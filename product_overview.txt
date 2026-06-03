@@ -1,0 +1,148 @@
+================================================================================
+                                L I F E P I V O T
+                           Product Overview & Features
+================================================================================
+
+LifePivot is a student-focused, AI-powered productivity tracking and study application designed for mobile devices. It implements a cohesive, high-end visual language with a "Native Plus" feel for iOS/iPhone users, scaling seamlessly across all screen sizes. 
+
+Rather than serving as a standard calendar or checklist, LifePivot leverages gamification mechanics, spaced repetition, a Web Audio synthesized sound engine, real-time Socratic tutoring, and a multi-tiered intelligent rescheduling engine to keep students focused, consistent, and accountable.
+
+--------------------------------------------------------------------------------
+1. CORE CONCEPT & PRODUCT MISSION
+--------------------------------------------------------------------------------
+LifePivot changes the way students plan, learn, and recover from missed study sessions. It structures learning goals into progressive, adaptive daily schedules, treating the academic path as a journey to be completed. By replacing standard reminders with a health (Lives) and economy (Gems/XP) loop, LifePivot incentivizes focus while actively helping users get back on track when they fall behind.
+
+--------------------------------------------------------------------------------
+2. KEY PRODUCT FEATURES
+--------------------------------------------------------------------------------
+
+A. AI-Powered Learning Plan Creator
+   - Intakes goal title, duration (e.g., 30 days), difficulty tier (Beginner, 
+     Intermediate, Advanced), study commitment level, and sprint boundaries.
+   - Leverages Gemini to build a fully structured, day-by-day task curriculum.
+   - Tasks are cataloged according to a difficulty hierarchy:
+     * P5 (Deep Theory): High cognitive burden, strictly limited to 1 per day.
+     * P4 (Hard Application): Core problem solving, includes 3-4 subtasks.
+     * P3 (Standard): Daily progress baseline.
+     * P2 (Theory Overview): Broad conceptual reading or video lectures.
+     * P1 (Exercises): repetition, practice, and "brain thickeners."
+     * P0 (Void Day): Rest and recovery day. Zero core tasks.
+   - Adapts plan structure based on intent:
+     * Exam Prep: Syllabus coverage, linear, dense, revision review focus.
+     * Level Up (Mastery): Deep concept mastery with feedback loops.
+     * Curiosity (Intro): Light, low-pressure exploration.
+
+B. The 3-Tier Reschedule & Pivot Engine
+   LifePivot features a resilient debt recovery engine to handle overdue tasks
+   without causing plan abandonment:
+   - Daily Check: Runs each morning. If yesterday's tasks were completed, the
+     streak grows. If tasks are overdue, the engine triggers a Pivot:
+     * Tier 1 (Algorithmic Slide): Shifts pending tasks forward into future
+       scheduled Void Days. This consumes the rest day but allows the student to
+       catch up without losing lives or breaking streaks.
+     * Tier 2 (AI Crunch): If no Void Days are left, the student loses 1 Life,
+       and Gemini compresses the remaining workload into the period before the
+       next Hard Wall. High-priority tasks (P5/P1) are kept, while low-priority
+       activities (P2) are dropped to save time.
+     * Tier 3 (The Avalanche): Activated when the user is out of lives. The
+       schedule collapses, and all overdue items are dumped onto "Today."
+   - Streak Shields: Automatically consumed to protect streaks on missed days.
+
+C. Focus Mode, Interactive Timer & Socratic Micro Drills
+   - Radial Countdown Timer: Immersive visual study timer that tracks progress.
+   - Circadian Rhythm Keys (Circadian Chests):
+     * Study during the Morning window (6:00 AM - 11:00 AM) to earn a Dusk Key.
+     * Study during the Evening window (6:00 PM - 10:00 PM) to earn a Dawn Key.
+     * Match keys to open chests and trigger a 20-minute Circadian Catalyst
+       (2x Gems and XP multiplier on all focus sessions).
+   - Stuck Assist (AI Socratic Hint): Real-time Socratic hints (Feynman, Socrates,
+     or Marcus Aurelius personas) with Web Speech API Text-to-Speech audio output.
+   - Focus Chat Overlay: Real-time tutoring directly integrated within active focus sessions.
+   - Socratic Micro Drills: Triggered upon study session completion to verify conceptual
+     comprehension. Consists of 3 educational JSON-designed multiple-choice questions
+     dynamically formulated by Gemini. Passing (3/3) awards full rewards; failure requires
+     retrying the drill or skipping for standard rewards.
+
+D. Synthesized On-Device Soundscapes
+   Uses the Web Audio API to synthesize focus audio directly on-device without
+   loading external files, reducing latency and network overhead:
+   - Space: Ambient synth pads, oscillators, and shifting chord progressions (Cmaj7, Dm7/A, Fmaj, G6).
+   - Rain: Simulated lowpass filtered pink noise rain with randomized high-frequency chimes.
+   - Binaural Beats: Focus frequencies (110Hz left / 114Hz right sine oscillators) with tri-harmonic backing pads.
+   - Cafe: Muffled low-frequency background chatter, cups clicking, and dynamic low-frequency speech patterns.
+   - Greenhouse: Bandpass filtered drop sounds simulating raindrops hitting glass panes.
+   - Web Audio SFX: Active recall match chimes, Zen Overdrive boosts, fail tones, and victory arpeggios.
+
+E. Socratic AI Tutor & Personas
+   - Features full chat integrations directly into the study and focus overlays.
+   - Personas:
+     * Feynman: Warm, physics-inspired analogies using simple terms.
+     * Socrates: Ancient philosopher asking questions to guide you to answers.
+     * Stoic (Marcus Aurelius): Quiet discipline, focus guidance, resilience.
+
+F. Active Recall, Recall Decks & Blitz Match
+   - Reflection Quiz: On task completion, students summarize what they learned.
+     The Socratic AI evaluates the response. A "Pass" awards bonus XP/Gems and
+     creates a tailored active recall flashcard.
+   - Spaced Repetition (Leitner Boxes):
+     * Review cards daily. "Easy" advances cards through 5 Leitner boxes.
+     * "Hard" resets cards to Box 1. Intervals range from 1 to 30 days.
+   - Blitz Match Game: Fast-paced flashcard recall mini-game featuring:
+     * A grid-based matching game that tests concept-definition associations.
+     * A 60-second countdown timer to challenge cognitive speed.
+     * "Zen Overdrive": Double-XP combo multiplier triggered during rapid streaks.
+     * Synthesized audio feedback (match/mismatch/victory sounds).
+   - Recall Pit: A recovery hub. Clearing Box 1 flashcards or resolving overdue
+     tasks allows students to recover lost Lives.
+
+G. Economy & Gamification
+   - Heads-Up Display (HUD): Tracks Lives (max 5), Gems (currency), XP, Level
+     (Pathseeker, Acolyte, Scholar, Sage, Grandmaster), and Streaks.
+   - Shop (The Exchange): Spend Gems to buy Lives, Void Days, Multipliers, Streak
+     Shields (max 2), Streak Repairs, or Avatar customizations.
+     * Double-or-Nothing Wagers: Stake gems on maintaining a 7-day streak to double
+       the return.
+     * Pathseeker Leagues: Competitive weekly 30-member brackets in 5 tiers 
+       (Bronze, Silver, Chrono, Astral, Zenith) with promotion/demotion boundaries.
+     * Interactive Reactive Avatar: Profile avatar that animates and responds
+       to study activity, streaks, and user progression.
+
+H. Interactive Weekly Learning Plan Map (Mind Map)
+   - Dynamic Radial Layout: Interactive canvas that displays the weekly syllabus,
+     grouping study objectives by Day nodes and Task branches.
+   - Navigation Controls: Smooth panning, multitouch pinch-to-zoom (optimized for
+     iOS devices), reset commands, and custom node coordinate offsets saved to
+     local browser storage.
+   - Picture-in-Picture Mini-Map: Floating navigation overlay showing real-time position.
+   - Dependency Lines: Connects prerequisite tasks (P1-P3) to core concepts (P4-P5) on
+     the same day to define clear study sequences.
+   - "Oracle's Beacon": Highlights and auto-centers the next pending high-priority task.
+   - Layout Toggles: Instantly switch between the radial canvas map and a clean,
+     mobile-first linear timeline directory.
+
+I. Milestone Checkpoint Socratic Battles
+   - Compulsory Milestone Verification: Triggered when crossing Sprint Wall boundaries.
+   - Arena Dialogues: Students engage in 3 rounds of conversational Socratic dialogue
+     with the **Nexus Grand Sage** to evaluate concept synthesis.
+   - Live Performance Indicators: Multi-round progress gauge and a real-time Socratic
+     Comprehension Rating estimate bar.
+   - Battle Resolution:
+     * Victory (Passing evaluation): Unlocks subsequent learning days, +15 Gems, +100 XP.
+     * Defeat (Failing evaluation): Sustains -1 Life penalty and triggers mandatory review.
+
+J. 3D Calendar Grid Layout
+   - Perspective View: Toggleable 3D calendar grid (using CSS perspective-1000 rotateX)
+     and flat splitscreen modes.
+   - Color-Coded Progress Tracking: Instantly review completed (green), pending (blue),
+     and missed/timeline-fractured (rose) days.
+   - Desktop Workspace: Sidebar panel showing student status, equipped shields, and showcasing
+     today's goals.
+   - Missed Session Alerts: "Timeline Fracture" warnings with quick-actions to initiate
+     Pivot slides directly.
+
+K. Progressive Web App (PWA) & Onboarding Walkthrough
+   - PWA Enablement: Service worker registration and manifest integration delivering an
+     offline-ready, app-store-free "Native Plus" experience on iOS/Android.
+   - Interactive Onboarding Tour: Guided step-by-step introduction welcoming Pathseekers,
+     explaining HUDS, priority scales, the Pivot engine, multipliers, and Leitner recall decks.
+================================================================================

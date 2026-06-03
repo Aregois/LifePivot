@@ -1,0 +1,23 @@
+{
+  "name": "LifePivot",
+  "short_name": "LifePivot",
+  "description": "A gamified, adaptive task manager and learning plan creator.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0B0D17",
+  "theme_color": "#0B0D17",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/apple-touch-icon.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

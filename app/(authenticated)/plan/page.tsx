@@ -1,0 +1,46 @@
+import { createClient } from '@/utils/supabase/server'
+import { PlanClient } from './plan-client'
+import { redirect } from 'next/navigation'
+import { Suspense } from 'react'
+
+export default async function PlanPage() {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) {
+        redirect('/login')
+    }
+
+    const { data: goals, error } = await supabase
+        .from('learning_goals')
+        .select(`
+          id,
+          title,
+          created_at,
+          duration_days,
+          plan_metadata,
+          tasks (
+            id,
+            title,
+            status,
+            due_date,
+            pivoted_count,
+            duration_mins,
+            priority,
+            task_type,
+            subject,
+            subtasks
+          )
+        `)
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+
+    return (
+        <Suspense fallback={
+            <div className="flex items-center justify-center min-h-[50vh]">
+                <div className="w-8 h-8 border-4 border-[#00FFFF] border-t-transparent rounded-full animate-spin shadow-[0_0_15px_rgba(0,255,255,0.2)]" />
+            </div>
+        }>
+            <PlanClient user={user} goals={goals} goalsError={error} />
+        </Suspense>
+    )
+}
