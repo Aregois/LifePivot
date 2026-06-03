@@ -1,15 +1,20 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Noto_Sans_Armenian } from "next/font/google";
 import "./globals.css";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
-  subsets: ["latin"],
+  subsets: ["latin", "cyrillic"],
 });
 
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
-  subsets: ["latin"],
+  subsets: ["latin", "cyrillic"],
+});
+
+const notoArmenian = Noto_Sans_Armenian({
+  variable: "--font-noto-armenian",
+  subsets: ["armenian"],
 });
 
 import { createClient } from "@/utils/supabase/server";
@@ -81,7 +86,7 @@ export default async function RootLayout({
   return (
     <html lang="en" className="dark" suppressHydrationWarning>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased selection:bg-neon-violet selection:text-white`}
+        className={`${geistSans.variable} ${geistMono.variable} ${notoArmenian.variable} antialiased selection:bg-neon-violet selection:text-white`}
         suppressHydrationWarning
       >
         <LanguageProvider>
