@@ -2,7 +2,6 @@
 
 import { Sparkles, Calendar, Zap, LayoutDashboard, Flame, TrendingUp, BookOpen } from 'lucide-react'
 import Link from 'next/link'
-import { WagerDashboardWidget } from '@/components/wager-dashboard-widget'
 import { CircadianChests } from '@/components/circadian-chests'
 import { ReactiveAvatar } from '@/components/reactive-avatar'
 import { SocraticCheckpointBattle } from '@/components/socratic-checkpoint-battle'
@@ -146,12 +145,14 @@ export function DashboardClient({
                       {goalData && <span className="text-sm font-bold text-gray-500">/ {goalData.duration_days}</span>}
                     </div>
                   </div>
+                  {/* Streak badge hidden for now
                   {stats.streak > 0 && (
                     <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-orange-500/10 border border-orange-500/20 shadow-[0_0_15px_rgba(249,115,22,0.15)]">
                       <Flame className="h-4 w-4 text-orange-400 fill-orange-400/40 animate-pulse" />
                       <span className="text-xs font-black text-orange-400">{stats.streak} {t('dashboard.day_streak')}</span>
                     </div>
                   )}
+                  */}
                 </div>
 
                 {/* Completion bar */}
@@ -254,21 +255,11 @@ export function DashboardClient({
                 </p>
               </Link>
 
-              <Link href="/profile?tab=flashcards" className="group p-5 rounded-2xl bg-[#1C2136]/50 border border-white/5 hover:border-amber-500/30 hover:bg-[#1C2136] transition-all relative overflow-hidden active:scale-[0.98]">
-                <div className="absolute top-0 right-0 w-24 h-24 bg-amber-500/10 rounded-full blur-[30px] group-hover:bg-amber-500/20 transition-all pointer-events-none" />
-                <div className="h-12 w-12 rounded-[1rem] bg-amber-500/10 flex items-center justify-center border border-amber-500/20 mb-3 group-hover:scale-110 group-hover:-rotate-3 transition-transform shadow-[0_0_15px_rgba(245,158,11,0.1)]">
-                  <BookOpen className="h-6 w-6 text-amber-500" />
-                </div>
-                <h3 className="text-white font-bold text-sm">{t('dashboard.recall_decks')}</h3>
-                <p className="text-[11px] text-gray-400 uppercase font-black tracking-widest mt-1">
-                  {dueCardsCount && dueCardsCount > 0 ? <span className="text-amber-500">{t('dashboard.due_today').replace('{count}', dueCardsCount.toString())}</span> : t('dashboard.up_to_date')}
-                </p>
-              </Link>
+              {/* Recall decks action hidden for now */}
             </div>
           </div>
 
           <CircadianChests />
-          <WagerDashboardWidget />
         </div>
       </div>
     </div>

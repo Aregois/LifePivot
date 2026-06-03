@@ -291,6 +291,12 @@ export function ShopClient() {
         }
     ]
 
+    // Filter out streak and cosmetic items for now
+    const activeShopItems = shopItems.filter(item => 
+        !['shield', 'repair'].includes(item.id) && 
+        !['title', 'frame', 'soundscape'].includes(item.type)
+    )
+
     const executePurchase = (itemId: string, voidPlacement?: 'tomorrow' | 'end') => {
         const item = shopItems.find(i => i.id === itemId)
         if (!item) return
@@ -412,208 +418,7 @@ export function ShopClient() {
                 </div>
             </div>
 
-            {/* {t('shop.wager_title')} Challenge */}
-            <div className="w-full">
-                {!wager ? (
-                    <div className="bg-[#141824] border border-white/5 p-6 rounded-[2.2rem] flex flex-col gap-5 relative overflow-hidden group">
-                        <div className="absolute top-0 right-0 w-48 h-48 bg-neon-violet/5 rounded-full blur-[40px] pointer-events-none" />
-                        <div className="flex items-start justify-between">
-                            <div>
-                                <span className="text-[10px] font-black text-neon-violet uppercase tracking-[0.2em] bg-neon-violet/10 border border-neon-violet/20 px-3 py-1 rounded-full">{t('shop.wager_challenge')}</span>
-                                <h3 className="text-xl font-black text-white mt-3">{t('shop.wager_title')}</h3>
-                                <p className="text-gray-400 text-xs mt-1">{t('shop.wager_desc')}</p>
-                            </div>
-                            <div className="h-10 w-10 bg-neon-violet/10 border border-neon-violet/20 flex items-center justify-center rounded-xl shrink-0">
-                                <Flame className="h-5 w-5 text-neon-violet" />
-                            </div>
-                        </div>
-
-                        {/* Wager amounts chips selector */}
-                        <div className="flex flex-col gap-2">
-                            <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest">{t('shop.select_bet')}</label>
-                            <div className="grid grid-cols-4 gap-2">
-                                {[10, 20, 50, 100].map((amt) => {
-                                    const active = wagerAmount === amt
-                                    return (
-                                        <button
-                                            key={amt}
-                                            onClick={() => {
-                                                haptics.light()
-                                                setWagerAmount(amt)
-                                            }}
-                                            className={`py-3.5 rounded-2xl text-sm font-black border transition-all flex flex-col items-center justify-center gap-1 ${
-                                                active
-                                                    ? 'bg-neon-violet/25 border-neon-violet text-white scale-105 shadow-[0_0_15px_rgba(189,0,255,0.25)]'
-                                                    : 'bg-[#0B0D17] border-white/5 text-gray-400 hover:border-white/10 hover:text-white'
-                                            }`}
-                                        >
-                                            <span className="flex items-center gap-0.5">
-                                                <Diamond className="h-3 w-3 fill-current shrink-0" />
-                                                {amt}
-                                            </span>
-                                            <span className="text-[8px] font-bold text-gray-500 uppercase">{t('shop.wins')} {amt * 2}</span>
-                                        </button>
-                                    )
-                                })}
-                            </div>
-                        </div>
-
-                        {/* Target Details */}
-                        <div className="bg-[#0B0D17] border border-white/5 p-4 rounded-2xl flex items-center justify-between text-xs">
-                            <div className="flex flex-col gap-0.5">
-                                <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">{t('shop.target_streak')}</span>
-                                <span className="text-white font-extrabold">{currentStreak + 7} Days</span>
-                            </div>
-                            <div className="h-8 w-[1px] bg-white/5" />
-                            <div className="flex flex-col gap-0.5">
-                                <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">{t('shop.wager_term')}</span>
-                                <span className="text-white font-extrabold">7 Days</span>
-                            </div>
-                            <div className="h-8 w-[1px] bg-white/5" />
-                            <div className="flex flex-col gap-0.5">
-                                <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">{t('shop.current_streak')}</span>
-                                <span className="text-gray-400 font-extrabold">{currentStreak} Days</span>
-                            </div>
-                        </div>
-
-                        {wagerError && (
-                            <div className="bg-red-500/10 border border-red-500/20 text-red-400 text-xs px-4 py-3 rounded-2xl text-center font-bold">
-                                {wagerError}
-                            </div>
-                        )}
-
-                        <button
-                            onClick={() => {
-                                if (confirmingWager) {
-                                    handlePlaceWager()
-                                } else {
-                                    haptics.medium()
-                                    setConfirmingWager(true)
-                                    setTimeout(() => setConfirmingWager(false), 3000)
-                                }
-                            }}
-                            disabled={isPending}
-                            className={`w-full py-4 rounded-2xl font-black text-sm transition-all flex items-center justify-center gap-2 ${
-                                confirmingWager
-                                    ? 'bg-amber-500 text-black animate-pulse shadow-[0_0_20px_rgba(245,158,11,0.3)]'
-                                    : 'bg-white text-black hover:scale-[1.02] active:scale-[0.98]'
-                            }`}
-                        >
-                            {isPending ? (
-                                <Loader2 className="h-4 w-4 animate-spin" />
-                            ) : confirmingWager ? (
-                                t('shop.confirm_wager')
-                            ) : (
-                                <>
-                                    <Flame className="h-4 w-4 fill-current" />
-                                    {t('shop.place_wager')}
-                                </>
-                            )}
-                        </button>
-                    </div>
-                ) : (
-                    /* Wager Active/Resolved Card */
-                    <div className="bg-[#141824] border border-white/5 p-6 rounded-[2.2rem] flex flex-col gap-5 relative overflow-hidden group">
-                        <div className="absolute top-0 right-0 w-48 h-48 bg-emerald-500/5 rounded-full blur-[40px] pointer-events-none" />
-                        
-                        {wagerResolution === 'won' ? (
-                            <div className="flex flex-col gap-4 text-center items-center py-4">
-                                <div className="h-16 w-16 bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center rounded-2xl shadow-[0_0_20px_rgba(16,185,129,0.3)] text-emerald-400 animate-bounce">
-                                    <Sparkles className="h-8 w-8" />
-                                </div>
-                                <div>
-                                    <h3 className="text-xl font-black text-white">{t('shop.challenge_completed')}</h3>
-                                    <p className="text-gray-400 text-xs mt-2 max-w-sm">
-                                        {t('shop.won_desc').replace('{target}', wager.targetStreak.toString())}
-                                    </p>
-                                </div>
-                                <div className="bg-[#0B0D17] border border-white/5 px-6 py-3.5 rounded-2xl flex items-center gap-3">
-                                    <div className="text-left">
-                                        <span className="text-[9px] font-black text-gray-500 uppercase tracking-widest block">{t('shop.double_reward')}</span>
-                                        <span className="text-emerald-400 text-lg font-black flex items-center gap-1 mt-0.5">
-                                            <Diamond className="h-4 w-4 fill-emerald-400/20 shrink-0" />
-                                            +{wager.amount * 2} Gems
-                                        </span>
-                                    </div>
-                                </div>
-                                <button
-                                    onClick={handleClaimWager}
-                                    disabled={isPending}
-                                    className="w-full mt-2 py-4 rounded-2xl bg-emerald-500 text-black font-black text-sm hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(16,185,129,0.25)]"
-                                >
-                                    {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : t('shop.claim_reward')}
-                                </button>
-                            </div>
-                        ) : wagerResolution === 'lost' ? (
-                            <div className="flex flex-col gap-4 text-center items-center py-4">
-                                <div className="h-16 w-16 bg-red-500/20 border border-red-500/30 flex items-center justify-center rounded-2xl shadow-[0_0_20px_rgba(239,68,68,0.3)] text-red-400">
-                                    <RotateCcw className="h-8 w-8" />
-                                </div>
-                                <div>
-                                    <h3 className="text-xl font-black text-white">{t('shop.wager_lost')}</h3>
-                                    <p className="text-gray-400 text-xs mt-2 max-w-sm">
-                                        {t('shop.lost_desc').replace('{amount}', wager.amount.toString())}
-                                    </p>
-                                </div>
-                                <button
-                                    onClick={handleDismissWager}
-                                    className="w-full mt-2 py-4 rounded-2xl bg-white/5 border border-white/10 text-white font-black text-sm hover:bg-white/10 active:scale-[0.98] transition-all"
-                                >
-                                    {t('shop.acknowledge')}
-                                </button>
-                            </div>
-                        ) : (
-                            /* Active status progress card */
-                            <div className="flex flex-col gap-4">
-                                <div className="flex items-start justify-between">
-                                    <div>
-                                        <span className="text-[10px] font-black text-emerald-400 uppercase tracking-[0.2em] bg-emerald-500/10 border border-emerald-500/20 px-3 py-1 rounded-full">{t('shop.challenge_active')}</span>
-                                        <h3 className="text-lg font-black text-white mt-3">{t('shop.wager_title')} In Progress</h3>
-                                        <p className="text-gray-400 text-xs mt-1">{t('shop.wager_active_desc').replace('{target}', wager.targetStreak.toString())}</p>
-                                    </div>
-                                    <div className="h-10 w-10 bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center rounded-xl shrink-0">
-                                        <Loader2 className="h-5 w-5 text-emerald-400 animate-spin" />
-                                    </div>
-                                </div>
-
-                                {/* Progress bar */}
-                                <div className="space-y-2 mt-2">
-                                    <div className="flex justify-between items-end text-xs">
-                                        <span className="text-gray-400 font-extrabold">{t('shop.current_streak')}: {currentStreak} / {wager.targetStreak} Days</span>
-                                        <span className="text-emerald-400 font-black">
-                                            {Math.round(Math.min(100, Math.max(0, ((currentStreak - wager.startStreak) / 7) * 100)))}%
-                                        </span>
-                                    </div>
-                                    <div className="w-full h-3 bg-[#0B0D17] rounded-full overflow-hidden border border-white/5 relative">
-                                        <div
-                                            className="h-full bg-gradient-to-r from-emerald-400 to-teal-500 rounded-full transition-all duration-1000 shadow-[0_0_12px_rgba(52,211,153,0.5)]"
-                                            style={{ width: `${Math.round(Math.min(100, Math.max(0, ((currentStreak - wager.startStreak) / 7) * 100)))}%` }}
-                                        />
-                                    </div>
-                                </div>
-
-                                {/* Details list */}
-                                <div className="grid grid-cols-2 gap-3 mt-1">
-                                    <div className="bg-[#0B0D17] border border-white/5 p-3 rounded-2xl text-center">
-                                        <span className="text-[8px] font-black text-gray-500 uppercase tracking-widest block">{t('shop.gems_locked')}</span>
-                                        <span className="text-white font-extrabold text-sm flex items-center justify-center gap-1 mt-0.5">
-                                            <Diamond className="h-3.5 w-3.5 fill-white/10 text-white shrink-0" />
-                                            {wager.amount}
-                                        </span>
-                                    </div>
-                                    <div className="bg-[#0B0D17] border border-white/5 p-3 rounded-2xl text-center">
-                                        <span className="text-[8px] font-black text-gray-500 uppercase tracking-widest block">{t('shop.double_reward')}</span>
-                                        <span className="text-emerald-400 font-extrabold text-sm flex items-center justify-center gap-1 mt-0.5">
-                                            <Diamond className="h-3.5 w-3.5 fill-emerald-400/20 text-emerald-400 shrink-0" />
-                                            {wager.amount * 2}
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-                    </div>
-                )}
-            </div>
+            {/* Wager challenge hidden for now */}
 
             {/* Notification center */}
             <div className="min-h-[40px] relative z-20">
@@ -645,7 +450,7 @@ export function ShopClient() {
 
             {/* Items Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 lg:gap-6">
-                {shopItems.map((item) => {
+                {activeShopItems.map((item) => {
                     const IconComponent = item.icon
                     const isPurchased = unlockedItems.includes(item.id.startsWith('sound_') ? item.id.replace('sound_', '') : item.id)
                     const isAffordable = gems >= item.cost

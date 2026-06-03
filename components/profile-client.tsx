@@ -168,15 +168,15 @@ export function ProfileClient({
             xpReward: 15,
             gemReward: 2
         },
-        {
-            id: 'daily_streak',
-            title: 'Streak Builder',
-            description: 'Finish 1 task today.',
-            progress: completedToday >= 1 ? 1 : 0,
-            target: 1,
-            xpReward: 10,
-            gemReward: 1
-        }
+        // {
+        //     id: 'daily_streak',
+        //     title: 'Streak Builder',
+        //     description: 'Finish 1 task today.',
+        //     progress: completedToday >= 1 ? 1 : 0,
+        //     target: 1,
+        //     xpReward: 10,
+        //     gemReward: 1
+        // }
     ]
 
     // Load settings from localStorage
@@ -415,50 +415,7 @@ export function ProfileClient({
                     <Award className="h-4 w-4" />
                     {t('profile.tab_mastery')}
                 </button>
-                <button
-                    onClick={() => { if (hapticsEnabled) webHaptics.light(); setActiveTab('flashcards') }}
-                    className={`flex-1 min-w-[90px] py-3 px-4 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 ${
-                        activeTab === 'flashcards' 
-                            ? 'bg-[#1C2033] text-white shadow-lg' 
-                            : 'text-gray-500 hover:text-gray-300'
-                    }`}
-                >
-                    <BookOpen className="h-4 w-4" />
-                    {t('profile.tab_cards')}
-                </button>
-                <button
-                    onClick={() => { if (hapticsEnabled) webHaptics.light(); setActiveTab('recall-pit') }}
-                    className={`flex-1 min-w-[95px] py-3 px-4 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 relative ${
-                        activeTab === 'recall-pit' 
-                            ? 'bg-[#1C2033] text-white shadow-lg' 
-                            : 'text-gray-500 hover:text-gray-300'
-                    }`}
-                >
-                    <ShieldAlert className="h-4 w-4 text-orange-500" />
-                    {t('profile.tab_rescue')}
-                </button>
-                <button
-                    onClick={() => { if (hapticsEnabled) webHaptics.light(); setActiveTab('leagues') }}
-                    className={`flex-1 min-w-[90px] py-3 px-4 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 ${
-                        activeTab === 'leagues' 
-                            ? 'bg-[#1C2033] text-white shadow-lg' 
-                            : 'text-gray-500 hover:text-gray-300'
-                    }`}
-                >
-                    <Flame className="h-4 w-4 text-orange-500 animate-pulse" />
-                    {t('profile.tab_leagues')}
-                </button>
-                <button
-                    onClick={() => { if (hapticsEnabled) webHaptics.light(); setActiveTab('cosmetics') }}
-                    className={`flex-1 min-w-[90px] py-3 px-4 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 ${
-                        activeTab === 'cosmetics' 
-                            ? 'bg-[#1C2033] text-white shadow-lg' 
-                            : 'text-gray-500 hover:text-gray-300'
-                    }`}
-                >
-                    <Palette className="h-4 w-4" />
-                    {t('profile.tab_wardrobe')}
-                </button>
+                {/* Tabs hidden: flashcards, recall-pit, leagues, cosmetics */}
                 <button
                     onClick={() => { if (hapticsEnabled) webHaptics.light(); setActiveTab('settings') }}
                     className={`flex-1 min-w-[90px] py-3 px-4 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 ${
@@ -472,20 +429,7 @@ export function ProfileClient({
                 </button>
             </div>
 
-            {/* TAB CONTENT: FLASHCARDS */}
-            {activeTab === 'flashcards' && (
-                <FlashcardsDeck />
-            )}
-
-            {/* TAB CONTENT: RECALL PIT */}
-            {activeTab === 'recall-pit' && (
-                <RecallPit />
-            )}
-
-            {/* TAB CONTENT: LEAGUES */}
-            {activeTab === 'leagues' && (
-                <PathseekerLeagues />
-            )}
+            {/* Tab contents hidden: flashcards, recall-pit, leagues */}
 
             {/* TAB CONTENT: MASTERY */}
             {activeTab === 'mastery' && (
@@ -504,11 +448,13 @@ export function ProfileClient({
                                 <p className="text-[8px] lg:text-[10px] font-black text-gray-500 uppercase tracking-wider">Study Time</p>
                                 <p className="text-sm lg:text-xl font-extrabold text-white mt-1 tabular-nums">{totalFocusMins}m</p>
                             </div>
+                            {/* Streak stat hidden 
                             <div className="bg-[#141824] border border-white/5 p-4 lg:p-6 rounded-3xl text-center shadow-lg">
                                 <Flame className="h-5 w-5 lg:h-6 lg:w-6 text-orange-500 mx-auto mb-2" />
                                 <p className="text-[8px] lg:text-[10px] font-black text-gray-500 uppercase tracking-wider">Streak</p>
                                 <p className="text-sm lg:text-xl font-extrabold text-white mt-1 tabular-nums">{currentStreak}d</p>
                             </div>
+                            */}
                         </div>
 
                         {/* Weekly Journey Activity Calendar */}
