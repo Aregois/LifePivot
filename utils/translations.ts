@@ -310,12 +310,12 @@ export const TRANSLATIONS: Record<Locale, Record<string, any>> = {
                 sage: "Sage",
                 scholar: "Scholar",
                 acolyte: "Acolyte",
-                pathseeker: "Pathseeker",
+                pathseeker: "Pathseeker"
+            },
             welcome_back: "Welcome back!",
             good_morning: "Good morning!",
             good_afternoon: "Good afternoon!",
             good_evening: "Good evening!"
-        }
         },
         plan: {
             todays_focus: "Today's Focus",
@@ -1004,12 +1004,12 @@ export const TRANSLATIONS: Record<Locale, Record<string, any>> = {
                 sage: "Мудрец",
                 scholar: "Ученый",
                 acolyte: "Послушник",
-                pathseeker: "Искатель",
+                pathseeker: "Искатель"
+            },
             welcome_back: "С возвращением!",
             good_morning: "Доброе утро!",
             good_afternoon: "Добрый день!",
             good_evening: "Добрый вечер!"
-        }
         },
         plan: {
             todays_focus: "Сегодняшний фокус",
@@ -1698,12 +1698,12 @@ export const TRANSLATIONS: Record<Locale, Record<string, any>> = {
                 sage: "Sage",
                 scholar: "Érudit",
                 acolyte: "Acolyte",
-                pathseeker: "Chercheur",
+                pathseeker: "Chercheur"
+            },
             welcome_back: "Bon retour !",
             good_morning: "Bon matin !",
             good_afternoon: "Bon après-midi !",
             good_evening: "Bonsoir !"
-        }
         },
         plan: {
             todays_focus: "Objectif du Jour",
@@ -2392,12 +2392,12 @@ export const TRANSLATIONS: Record<Locale, Record<string, any>> = {
                 sage: "Sabio",
                 scholar: "Erudito",
                 acolyte: "Acólito",
-                pathseeker: "Buscador",
+                pathseeker: "Buscador"
+            },
             welcome_back: "¡Bienvenido de nuevo!",
             good_morning: "¡Buenos días!",
             good_afternoon: "¡Buenas tardes!",
             good_evening: "¡Buenas noches!"
-        }
         },
         plan: {
             todays_focus: "Enfoque de Hoy",
@@ -3086,12 +3086,12 @@ export const TRANSLATIONS: Record<Locale, Record<string, any>> = {
                 sage: "Իմաստուն",
                 scholar: "Գիտնական",
                 acolyte: "Նորընծա",
-                pathseeker: "Որոնող",
+                pathseeker: "Որոնող"
+            },
             welcome_back: "Բարի վերադարձ:",
             good_morning: "Բարի լույս:",
             good_afternoon: "Բարի օր:",
             good_evening: "Բարի երեկո:"
-        }
         },
         plan: {
             todays_focus: "Այսօրվա կենտրոնացումը",
@@ -3780,12 +3780,12 @@ export const TRANSLATIONS: Record<Locale, Record<string, any>> = {
                 sage: "賢者 (セージ)",
                 scholar: "学者 (スカラー)",
                 acolyte: "修練者 (アコライト)",
-                pathseeker: "探求者 (パスシーカー)",
+                pathseeker: "探求者 (パスシーカー)"
+            },
             welcome_back: "おかえりなさい！",
             good_morning: "おはようございます！",
             good_afternoon: "こんにちは！",
             good_evening: "こんばんは！"
-        }
         },
         plan: {
             todays_focus: "本日の集中対象",
@@ -4474,12 +4474,12 @@ export const TRANSLATIONS: Record<Locale, Record<string, any>> = {
                 sage: "贤者",
                 scholar: "学者",
                 acolyte: "侍从",
-                pathseeker: "探索者",
+                pathseeker: "探索者"
+            },
             welcome_back: "欢迎回来！",
             good_morning: "早上好！",
             good_afternoon: "下午好！",
             good_evening: "晚上好！"
-        }
         },
         plan: {
             todays_focus: "今日专注",
