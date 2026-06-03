@@ -2,11 +2,12 @@
 
 import { useState, useEffect, useTransition } from 'react'
 import { motion, AnimatePresence, useMotionValue, useTransform } from 'framer-motion'
-import { AlertCircle, RefreshCw, Check, X, Diamond, Heart, Sparkles, BookOpen, Clock, Flame } from 'lucide-react'
+import { AlertCircle, RefreshCw, Check, X } from 'lucide-react'
 import { haptics } from '@/utils/haptics'
 import { fetchRecallPitItems, reviewFlashcard, recoverLifeFromRecallPit, rewardWagerServer, rescueOverdueTask } from '@/app/actions'
 import { useEconomy } from './economy-provider'
 import { BlitzMatchGame } from './blitz-match-game'
+import { useLanguage } from './language-provider'
 
 interface RecallItem {
     id: string
@@ -18,6 +19,7 @@ interface RecallItem {
 
 export function RecallPit() {
     const { setLives, setGems, lives } = useEconomy()
+    const { t } = useLanguage()
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
     const [items, setItems] = useState<RecallItem[]>([])
@@ -96,12 +98,8 @@ export function RecallPit() {
 
         startTransition(async () => {
             if (item.type === 'flashcard') {
-                // Flashcards are reviewed in Leitner System
                 await reviewFlashcard(item.id, rating)
             } else {
-                // If it's a task, swiping it easy marks it reviewed/shifted.
-                // We don't mark the task completed (they still have to complete it on the planner),
-                // but swiping it easy lets them rescue/clear it from the Recall Pit.
                 if (rating === 'easy') {
                     await rescueOverdueTask(item.id)
                 }
@@ -141,9 +139,9 @@ export function RecallPit() {
     const rotate = useTransform(x, [-150, 150], [-15, 15])
     const opacity = useTransform(x, [-100, 0, 100], [0.5, 1, 0.5])
     const cardGlow = useTransform(x, [-100, 0, 100], [
-        'rgba(239,68,68,0.15)', // Red glow (Still struggling)
+        'rgba(239,68,68,0.15)', // Red glow
         'rgba(255,255,255,0.05)',
-        'rgba(52,211,153,0.15)'  // Emerald glow (Recalled)
+        'rgba(52,211,153,0.15)'  // Emerald glow
     ])
 
     const handleDragEnd = (event: any, info: any) => {
@@ -159,7 +157,7 @@ export function RecallPit() {
         return (
             <div className="flex flex-col items-center justify-center py-16">
                 <RefreshCw className="h-8 w-8 text-electric-blue animate-spin mb-3" />
-                <p className="text-gray-500 text-xs">Entering the Pit...</p>
+                <p className="text-gray-500 text-xs">{t('recall_pit.loading')}</p>
             </div>
         )
     }
@@ -168,10 +166,10 @@ export function RecallPit() {
         return (
             <div className="bg-red-500/10 border border-red-500/20 p-6 rounded-3xl text-center">
                 <AlertCircle className="h-8 w-8 text-red-500 mx-auto mb-3" />
-                <p className="text-sm font-bold text-white">Pit Failed to Load</p>
+                <p className="text-sm font-bold text-white">{t('recall_pit.failed')}</p>
                 <p className="text-xs text-gray-400 mt-1">{error}</p>
                 <button onClick={loadRecallItems} className="mt-4 px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-xs text-white">
-                    Try Again
+                    {t('recall_pit.try_again')}
                 </button>
             </div>
         )
@@ -187,16 +185,16 @@ export function RecallPit() {
                     <Check className="h-8 w-8 text-emerald-400" />
                 </div>
                 <div>
-                    <h3 className="text-xl font-black text-white">The Recall Pit is Clean!</h3>
+                    <h3 className="text-xl font-black text-white">{t('recall_pit.clean_title')}</h3>
                     <p className="text-xs text-gray-400 mt-2 max-w-xs leading-relaxed">
-                        Excellent status. You have no overdue tasks and no Box 1 flashcards currently needing rescue.
+                        {t('recall_pit.clean_desc')}
                     </p>
                 </div>
                 <button
                     onClick={loadRecallItems}
                     className="px-6 py-3 bg-[#1C2033] hover:bg-[#232942] border border-white/5 rounded-xl text-xs text-white font-bold transition-all active:scale-95"
                 >
-                    Recheck Files
+                    {t('recall_pit.recheck')}
                 </button>
             </div>
         )
@@ -224,8 +222,7 @@ export function RecallPit() {
                         exit={{ opacity: 0, y: -20, scale: 0.8 }}
                         className="absolute -top-12 z-50 bg-emerald-500 text-black px-4 py-2.5 rounded-full font-black text-xs flex items-center gap-1.5 shadow-[0_0_20px_rgba(16,185,129,0.4)]"
                     >
-                        <Sparkles className="h-4 w-4" />
-                        {rewardEarned === 'heart' ? 'Heart Restored! ❤️' : '+5 Gems Awarded! 💎'}
+                        {rewardEarned === 'heart' ? t('recall_pit.heart_restored') : t('recall_pit.gems_awarded')}
                     </motion.div>
                 )}
             </AnimatePresence>
@@ -233,10 +230,10 @@ export function RecallPit() {
             {/* Session Header */}
             <div className="w-full flex items-center justify-between px-2">
                 <span className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">
-                    {currentItem.title} ({currentIdx + 1} of {items.length})
+                    {currentItem.type === 'flashcard' ? t('recall_pit.title_fc') : t('recall_pit.title_task')} ({currentIdx + 1} of {items.length})
                 </span>
                 <span className="text-[10px] text-emerald-400 font-extrabold uppercase tracking-wider flex items-center gap-1">
-                    Cleared: {sessionCleared}
+                    {t('recall_pit.cleared_label').replace('{count}', String(sessionCleared))}
                 </span>
             </div>
 
@@ -246,8 +243,7 @@ export function RecallPit() {
                     onClick={() => { haptics.medium(); setShowBlitzGame(true) }}
                     className="w-full max-w-[320px] py-4 rounded-[1.5rem] bg-gradient-to-r from-amber-500 via-orange-500 to-yellow-500 text-black font-black text-xs uppercase tracking-widest hover:opacity-95 active:scale-95 transition-all shadow-[0_0_20px_rgba(245,158,11,0.25)] flex items-center justify-center gap-2"
                 >
-                    <Sparkles className="h-4 w-4 fill-black" />
-                    Launch Blitz Match Grid
+                    {t('recall_pit.launch_blitz')}
                 </button>
             )}
 
@@ -274,17 +270,7 @@ export function RecallPit() {
 
                     {/* Top label */}
                     <div className="flex items-center gap-1.5 text-[9px] font-black tracking-widest text-gray-500 uppercase">
-                        {currentItem.type === 'flashcard' ? (
-                            <>
-                                <BookOpen className="h-3 w-3 text-neon-violet" />
-                                <span>Flashcard (Box 1)</span>
-                            </>
-                        ) : (
-                            <>
-                                <AlertCircle className="h-3 w-3 text-orange-500" />
-                                <span>Task Overdue</span>
-                            </>
-                        )}
+                        {currentItem.type === 'flashcard' ? t('recall_pit.fc_label') : t('recall_pit.task_label')}
                     </div>
 
                     {/* Body */}
@@ -298,12 +284,12 @@ export function RecallPit() {
                                     exit={{ opacity: 0, y: -10 }}
                                     className="flex flex-col gap-2 items-center"
                                 >
-                                    <span className="text-xs text-gray-500 uppercase tracking-widest font-black">Overdue Goal Item</span>
+                                    <span className="text-xs text-gray-500 uppercase tracking-widest font-black">{t('recall_pit.overdue_item')}</span>
                                     <p className="text-base font-extrabold text-white leading-snug">
                                         {currentItem.details}
                                     </p>
                                     <span className="text-[9px] text-orange-400 bg-orange-500/10 border border-orange-500/20 px-2 py-0.5 rounded-full mt-2">
-                                        Pivoted Action Required
+                                        {t('recall_pit.action_required')}
                                     </span>
                                 </motion.div>
                             ) : !isFlipped ? (
@@ -333,11 +319,11 @@ export function RecallPit() {
                     {/* Footer cue */}
                     <div className="text-[9px] text-gray-500 font-black uppercase tracking-[0.2em] pointer-events-none">
                         {currentItem.type === 'task' ? (
-                            <span className="text-orange-400/80">Swipe Right to complete review</span>
+                            <span className="text-orange-400/80">{t('recall_pit.swipe_right_cue')}</span>
                         ) : isFlipped ? (
-                            'Tap to see Question'
+                            t('recall_pit.tap_question')
                         ) : (
-                            'Tap to Reveal Answer'
+                            t('recall_pit.tap_answer')
                         )}
                     </div>
                 </motion.div>
@@ -364,10 +350,10 @@ export function RecallPit() {
             {/* Instruction tooltip */}
             <div className="text-center max-w-[240px] mt-2">
                 <p className="text-[10px] text-gray-500 leading-relaxed uppercase tracking-wider">
-                    Swipe right if <span className="text-emerald-400 font-bold">recalled/reviewed</span>, swipe left if <span className="text-red-500 font-bold">still struggling</span>.
+                    {t('recall_pit.instruction')}
                 </p>
                 <p className="text-[9px] text-gray-600 mt-1">
-                    Clear 3 items to recover 1 Heart or earn 5 Gems!
+                    {t('recall_pit.milestone')}
                 </p>
             </div>
         </div>

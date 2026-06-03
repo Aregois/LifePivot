@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { Calendar } from 'lucide-react'
 import { getLocalDateString, getSunday } from '@/utils/date-utils'
 import { haptics } from '@/utils/haptics'
+import { useLanguage } from './language-provider'
 
 const useIsomorphicLayoutEffect = typeof window !== 'undefined' ? useLayoutEffect : useEffect
 
@@ -14,6 +15,7 @@ interface DateSelectorProps {
 }
 
 export function DateSelector({ selectedDate, onSelectDate }: DateSelectorProps) {
+    const { locale, t } = useLanguage()
     // Initialize baseDate from selectedDate so we always start on the right week
     const [baseDate, setBaseDate] = useState(() => {
         const d = selectedDate ? new Date(selectedDate + 'T00:00:00') : new Date()
@@ -42,7 +44,7 @@ export function DateSelector({ selectedDate, onSelectDate }: DateSelectorProps) 
     const currentMonthLabel = useMemo(() => {
         const midWeek = new Date(baseDate)
         midWeek.setDate(baseDate.getDate() + 3)
-        return midWeek.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
+        return midWeek.toLocaleDateString(locale, { month: 'long', year: 'numeric' })
     }, [baseDate])
 
     // Generate 3 weeks: previous, current, next
@@ -55,7 +57,7 @@ export function DateSelector({ selectedDate, onSelectDate }: DateSelectorProps) 
                 const d = new Date(weekStart)
                 d.setDate(weekStart.getDate() + dayIdx)
                 return {
-                    dayStr: d.toLocaleDateString('en-US', { weekday: 'short' }),
+                    dayStr: d.toLocaleDateString(locale, { weekday: 'short' }),
                     num: d.getDate(),
                     isToday: getLocalDateString(d) === getLocalDateString(new Date()),
                     fullDate: getLocalDateString(d)
@@ -142,7 +144,7 @@ export function DateSelector({ selectedDate, onSelectDate }: DateSelectorProps) 
                 >
                     <Calendar className="w-3.5 h-3.5 text-gray-400 group-hover:text-[#00FFFF] transition-colors" />
                     <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest group-hover:text-white transition-colors">
-                        View All
+                        {t('calendar.view_all')}
                     </span>
                 </Link>
             </div>

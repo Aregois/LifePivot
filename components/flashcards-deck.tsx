@@ -6,6 +6,7 @@ import { BookOpen, Sparkles, AlertCircle, RefreshCw, Check, X, Diamond, Star } f
 import { haptics } from '@/utils/haptics'
 import { fetchFlashcards, reviewFlashcard } from '@/app/actions'
 import { useEconomy } from './economy-provider'
+import { useLanguage } from './language-provider'
 
 interface Flashcard {
     id: string
@@ -18,6 +19,7 @@ interface Flashcard {
 
 export function FlashcardsDeck() {
     const { setGems, setXp, setLevel } = useEconomy()
+    const { locale, t } = useLanguage()
     const [flashcards, setFlashcards] = useState<Flashcard[]>([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
@@ -123,7 +125,7 @@ export function FlashcardsDeck() {
         return (
             <div className="flex flex-col items-center justify-center py-16">
                 <RefreshCw className="h-8 w-8 text-electric-blue animate-spin shadow-[0_0_15px_rgba(0,240,255,0.2)] mb-3" />
-                <p className="text-gray-500 text-xs">Accessing memory files...</p>
+                <p className="text-gray-500 text-xs">{t('flashcards.accessing')}</p>
             </div>
         )
     }
@@ -132,10 +134,10 @@ export function FlashcardsDeck() {
         return (
             <div className="bg-red-500/10 border border-red-500/20 p-6 rounded-3xl text-center">
                 <AlertCircle className="h-8 w-8 text-red-500 mx-auto mb-3" />
-                <p className="text-sm font-bold text-white">Access Failed</p>
+                <p className="text-sm font-bold text-white">{t('flashcards.access_failed')}</p>
                 <p className="text-xs text-gray-400 mt-1">{error}</p>
                 <button onClick={loadCards} className="mt-4 px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-xs text-white">
-                    Try Again
+                    {t('flashcards.try_again')}
                 </button>
             </div>
         )
@@ -151,13 +153,13 @@ export function FlashcardsDeck() {
                 {/* Session Header / Progress bar */}
                 <div className="w-full flex items-center justify-between px-2">
                     <span className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">
-                        Reviewing {currentIdx + 1} of {reviewQueue.length}
+                        {t('flashcards.review_progress').replace('{current}', (currentIdx + 1).toString()).replace('{total}', reviewQueue.length.toString())}
                     </span>
                     <button 
                         onClick={() => { haptics.light(); setReviewQueue([]) }} 
                         className="text-[10px] text-gray-500 hover:text-gray-300 font-bold uppercase tracking-wider"
                     >
-                        Exit
+                        {t('flashcards.exit')}
                     </button>
                 </div>
                 <div className="w-full h-1.5 bg-white/5 rounded-full overflow-hidden">
@@ -186,7 +188,7 @@ export function FlashcardsDeck() {
                         {/* Top Indicator */}
                         <div className="flex items-center gap-1.5 text-[9px] font-black tracking-widest text-gray-500 uppercase">
                             <BookOpen className="h-3 w-3 text-electric-blue" />
-                            <span>Box {currentCard.leitner_box}</span>
+                            <span>{t('flashcards.box_num').replace('{box}', currentCard.leitner_box.toString())}</span>
                         </div>
 
                         {/* Question / Answer (flip logic) */}
@@ -218,7 +220,7 @@ export function FlashcardsDeck() {
 
                         {/* Bottom action label */}
                         <div className="text-[9px] text-electric-blue font-black uppercase tracking-[0.2em] animate-pulse pointer-events-none">
-                            {isFlipped ? 'Tap to see Question' : 'Tap to Reveal Answer'}
+                            {isFlipped ? t('flashcards.tap_question') : t('flashcards.tap_reveal')}
                         </div>
                     </motion.div>
                 </div>
@@ -244,7 +246,7 @@ export function FlashcardsDeck() {
                 {/* Instructions */}
                 <div className="text-center max-w-[200px] mt-4">
                     <p className="text-[10px] text-gray-500 leading-relaxed uppercase tracking-wider">
-                        Swipe left if it was <span className="text-red-500 font-bold">Hard</span>, swipe right if <span className="text-emerald-400 font-bold">Easy</span>.
+                        {t('flashcards.swipe_prefix')}<span className="text-red-500 font-bold">{t('flashcards.hard')}</span>{t('flashcards.swipe_mid')}<span className="text-emerald-400 font-bold">{t('flashcards.easy')}</span>.
                     </p>
                 </div>
             </div>
@@ -264,18 +266,18 @@ export function FlashcardsDeck() {
                 </div>
 
                 <div>
-                    <h3 className="text-xl font-black text-white uppercase tracking-wider">Review Complete!</h3>
-                    <p className="text-xs text-gray-400 mt-1 leading-relaxed">Your neural pathways have been strengthened.</p>
+                    <h3 className="text-xl font-black text-white uppercase tracking-wider">{t('flashcards.complete_title')}</h3>
+                    <p className="text-xs text-gray-400 mt-1 leading-relaxed">{t('flashcards.complete_desc')}</p>
                 </div>
 
                 {/* Rewards Panel */}
                 <div className="flex gap-4 w-full justify-center">
                     <div className="bg-[#141824] border border-white/5 px-4 py-3 rounded-2xl flex flex-col items-center min-w-[90px]">
-                        <span className="text-[8px] font-black text-gray-500 uppercase tracking-widest">XP Gained</span>
+                        <span className="text-[8px] font-black text-gray-500 uppercase tracking-widest">{t('flashcards.xp_gained')}</span>
                         <span className="text-sm font-extrabold text-white mt-1">+{sessionXP} XP</span>
                     </div>
                     <div className="bg-[#141824] border border-white/5 px-4 py-3 rounded-2xl flex flex-col items-center min-w-[90px]">
-                        <span className="text-[8px] font-black text-gray-500 uppercase tracking-widest">Stardust</span>
+                        <span className="text-[8px] font-black text-gray-500 uppercase tracking-widest">{t('flashcards.stardust')}</span>
                         <span className="text-sm font-extrabold text-electric-blue mt-1 flex items-center gap-0.5">
                             <Diamond className="h-3 w-3 fill-electric-blue/20" />
                             +{sessionGems}
@@ -287,7 +289,7 @@ export function FlashcardsDeck() {
                     onClick={() => { haptics.medium(); loadCards(); setReviewQueue([]) }}
                     className="w-full py-4 rounded-2xl bg-electric-blue text-black font-black uppercase tracking-widest text-xs hover:scale-103 active:scale-97 shadow-[0_0_20px_rgba(0,240,255,0.3)] transition-transform"
                 >
-                    Return to Library
+                    {t('flashcards.return_btn')}
                 </button>
             </div>
         )
@@ -300,11 +302,11 @@ export function FlashcardsDeck() {
             <div className="bg-[#141824] border border-white/5 p-6 rounded-[2.5rem] flex items-center justify-between shadow-xl relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-electric-blue/5 rounded-full blur-[40px] pointer-events-none" />
                 <div>
-                    <h3 className="text-xs font-black text-gray-400 uppercase tracking-widest">Review status</h3>
+                    <h3 className="text-xs font-black text-gray-400 uppercase tracking-widest">{t('flashcards.status_title')}</h3>
                     <p className="text-2xl font-black text-white mt-1 tabular-nums">
-                        {dueCount} card{dueCount !== 1 ? 's' : ''} due
+                        {t('flashcards.due_count').replace('{count}', dueCount.toString())}
                     </p>
-                    <p className="text-[10px] text-gray-500 mt-1">Total Library Size: {flashcards.length} cards</p>
+                    <p className="text-[10px] text-gray-500 mt-1">{t('flashcards.library_size').replace('{count}', flashcards.length.toString())}</p>
                 </div>
                 <div className="h-12 w-12 rounded-2xl bg-electric-blue/10 border border-electric-blue/20 flex items-center justify-center">
                     <BookOpen className="h-5 w-5 text-electric-blue" />
@@ -322,7 +324,7 @@ export function FlashcardsDeck() {
                             : 'bg-white/5 border border-white/5 text-gray-500 cursor-not-allowed'
                     }`}
                 >
-                    Review Due Cards ({dueCount})
+                    {t('flashcards.review_due_btn').replace('{count}', dueCount.toString())}
                 </button>
                 
                 <button
@@ -334,18 +336,18 @@ export function FlashcardsDeck() {
                             : 'bg-white/5 border border-white/5 text-gray-500 cursor-not-allowed'
                     }`}
                 >
-                    Review All Cards ({flashcards.length})
+                    {t('flashcards.review_all_btn').replace('{count}', flashcards.length.toString())}
                 </button>
             </div>
 
             {/* List / Inventory representation */}
             <div className="bg-[#141824] border border-white/5 p-5 lg:p-8 rounded-[2.5rem] shadow-lg">
-                <h4 className="text-xs lg:text-sm font-black uppercase tracking-wider text-gray-400 mb-4 lg:mb-6">Memory Inventory</h4>
+                <h4 className="text-xs lg:text-sm font-black uppercase tracking-wider text-gray-400 mb-4 lg:mb-6">{t('flashcards.inventory_title')}</h4>
                 {flashcards.length === 0 ? (
                     <div className="py-8 text-center">
-                        <p className="text-gray-500 text-xs italic">Your library is empty.</p>
+                        <p className="text-gray-500 text-xs italic">{t('flashcards.empty_title')}</p>
                         <p className="text-[10px] text-gray-600 mt-2 max-w-[200px] mx-auto leading-normal">
-                            Complete a study task focus session and pass the Socratic reflection check to generate flashcards automatically!
+                            {t('flashcards.empty_desc')}
                         </p>
                     </div>
                 ) : (
@@ -360,13 +362,13 @@ export function FlashcardsDeck() {
                                     <div className="flex items-center justify-between mt-2 pt-3 border-t border-white/5">
                                         <div className="flex items-center gap-2">
                                             <span className="text-[8px] lg:text-[9px] font-black uppercase tracking-wider bg-white/5 text-gray-500 border border-white/5 px-2 py-0.5 rounded-full shrink-0">
-                                                Box {card.leitner_box}
+                                                {t('flashcards.box_num').replace('{box}', card.leitner_box.toString())}
                                             </span>
                                             {isDue ? (
-                                                <span className="text-[8px] lg:text-[9px] font-black text-amber-500 uppercase tracking-widest">Due</span>
+                                                <span className="text-[8px] lg:text-[9px] font-black text-amber-500 uppercase tracking-widest">{t('flashcards.due_label')}</span>
                                             ) : (
                                                 <span className="text-[8px] lg:text-[9px] font-black text-gray-600 uppercase tracking-widest tabular-nums">
-                                                    {new Date(card.next_review).toLocaleDateString(undefined, {month: 'short', day: 'numeric'})}
+                                                    {new Date(card.next_review).toLocaleDateString(locale, {month: 'short', day: 'numeric'})}
                                                 </span>
                                             )}
                                         </div>

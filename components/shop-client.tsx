@@ -326,7 +326,7 @@ export function ShopClient() {
                     return
                 }
                 success = true
-                message = result.message || `Successfully purchased ${item.title}!`
+                message = result.message || t('shop.purchased_success').replace('{name}', item.title)
 
                 if (item.id === 'heart') {
                     setLives(prev => Math.min(5, prev + 1))
@@ -337,12 +337,12 @@ export function ShopClient() {
                 const result = await purchaseCustomization(item.cost, item.title)
                 if (result && 'error' in result && result.error) {
                     haptics.error()
-                    setPurchaseError('Purchase failed: ' + result.error)
+                    setPurchaseError(t('shop.purchase_failed_error').replace('{error}', result.error))
                     setTimeout(() => setPurchaseError(null), 3000)
                     return
                 }
                 success = true
-                message = result.message || `Successfully unlocked ${item.title}!`
+                message = result.message || t('shop.unlocked_success').replace('{name}', item.title)
 
                 if (item.type === 'title') {
                     const titles = JSON.parse(localStorage.getItem('lifepivot_unlocked_titles') || '["title_scholar"]')
@@ -381,7 +381,7 @@ export function ShopClient() {
     const handlePurchase = (item: ShopItem) => {
         if (gems < item.cost) {
             haptics.error()
-            setPurchaseError(`Not enough Gems! You need ${item.cost - gems} more.`)
+            setPurchaseError(t('shop.not_enough_gems').replace('{count}', (item.cost - gems).toString()))
             setTimeout(() => setPurchaseError(null), 3000)
             return
         }

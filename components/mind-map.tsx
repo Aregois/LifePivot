@@ -13,6 +13,7 @@ import { haptics } from '@/utils/haptics'
 import { toggleTask, toggleSubtask, rescheduleTaskToTomorrow } from '@/app/actions'
 import { FocusModeOverlay } from './focus-mode-overlay'
 import type { Task, Subtask } from '@/utils/types'
+import { useLanguage } from './language-provider'
 
 // Core configurations
 const CANVAS_SIZE = 2000
@@ -57,6 +58,7 @@ interface MindMapProps {
 }
 
 export function MindMap({ goal, onOptimisticGemUpdate }: MindMapProps) {
+    const { t } = useLanguage()
     const [selectedWeek, setSelectedWeek] = useState(1)
     const [expandedBranches, setExpandedBranches] = useState<Set<string>>(new Set())
     const [selectedTask, setSelectedTask] = useState<Task | null>(null)
@@ -345,7 +347,7 @@ export function MindMap({ goal, onOptimisticGemUpdate }: MindMapProps) {
             x: CENTER,
             y: CENTER,
             title: goal.title,
-            subtitle: `Week ${selectedWeek} Overview`
+            subtitle: t('mind_map.week_overview').replace('{week}', String(selectedWeek))
         })
 
         branchesData.forEach((branch, idx) => {
@@ -692,7 +694,7 @@ export function MindMap({ goal, onOptimisticGemUpdate }: MindMapProps) {
                                     : 'bg-black/20 border-white/5 text-gray-500 hover:text-gray-300'
                             }`}
                         >
-                            Week {w}
+                            {t('mind_map.week_nav').replace('{week}', String(w))}
                         </button>
                     )
                 })}
@@ -701,7 +703,7 @@ export function MindMap({ goal, onOptimisticGemUpdate }: MindMapProps) {
             {/* Compact Overflow-safe Control Pill */}
             <div className="flex items-center justify-between bg-[#141824] px-4 py-2.5 rounded-[1.6rem] border border-white/5 shadow-xl select-none shrink-0 w-full">
                 <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest truncate mr-2">
-                    Week {selectedWeek} Roadmap
+                    {t('mind_map.roadmap').replace('{week}', String(selectedWeek))}
                 </span>
 
                 <div className="flex bg-black/35 p-0.5 rounded-xl border border-white/5 shrink-0 mr-2 select-none">
@@ -709,13 +711,13 @@ export function MindMap({ goal, onOptimisticGemUpdate }: MindMapProps) {
                         onClick={() => { haptics.light(); setMapViewMode('canvas') }}
                         className={`px-3.5 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all cursor-pointer ${mapViewMode === 'canvas' ? 'bg-electric-blue/15 text-electric-blue border border-electric-blue/15 shadow-[0_0_8px_rgba(0,240,255,0.1)]' : 'text-gray-500 border-transparent hover:text-gray-400'}`}
                     >
-                        Map
+                        {t('plan.map_view')}
                     </button>
                     <button
                         onClick={() => { haptics.light(); setMapViewMode('timeline') }}
                         className={`px-3.5 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all cursor-pointer ${mapViewMode === 'timeline' ? 'bg-electric-blue/15 text-electric-blue border border-electric-blue/15 shadow-[0_0_8px_rgba(0,240,255,0.1)]' : 'text-gray-500 border-transparent hover:text-gray-400'}`}
                     >
-                        Timeline
+                        {t('plan.list_view')}
                     </button>
                 </div>
                 
@@ -725,29 +727,29 @@ export function MindMap({ goal, onOptimisticGemUpdate }: MindMapProps) {
                         <button 
                             onClick={resetPositions} 
                             className="h-8.5 px-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 active:scale-90 transition-transform text-[9px] font-black uppercase tracking-wider"
-                            title="Reset Dragged Node Offsets"
+                            title={t('mind_map.reset_layout_tooltip')}
                         >
-                            Reset Layout
+                            {t('mind_map.reset_layout')}
                         </button>
                     )}
                     <button 
                         onClick={zoomOut} 
                         className="h-8.5 w-8.5 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-gray-400 active:scale-90 transition-transform"
-                        title="Zoom Out"
+                        title={t('mind_map.zoom_out_tooltip')}
                     >
                         <Minimize2 className="h-3.5 w-3.5" />
                     </button>
                     <button 
                         onClick={zoomIn} 
                         className="h-8.5 w-8.5 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-gray-400 active:scale-90 transition-transform"
-                        title="Zoom In"
+                        title={t('mind_map.zoom_in_tooltip')}
                     >
                         <Maximize2 className="h-3.5 w-3.5" />
                     </button>
                     <button 
                         onClick={resetView} 
                         className="h-8.5 w-8.5 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-gray-400 active:scale-90 transition-transform"
-                        title="Reset View"
+                        title={t('mind_map.reset_view_tooltip')}
                     >
                         <RotateCcw className="h-3.5 w-3.5" />
                     </button>
@@ -767,8 +769,8 @@ export function MindMap({ goal, onOptimisticGemUpdate }: MindMapProps) {
                     {branchesData.length === 0 && (
                         <div className="absolute inset-0 flex flex-col items-center justify-center p-8 text-center bg-[#070912]/80 backdrop-blur-sm z-30 select-none">
                             <span className="text-4xl mb-3">🏝️</span>
-                            <h4 className="text-sm font-black text-white uppercase tracking-wider">Rest & Recharge Week</h4>
-                            <p className="text-xs text-gray-500 max-w-[200px] mt-1 leading-relaxed">No tasks are scheduled for Week {selectedWeek}. Enjoy your break!</p>
+                            <h4 className="text-sm font-black text-white uppercase tracking-wider">{t('mind_map.rest_week_title')}</h4>
+                            <p className="text-xs text-gray-500 max-w-[200px] mt-1 leading-relaxed">{t('mind_map.rest_week_desc').replace('{week}', String(selectedWeek))}</p>
                         </div>
                     )}
 
@@ -966,13 +968,13 @@ export function MindMap({ goal, onOptimisticGemUpdate }: MindMapProps) {
                                                 <div className="flex items-center gap-1.5">
                                                     <div className={`w-2 h-2 rounded-full ${node.completed === node.total ? 'bg-emerald-500 shadow-[0_0_8px_#10b981]' : 'bg-electric-blue shadow-[0_0_8px_#00f0ff]'}`} />
                                                     <span className={`text-[10px] font-black tracking-wider uppercase text-white`}>
-                                                        {node.name}
+                                                        {t('plan.day_count').replace('{day}', node.name.replace('Day ', ''))}
                                                     </span>
                                                 </div>
                                                 <div className="flex items-center gap-1 mt-1 text-[9px] font-bold text-gray-500 uppercase tracking-widest">
                                                     <span>{node.completed}/{node.total}</span>
                                                     <span className="opacity-40">•</span>
-                                                    <span>{isExpanded ? 'Collapse' : 'Expand'}</span>
+                                                    <span>{isExpanded ? t('mind_map.collapse') : t('mind_map.expand')}</span>
                                                 </div>
                                             </motion.div>
                                         </button>
@@ -1091,12 +1093,12 @@ export function MindMap({ goal, onOptimisticGemUpdate }: MindMapProps) {
                     {/* Picture-in-Picture Mini-Map HUD Preview Container */}
                     <div className="absolute bottom-4 left-4 p-2 rounded-2xl bg-black/60 border border-white/10 backdrop-blur-md z-30 select-none shadow-[0_4px_20px_rgba(0,0,0,0.5)] hidden sm:flex flex-col gap-1.5 pointer-events-auto">
                         <div className="flex items-center justify-between text-[8px] font-black uppercase text-gray-400 tracking-wider w-[120px]">
-                            <span>Map HUD</span>
+                            <span>{t('mind_map.map_hud')}</span>
                             <button 
                                 onClick={() => { haptics.light(); setShowMiniMap(!showMiniMap) }}
                                 className="text-electric-blue hover:text-white transition-colors"
                             >
-                                {showMiniMap ? 'Hide' : 'Show'}
+                                {showMiniMap ? t('mind_map.hide') : t('mind_map.show')}
                             </button>
                         </div>
 
@@ -1160,34 +1162,34 @@ export function MindMap({ goal, onOptimisticGemUpdate }: MindMapProps) {
 
                     {/* Legend and stats panel */}
                     <div className="absolute bottom-4 right-4 bg-black/40 backdrop-blur-md p-3.5 rounded-2xl border border-white/5 pointer-events-none hidden sm:flex flex-col gap-1 items-start text-[8px] font-bold text-gray-500 tracking-wider uppercase select-none z-20">
-                        <span className="text-[9px] text-white font-black mb-1">LEGEND:</span>
+                        <span className="text-[9px] text-white font-black mb-1">{t('mind_map.legend')}</span>
                         <div className="flex items-center gap-1.5">
                             <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                            <span>Completed</span>
+                            <span>{t('mind_map.legend_completed')}</span>
                         </div>
                         <div className="flex items-center gap-1.5">
                             <div className="w-1.5 h-1.5 rounded-full bg-[#ef4444]" />
-                            <span>P5 Deep Theory</span>
+                            <span>{t('mind_map.p5_label')}</span>
                         </div>
                         <div className="flex items-center gap-1.5">
                             <div className="w-1.5 h-1.5 rounded-full bg-[#f97316]" />
-                            <span>P4 Hard App</span>
+                            <span>{t('mind_map.p4_label')}</span>
                         </div>
                         <div className="flex items-center gap-1.5">
                             <div className="w-1.5 h-1.5 rounded-full bg-[#eab308]" />
-                            <span>P3 Standard</span>
+                            <span>{t('mind_map.p3_label')}</span>
                         </div>
                         <div className="flex items-center gap-1.5">
                             <div className="w-1.5 h-1.5 rounded-full bg-[#3b82f6]" />
-                            <span>P2 Overview</span>
+                            <span>{t('mind_map.p2_label')}</span>
                         </div>
                         <div className="flex items-center gap-1.5">
                             <div className="w-1.5 h-1.5 rounded-full bg-[#64748b]" />
-                            <span>P1 Exercises</span>
+                            <span>{t('mind_map.p1_label')}</span>
                         </div>
                         <div className="flex items-center gap-1.5">
                             <div className="w-1.5 h-1.5 rounded-full bg-[#06b6d4]" />
-                            <span>Void Day</span>
+                            <span>{t('mind_map.p0_label')}</span>
                         </div>
                     </div>
                 </div>
@@ -1200,8 +1202,8 @@ export function MindMap({ goal, onOptimisticGemUpdate }: MindMapProps) {
                     {branchesData.length === 0 ? (
                         <div className="absolute inset-0 flex flex-col items-center justify-center p-8 text-center bg-[#070912]/80 backdrop-blur-sm z-10 select-none rounded-3xl">
                             <span className="text-4xl mb-3">🏝️</span>
-                            <h4 className="text-sm font-black text-white uppercase tracking-wider">Rest & Recharge Week</h4>
-                            <p className="text-xs text-gray-500 max-w-[200px] mt-1 leading-relaxed">No tasks are scheduled for Week {selectedWeek}. Enjoy your break!</p>
+                            <h4 className="text-sm font-black text-white uppercase tracking-wider">{t('mind_map.rest_week_title')}</h4>
+                            <p className="text-xs text-gray-500 max-w-[200px] mt-1 leading-relaxed">{t('mind_map.rest_week_desc').replace('{week}', String(selectedWeek))}</p>
                         </div>
                     ) : (
                         <div className="flex flex-col gap-6 relative z-10">
@@ -1224,14 +1226,14 @@ export function MindMap({ goal, onOptimisticGemUpdate }: MindMapProps) {
                                         <div className="flex items-center justify-between mb-1">
                                             <div className="flex items-center gap-2">
                                                 <h4 className="text-xs font-black uppercase tracking-wider text-white">
-                                                    {branch.name}
+                                                    {t('plan.day_count').replace('{day}', branch.name.replace('Day ', ''))}
                                                 </h4>
                                                 {isDayCompleted && (
                                                     <Flame className="w-3.5 h-3.5 text-orange-500 fill-orange-500/20 animate-pulse" />
                                                 )}
                                             </div>
                                             <span className="text-[9px] font-bold text-gray-500 tracking-wider">
-                                                {branch.completedCount}/{branch.totalCount} COMPLETED
+                                                {t('mind_map.completed_count').replace('{completed}', String(branch.completedCount)).replace('{total}', String(branch.totalCount))}
                                             </span>
                                         </div>
 
@@ -1292,7 +1294,7 @@ export function MindMap({ goal, onOptimisticGemUpdate }: MindMapProps) {
                                                             <div className="flex flex-col gap-0.5 min-w-0">
                                                                 <div className="flex items-center gap-1.5 flex-wrap">
                                                                     <span className="text-[8px] font-black uppercase tracking-widest text-gray-500">
-                                                                        {task.subject || 'GENERAL'}
+                                                                        {task.subject || t('mind_map.general_subject')}
                                                                     </span>
                                                                     <span 
                                                                         className="text-[8px] font-black uppercase tracking-widest"
@@ -1306,8 +1308,8 @@ export function MindMap({ goal, onOptimisticGemUpdate }: MindMapProps) {
                                                                     </span>
                                                                     {hasCatalystGems && (
                                                                         <span className="flex items-center gap-0.5 bg-amber-500/10 border border-amber-500/20 rounded px-1 text-[7px] font-black text-amber-400">
-                                                                            <Diamond className="w-2 h-2 fill-amber-400/20" />
-                                                                            BONUS GEMS
+                                                                            <Diamond className="w-2.5 h-2.5 fill-amber-400/20" />
+                                                                            {t('focus.bonus_gems')}
                                                                         </span>
                                                                     )}
                                                                 </div>
@@ -1329,7 +1331,7 @@ export function MindMap({ goal, onOptimisticGemUpdate }: MindMapProps) {
                                                                     className="h-7 px-3 rounded-lg bg-electric-blue text-black text-[9px] font-black uppercase tracking-wider flex items-center gap-1 hover:scale-105 active:scale-95 transition-transform cursor-pointer border-0"
                                                                 >
                                                                     <Play className="w-2.5 h-2.5 fill-black" />
-                                                                    Focus
+                                                                    {t('task_card.btn_focus')}
                                                                 </button>
                                                             )}
                                                         </div>
@@ -1395,7 +1397,7 @@ export function MindMap({ goal, onOptimisticGemUpdate }: MindMapProps) {
                                                     const SubjectIcon = getSubjectIcon(selectedTask.subject)
                                                     return <SubjectIcon className="h-3 w-3" />
                                                 })()}
-                                                {selectedTask.subject || 'GENERAL'}
+                                                {selectedTask.subject || t('mind_map.general_subject')}
                                             </span>
                                             <span className={`text-[9px] font-black uppercase tracking-widest bg-white/5 px-2.5 py-0.5 rounded ${
                                                 selectedTask.priority === 5 ? 'text-red-400 border border-red-500/20' :
@@ -1404,18 +1406,18 @@ export function MindMap({ goal, onOptimisticGemUpdate }: MindMapProps) {
                                                 selectedTask.priority === 2 ? 'text-blue-400 border border-blue-500/20' :
                                                 selectedTask.priority === 1 ? 'text-gray-400 border border-white/5' : 'text-cyan-400 border border-cyan-500/20'
                                             }`}>
-                                                {selectedTask.priority === 5 ? 'P5 Deep Theory' :
-                                                 selectedTask.priority === 4 ? 'P4 Hard App' :
-                                                 selectedTask.priority === 3 ? 'P3 Standard' :
-                                                 selectedTask.priority === 2 ? 'P2 Overview' :
-                                                 selectedTask.priority === 1 ? 'P1 Exercises' : 'Void Day'}
+                                                {selectedTask.priority === 5 ? t('mind_map.p5_label') :
+                                                 selectedTask.priority === 4 ? t('mind_map.p4_label') :
+                                                 selectedTask.priority === 3 ? t('mind_map.p3_label') :
+                                                 selectedTask.priority === 2 ? t('mind_map.p2_label') :
+                                                 selectedTask.priority === 1 ? t('mind_map.p1_label') : t('mind_map.p0_label')}
                                             </span>
                                         </div>
                                         <h3 className="text-white text-base font-black leading-tight mt-1">
                                             {selectedTask.title}
                                         </h3>
                                         <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider mt-0.5">
-                                            Due: {selectedTask.due_date}
+                                            {t('mind_map.due').replace('{date}', selectedTask.due_date)}
                                         </p>
                                     </div>
                                     <button
@@ -1429,7 +1431,7 @@ export function MindMap({ goal, onOptimisticGemUpdate }: MindMapProps) {
                                 {/* Subtask Section */}
                                 {selectedTask.subtasks && selectedTask.subtasks.length > 0 && (
                                     <div className="mb-6 bg-black/35 p-4 rounded-2xl border border-white/5 relative z-10">
-                                        <h4 className="text-[10px] font-black uppercase text-gray-400 tracking-wider mb-2.5">Subtasks</h4>
+                                        <h4 className="text-[10px] font-black uppercase text-gray-400 tracking-wider mb-2.5">{t('task_card.btn_subtasks')}</h4>
                                         <div className="flex flex-col gap-2 max-h-[140px] overflow-y-auto pr-1">
                                             {selectedTask.subtasks.map((st) => (
                                                 <button
@@ -1459,7 +1461,7 @@ export function MindMap({ goal, onOptimisticGemUpdate }: MindMapProps) {
                                             className="w-full py-4 rounded-xl text-xs font-black uppercase tracking-widest bg-electric-blue text-black flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(0,240,255,0.3)] hover:shadow-[0_0_25px_rgba(0,240,255,0.5)] active:scale-98 transition-all hover:scale-[1.01]"
                                         >
                                             <Play className="w-3.5 h-3.5 fill-black" />
-                                            Launch Focus Mode
+                                            {t('mind_map.launch_focus')}
                                         </button>
                                     )}
 
@@ -1475,12 +1477,12 @@ export function MindMap({ goal, onOptimisticGemUpdate }: MindMapProps) {
                                             {selectedTask.status === 'completed' ? (
                                                 <>
                                                     <CheckCircle2 className="w-3.5 h-3.5" />
-                                                    Completed
+                                                    {t('task_card.status_completed')}
                                                 </>
                                             ) : (
                                                 <>
                                                     <Circle className="w-3.5 h-3.5" />
-                                                    Mark Completed
+                                                    {t('task_card.btn_mark_completed')}
                                                 </>
                                             )}
                                         </button>
@@ -1491,7 +1493,7 @@ export function MindMap({ goal, onOptimisticGemUpdate }: MindMapProps) {
                                                 className="py-3.5 rounded-xl text-[10px] font-black uppercase tracking-widest text-gray-400 bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 transition-all flex items-center justify-center gap-1.5"
                                             >
                                                 <Calendar className="w-3.5 h-3.5" />
-                                                Delay Day
+                                                {t('mind_map.delay_day')}
                                             </button>
                                         )}
                                     </div>

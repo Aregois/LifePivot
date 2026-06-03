@@ -3,17 +3,8 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Share, PlusSquare, X, Download, AlertCircle } from 'lucide-react';
-
-interface BeforeInstallPromptEvent extends Event {
-  readonly platforms: string[];
-  readonly userChoice: Promise<{
-    outcome: 'accepted' | 'dismissed';
-    platform: string;
-  }>;
-  prompt(): Promise<void>;
-}
-
 import { usePathname } from 'next/navigation';
+import { useLanguage } from './language-provider';
 
 interface BeforeInstallPromptEvent extends Event {
   readonly platforms: string[];
@@ -25,6 +16,7 @@ interface BeforeInstallPromptEvent extends Event {
 }
 
 export function PwaInstallPrompt() {
+  const { t } = useLanguage();
   const [showPrompt, setShowPrompt] = useState(false);
   const [isIOS, setIsIOS] = useState(false);
   const [isChromeIOS, setIsChromeIOS] = useState(false);
@@ -123,17 +115,13 @@ export function PwaInstallPrompt() {
 
   const getShareInstruction = () => {
     if (isChromeIOS) {
-      return 'Tap the Share icon (square with up arrow) next to the address bar at the top.';
+      return t('pwa.chrome_ios_share');
     }
     if (isFirefoxIOS) {
-      return 'Tap the Menu button (three lines) in the bottom navigation bar and select Share.';
+      return t('pwa.firefox_ios_share');
     }
-    return 'Tap the Share button in Safari\'s bottom navigation bar.';
+    return t('pwa.safari_share');
   };
-
-  // Determine bottom spacing based on route (login page has no bottom navigation bar)
-  const isLoginPage = pathname === '/login';
-  const bottomClass = isLoginPage ? 'bottom-6' : 'bottom-[112px]';
 
   return (
     <AnimatePresence>
@@ -162,7 +150,7 @@ export function PwaInstallPrompt() {
             <button
               onClick={handleDismiss}
               className="absolute top-6 right-6 p-2 rounded-full text-gray-400 hover:text-white bg-white/5 hover:bg-white/10 transition-colors"
-              aria-label="Dismiss install prompt"
+              aria-label={t('pwa.dismiss_label')}
             >
               <X className="h-5 w-5" />
             </button>
@@ -172,9 +160,9 @@ export function PwaInstallPrompt() {
               <Download className="h-9 w-9 text-white animate-pulse" />
             </div>
 
-            <h3 className="font-black text-2xl text-white tracking-tight mb-2">Install LifePivot</h3>
+            <h3 className="font-black text-2xl text-white tracking-tight mb-2">{t('pwa.title')}</h3>
             <p className="text-sm text-gray-400 leading-relaxed mb-6">
-              Install our native app extension on your device for immediate, full-screen zero-gravity learning.
+              {t('pwa.desc')}
             </p>
 
             {/* Custom Instructions for iOS Users */}
@@ -183,7 +171,7 @@ export function PwaInstallPrompt() {
                 <div className="bg-amber-500/10 border border-amber-500/20 text-amber-200 text-xs rounded-[1.8rem] p-5 flex gap-3 items-start text-left">
                   <AlertCircle className="h-5 w-5 shrink-0 text-amber-400 mt-0.5" />
                   <span className="leading-relaxed">
-                    You are in an in-app browser. Tap the <span className="font-bold text-white">Share</span> menu and choose <span className="font-bold text-white">"Open in Safari"</span> to install LifePivot.
+                    {t('pwa.in_app_warning')}
                   </span>
                 </div>
               ) : (
@@ -193,7 +181,7 @@ export function PwaInstallPrompt() {
                       <Share className="h-4 w-4 text-electric-blue" />
                     </div>
                     <span className="leading-relaxed">
-                      1. {getShareInstruction()}
+                      {t('pwa.step_share').replace('{shareInstruction}', getShareInstruction())}
                     </span>
                   </div>
                   
@@ -202,7 +190,7 @@ export function PwaInstallPrompt() {
                       <PlusSquare className="h-4 w-4 text-neon-violet" />
                     </div>
                     <span className="leading-relaxed">
-                      2. Scroll down and tap <span className="font-bold text-white">"Add to Home Screen"</span>.
+                      {t('pwa.step_add')}
                     </span>
                   </div>
                 </div>
@@ -215,7 +203,7 @@ export function PwaInstallPrompt() {
                     onClick={handleInstallClick}
                     className="w-full bg-gradient-to-r from-electric-blue to-neon-violet hover:from-electric-blue/90 hover:to-neon-violet/90 text-white font-extrabold py-4 px-6 rounded-[1.8rem] text-xs uppercase tracking-wider transition-all duration-300 shadow-[0_0_25px_rgba(0,240,255,0.3)] active:scale-[0.98]"
                   >
-                    Install Now
+                    {t('pwa.install_now')}
                   </button>
                 </div>
               )
@@ -225,7 +213,7 @@ export function PwaInstallPrompt() {
               onClick={handleDismiss}
               className="mt-6 text-xs text-gray-500 hover:text-gray-400 font-bold uppercase tracking-widest transition-colors"
             >
-              Maybe Later
+              {t('pwa.maybe_later')}
             </button>
           </motion.div>
         </div>

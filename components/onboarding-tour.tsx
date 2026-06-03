@@ -3,10 +3,11 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { 
-    Sparkles, Heart, Diamond, Flame, Trophy, Zap, 
-    BookOpen, ArrowRight, CheckCircle2, Eye, ShieldAlert, Cpu 
+    Sparkles, Heart, Trophy, Zap, 
+    BookOpen, ArrowRight, CheckCircle2, ShieldAlert 
 } from 'lucide-react'
 import { haptics } from '@/utils/haptics'
+import { useLanguage } from './language-provider'
 
 interface Step {
     title: string
@@ -21,55 +22,56 @@ export function OnboardingTour() {
     const [mounted, setMounted] = useState(false)
     const [step, setStep] = useState(0)
     const [isOpen, setIsOpen] = useState(false)
+    const { t } = useLanguage()
 
     const steps: Step[] = [
         {
-            title: "Welcome, Pathseeker",
-            description: "LifePivot is an adaptive learning calendar designed to build consistency and manage your study schedule dynamically.",
+            title: t('onboarding.title_welcome'),
+            description: t('onboarding.desc_welcome'),
             icon: Sparkles,
             color: "from-indigo-400 to-cyan-400 text-cyan-400",
             glow: "rgba(6,182,212,0.2)",
-            badge: "Product Mission"
+            badge: t('onboarding.badge_mission')
         },
         {
-            title: "Resource HUD & Wallet",
-            description: "Manage Hearts (Lives) and Gems. Completing study goals awards Gems. If you fall behind, Lives protect your daily streak.",
+            title: t('onboarding.title_hud'),
+            description: t('onboarding.desc_hud'),
             icon: Heart,
             color: "from-rose-500 to-red-600 text-rose-500",
             glow: "rgba(244,63,94,0.2)",
-            badge: "Accountability Loop"
+            badge: t('onboarding.badge_loop')
         },
         {
-            title: "Task Priority (P1 to P5)",
-            description: "Plans alternate from light Exercises (P1), Overview reading (P2), up to Deep Theory (P5). Higher priorities reward more XP and Gems.",
+            title: t('onboarding.title_priority'),
+            description: t('onboarding.desc_priority'),
             icon: Trophy,
             color: "from-yellow-400 to-amber-500 text-yellow-400",
             glow: "rgba(234,179,8,0.2)",
-            badge: "Plan Curriculum"
+            badge: t('onboarding.badge_curriculum')
         },
         {
-            title: "The 3-Tier Pivot Engine",
-            description: "When tasks are missed, the engine recovers. It tries a Slide (using scheduled rest days), falls back to Crunch (losing 1 Life), or Avalanches debt.",
+            title: t('onboarding.title_pivot'),
+            description: t('onboarding.desc_pivot'),
             icon: ShieldAlert,
             color: "from-orange-500 to-rose-600 text-orange-500",
             glow: "rgba(249,115,22,0.2)",
-            badge: "Intelligent Realignment"
+            badge: t('onboarding.badge_realignment')
         },
         {
-            title: "Circadian Multipliers",
-            description: "Study in Morning (6am-11am) or Evening (6pm-10pm) zones to earn keys. Use them to open chests for a 20-minute double multiplier booster.",
+            title: t('onboarding.title_circadian'),
+            description: t('onboarding.desc_circadian'),
             icon: Zap,
             color: "from-cyan-400 to-violet-500 text-cyan-400",
             glow: "rgba(0,240,255,0.25)",
-            badge: "Time-Locked Multipliers"
+            badge: t('onboarding.badge_multipliers')
         },
         {
-            title: "Active Recall & Recall Decks",
-            description: "Summarize your study at completion. Socratic AI evaluates your reflection to generate Leitner spaced repetition flashcards.",
+            title: t('onboarding.title_active_recall'),
+            description: t('onboarding.desc_active_recall'),
             icon: BookOpen,
             color: "from-violet-500 to-fuchsia-600 text-violet-400",
             glow: "rgba(168,85,247,0.2)",
-            badge: "Recall & Spacing"
+            badge: t('onboarding.badge_recall')
         }
     ]
 
@@ -203,7 +205,7 @@ export function OnboardingTour() {
                                 onClick={handleSkip}
                                 className="flex-1 py-3 text-xs font-black text-gray-500 hover:text-gray-400 uppercase tracking-widest transition-colors"
                             >
-                                Skip
+                                {t('onboarding.button_skip')}
                             </button>
                         ) : null}
                         
@@ -217,12 +219,12 @@ export function OnboardingTour() {
                         >
                             {step === steps.length - 1 ? (
                                 <>
-                                    Begin Journey
+                                    {t('onboarding.button_begin')}
                                     <CheckCircle2 className="h-3.5 w-3.5" />
                                 </>
                             ) : (
                                 <>
-                                    Next Tip
+                                    {t('onboarding.button_next')}
                                     <ArrowRight className="h-3.5 w-3.5" />
                                 </>
                             )}

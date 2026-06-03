@@ -1,13 +1,14 @@
 'use client'
 
 import { useState, useRef, useEffect, useTransition } from 'react'
-import { Send, Bot, User, Loader2, Volume2, VolumeX, Sparkles, ChevronDown } from 'lucide-react'
-import { sendSocraticMessage, generateHint } from '@/app/actions'
+import { Send, Bot, User, Loader2, Volume2, VolumeX, ChevronDown } from 'lucide-react'
+import { sendSocraticMessage } from '@/app/actions'
 import { speakText, stopSpeaking } from '@/utils/tts'
 import { useEconomy } from './economy-provider'
 import { createClient } from '@/utils/supabase/client'
 import { haptics } from '@/utils/haptics'
 import type { Task } from '@/utils/types'
+import { useLanguage } from './language-provider'
 
 interface Message {
     role: 'user' | 'model'
@@ -15,6 +16,7 @@ interface Message {
 }
 
 export function DesktopTutorPanel() {
+    const { t } = useLanguage()
     const { activeChatTask, setActiveChatTask } = useEconomy()
     const [messages, setMessages] = useState<Message[]>([])
     const [input, setInput] = useState('')
@@ -116,7 +118,7 @@ export function DesktopTutorPanel() {
         
         // If we don't have a task, we cannot use the Socratic prompt, so show error
         if (!activeChatTask) {
-            setError('Please create or select a study task to start Socratic tutoring.')
+            setError(t('tutor.error_select'))
             return
         }
 
@@ -127,7 +129,7 @@ export function DesktopTutorPanel() {
         startTransition(async () => {
             const result = await sendSocraticMessage(activeChatTask.id, trimmed, history, undefined, persona)
             if ('error' in result && result.error) {
-                setError('Tutor is offline. Try again.')
+                setError(t('tutor.error_offline'))
                 return
             }
             setMessages(prev => [...prev, { role: 'user', text: trimmed }])
@@ -156,8 +158,8 @@ export function DesktopTutorPanel() {
                             <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-emerald-500 border-2 border-[#0B0D17] animate-pulse shadow-[0_0_8px_#10b981]"></div>
                         </div>
                         <div>
-                            <h3 className="text-xs font-black text-white uppercase tracking-wider leading-tight">Nexus Buddy</h3>
-                            <p className="text-[9px] font-black text-electric-blue uppercase tracking-widest mt-0.5">Socratic Tutor</p>
+                            <h3 className="text-xs font-black text-white uppercase tracking-wider leading-tight">{t('tutor.buddy')}</h3>
+                            <p className="text-[9px] font-black text-electric-blue uppercase tracking-widest mt-0.5">{t('tutor.title')}</p>
                         </div>
                     </div>
                 </div>
@@ -169,9 +171,9 @@ export function DesktopTutorPanel() {
                         onChange={handlePersonaChange}
                         className="w-full appearance-none bg-black/30 border border-white/5 hover:border-white/10 rounded-xl py-2.5 pl-3 pr-10 text-[11px] font-extrabold text-gray-300 uppercase tracking-widest focus:outline-none focus:border-neon-violet/40 focus:ring-1 focus:ring-neon-violet/40 cursor-pointer transition-colors"
                     >
-                        <option value="feynman">Richard Feynman</option>
-                        <option value="socrates">Socrates</option>
-                        <option value="stoic">Marcus Aurelius</option>
+                        <option value="feynman">{t('tutor.feynman')}</option>
+                        <option value="socrates">{t('tutor.socrates')}</option>
+                        <option value="stoic">{t('tutor.aurelius')}</option>
                     </select>
                     <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-500">
                         <ChevronDown className="h-3.5 w-3.5" />
@@ -180,14 +182,14 @@ export function DesktopTutorPanel() {
 
                 {/* Active Task Context Banner */}
                 {activeChatTask ? (
-                    <div className="px-3 py-2 rounded-lg bg-electric-blue/5 border border-electric-blue/15 flex flex-col gap-0.5">
-                        <span className="text-[8px] font-black uppercase text-electric-blue tracking-widest">Active Study Context</span>
+                    <div className="px-3 py-2 rounded-lg bg-electric-blue/5 border border-electric-blue/15 flex flex-col gap-0.5 animate-fade-in">
+                        <span className="text-[8px] font-black uppercase text-electric-blue tracking-widest">{t('tutor.active_context')}</span>
                         <span className="text-[10px] font-bold text-white truncate">{activeChatTask.title}</span>
                     </div>
                 ) : (
-                    <div className="px-3 py-2 rounded-lg bg-amber-500/5 border border-amber-500/15 flex flex-col gap-0.5">
-                        <span className="text-[8px] font-black uppercase text-amber-500 tracking-widest">Context Pending</span>
-                        <span className="text-[10px] font-medium text-gray-400">No active task selected</span>
+                    <div className="px-3 py-2 rounded-lg bg-amber-500/5 border border-amber-500/15 flex flex-col gap-0.5 animate-fade-in">
+                        <span className="text-[8px] font-black uppercase text-amber-500 tracking-widest">{t('tutor.context_pending')}</span>
+                        <span className="text-[10px] font-medium text-gray-400">{t('tutor.no_task_selected')}</span>
                     </div>
                 )}
             </div>
@@ -203,7 +205,7 @@ export function DesktopTutorPanel() {
                             <Bot className="h-6 w-6 text-electric-blue animate-float" />
                         </div>
                         <p className="text-gray-400 text-xs font-bold uppercase tracking-wider max-w-[180px] leading-relaxed">
-                            I'll guide your thinking, but I won't give you direct answers.
+                            {t('tutor.guide_text')}
                         </p>
                     </div>
                 )}
@@ -259,7 +261,7 @@ export function DesktopTutorPanel() {
                             {isPending && !isTyping ? (
                                 <span className="flex items-center gap-1.5 text-gray-500 italic text-[11px]">
                                     <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                                    Tutor is thinking...
+                                    {t('tutor.thinking')}
                                 </span>
                             ) : (
                                 <span>
@@ -272,7 +274,7 @@ export function DesktopTutorPanel() {
                 )}
 
                 {error && (
-                    <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-[10px] text-center font-black uppercase tracking-wider">
+                    <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-[10px] text-center font-black uppercase tracking-wider animate-fade-in">
                         {error}
                     </div>
                 )}
@@ -288,14 +290,14 @@ export function DesktopTutorPanel() {
                         value={input} 
                         onChange={e => setInput(e.target.value)}
                         onKeyDown={e => e.key === 'Enter' && handleSend()}
-                        placeholder="Ask tutor..."
+                        placeholder={t('tutor.placeholder')}
                         disabled={isPending || isTyping}
                         className="flex-1 bg-transparent text-xs text-white placeholder-gray-600 focus:outline-none py-1.5 pl-2" 
                     />
                     <button 
                         onClick={handleSend} 
                         disabled={!input.trim() || isPending || isTyping}
-                        className="h-7 w-7 rounded-full bg-tertiary text-white hover:bg-white hover:text-tertiary transition-colors flex items-center justify-center disabled:opacity-30 disabled:hover:bg-tertiary disabled:hover:text-white shadow-[0_0_10px_rgba(189,0,255,0.6)] active:scale-95 shrink-0"
+                        className="h-7 w-7 rounded-full bg-tertiary text-white hover:bg-white hover:text-tertiary transition-colors flex items-center justify-center disabled:opacity-30 disabled:hover:bg-tertiary disabled:hover:text-white shadow-[0_0_10px_rgba(189,0,255,0.6)] active:scale-95 shrink-0 animate-fade-in"
                     >
                         <Send className="h-3 w-3 fill-current" />
                     </button>

@@ -6,6 +6,7 @@ import { processPivot, checkRescheduleTier } from '@/app/actions'
 import { haptics } from '@/utils/haptics'
 import { useState, useTransition, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { useLanguage } from './language-provider'
 
 interface MissedSessionOverlayProps {
     goalId: string
@@ -13,6 +14,7 @@ interface MissedSessionOverlayProps {
 }
 
 export function MissedSessionOverlay({ goalId, onClose }: MissedSessionOverlayProps) {
+    const { t } = useLanguage()
     const router = useRouter()
     const [isPending, startTransition] = useTransition()
     const [error, setError] = useState<string | null>(null)
@@ -83,15 +85,15 @@ export function MissedSessionOverlay({ goalId, onClose }: MissedSessionOverlayPr
 
                         <div className="space-y-1.5 mb-6">
                             <span className="text-[9px] font-black tracking-[0.3em] text-red-500 uppercase italic">
-                                {resultTier ? "Equilibrium Restored" : "Critical Disruption"}
+                                {resultTier ? t('missed_session.restored') : t('missed_session.disruption')}
                             </span>
                             <h2 className="text-2xl font-black text-white tracking-tighter leading-tight uppercase italic">
-                                {resultTier ? (resultTier === 1 ? "Slide Logic Active" : resultTier === 2 ? "Crunch Mode Engaged" : "Avalanche Hit") : "Mission Interrupted"}
+                                {resultTier ? (resultTier === 1 ? t('missed_session.tier1_title') : resultTier === 2 ? t('missed_session.tier2_title') : t('missed_session.tier3_title')) : t('missed_session.interrupted')}
                             </h2>
                             <p className="text-xs text-gray-400 font-medium leading-relaxed px-2">
                                 {error || (resultTier
-                                    ? (resultTier === 1 ? "Safety Net absorbed the impact. Your rest days were consumed to protect the deadline." : resultTier === 2 ? "Emergency AI Compression executed. 1 Life deducted to protect the mission." : "Zero resources remaining. Previous debt has been forcefuly stacked onto today.")
-                                    : "You missed sessions. The 3-Tier engine will now calculate the most optimal path to save your goal.")}
+                                    ? (resultTier === 1 ? t('missed_session.tier1_desc') : resultTier === 2 ? t('missed_session.tier2_desc') : t('missed_session.tier3_desc'))
+                                    : t('missed_session.welcome_desc'))}
                             </p>
                         </div>
 
@@ -105,10 +107,10 @@ export function MissedSessionOverlay({ goalId, onClose }: MissedSessionOverlayPr
                                     <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
                                     <div className="flex flex-col items-start text-left relative z-10">
                                         <span className="text-[10px] font-black tracking-widest uppercase opacity-60">
-                                            {isPending ? "Calculating..." : "Deploy Engine"}
+                                            {isPending ? t('missed_session.calculating') : t('missed_session.deploy_engine')}
                                         </span>
                                         <span className="text-base font-black uppercase italic tracking-tighter">
-                                            {isPending ? "Optimizing..." : "Initiate Realignment"}
+                                            {isPending ? t('missed_session.optimizing') : t('missed_session.initiate_realignment')}
                                         </span>
                                     </div>
                                     <Zap className={`h-5 w-5 text-white ${isPending ? 'animate-spin' : 'group-hover:animate-bounce'}`} />
@@ -117,12 +119,12 @@ export function MissedSessionOverlay({ goalId, onClose }: MissedSessionOverlayPr
 
                             {!resultTier && showTier3Confirmation && (
                                 <div className="space-y-2">
-                                    <p className="text-[9px] font-bold text-red-400 uppercase tracking-widest mb-1">Zero Lives Available</p>
+                                    <p className="text-[9px] font-bold text-red-400 uppercase tracking-widest mb-1">{t('missed_session.zero_lives')}</p>
                                     <button
                                         onClick={() => router.push('/shop')}
                                         className="w-full rounded-xl bg-white text-black py-4 px-6 font-black uppercase italic tracking-tighter hover:bg-gray-200 transition-all flex items-center justify-between"
                                     >
-                                        <span className="text-base">Buy Lives in Shop</span>
+                                        <span className="text-base">{t('missed_session.buy_lives')}</span>
                                         <Heart className="h-5 w-5 fill-red-500 text-red-500" />
                                     </button>
                                     <button
@@ -130,7 +132,7 @@ export function MissedSessionOverlay({ goalId, onClose }: MissedSessionOverlayPr
                                         disabled={isPending}
                                         className="w-full rounded-xl bg-white/5 border border-white/10 text-white/60 py-3 px-6 font-bold uppercase text-[10px] tracking-widest hover:text-white hover:border-white/20 transition-all"
                                     >
-                                        Accept Debt & Continue
+                                        {t('missed_session.accept_debt')}
                                     </button>
                                 </div>
                             )}
@@ -139,7 +141,7 @@ export function MissedSessionOverlay({ goalId, onClose }: MissedSessionOverlayPr
                                 <div className="w-full py-4 text-center">
                                     <div className="inline-flex items-center gap-2 text-electric-blue">
                                         <Zap className="h-5 w-5 animate-pulse" />
-                                        <span className="text-xs font-black uppercase tracking-widest">Equilibrium Resumed...</span>
+                                        <span className="text-xs font-black uppercase tracking-widest">{t('missed_session.resumed')}</span>
                                     </div>
                                 </div>
                             )}
@@ -147,7 +149,7 @@ export function MissedSessionOverlay({ goalId, onClose }: MissedSessionOverlayPr
 
                         <div className="flex items-center gap-2 mt-6 px-4 py-2 rounded-full bg-white/5 border border-white/5 opacity-40">
                             <Zap className="h-3 w-3 text-electric-blue" />
-                            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Pivot to Today is Free</span>
+                            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{t('missed_session.pivot_free')}</span>
                         </div>
                     </div>
                 </motion.div>

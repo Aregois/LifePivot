@@ -6,25 +6,29 @@ import { usePathname } from 'next/navigation'
 import { useEconomy } from './economy-provider'
 import { AvatarIcon } from './avatar-icons'
 import { haptics } from '@/utils/haptics'
+import { useLanguage } from './language-provider'
 
 export function DesktopSidebar() {
     const pathname = usePathname()
     const { level, avatarId } = useEconomy()
+    const { t } = useLanguage()
 
     const navItems = [
-        { name: 'Home', href: '/', icon: Home },
-        { name: 'Plan', href: '/plan', icon: Map },
-        { name: 'Shop', href: '/shop', icon: ShoppingBag },
-        { name: 'Profile', href: '/profile', icon: User },
-        { name: 'Calendar', href: '/calendar', icon: Calendar },
+        { name: t('nav.home'), href: '/', icon: Home },
+        { name: t('nav.plan'), href: '/plan', icon: Map },
+        { name: t('nav.shop'), href: '/shop', icon: ShoppingBag },
+        { name: t('nav.profile'), href: '/profile', icon: User },
+        { name: t('nav.calendar'), href: '/calendar', icon: Calendar },
     ]
 
     // Resolve title based on level
-    let levelTitle = 'Pathseeker'
-    if (level >= 11) levelTitle = 'Grandmaster'
-    else if (level >= 8) levelTitle = 'Sage'
-    else if (level >= 5) levelTitle = 'Scholar'
-    else if (level >= 3) levelTitle = 'Acolyte'
+    let levelTitleKey = 'dashboard.level_titles.pathseeker'
+    if (level >= 11) levelTitleKey = 'dashboard.level_titles.grandmaster'
+    else if (level >= 8) levelTitleKey = 'dashboard.level_titles.sage'
+    else if (level >= 5) levelTitleKey = 'dashboard.level_titles.scholar'
+    else if (level >= 3) levelTitleKey = 'dashboard.level_titles.acolyte'
+
+    const levelTitle = t(levelTitleKey)
 
     return (
         <aside className="hidden md:flex flex-col w-64 fixed left-0 top-0 h-screen py-8 px-4 bg-[#0E111F]/80 backdrop-blur-xl border-r border-white/5 z-50 select-none">
@@ -87,7 +91,7 @@ export function DesktopSidebar() {
                     onClick={() => haptics.medium()}
                     className="w-full py-3.5 rounded-xl border border-neon-violet/30 text-neon-violet bg-neon-violet/5 font-black text-[10px] tracking-widest uppercase hover:bg-neon-violet hover:text-white transition-all duration-300 shadow-[0_0_15px_rgba(189,0,255,0.08)] active:scale-95"
                 >
-                    UPGRADE TO PRO
+                    {t('sidebar.upgrade')}
                 </button>
             </div>
         </aside>

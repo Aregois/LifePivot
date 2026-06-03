@@ -14,8 +14,8 @@ export function BottomNav() {
     const { t } = useLanguage()
 
     const tabs = [
-        { name: t('nav.plan'), href: '/', icon: Home },
-        { name: t('nav.calendar'), href: '/plan', icon: Calendar },
+        { name: t('nav.home'), href: '/', icon: Home },
+        { name: t('nav.plan'), href: '/plan', icon: Calendar },
         { name: t('nav.shop'), href: '/shop', icon: ShoppingBag },
         { name: t('nav.profile'), href: '/profile', icon: User },
     ]
@@ -29,7 +29,7 @@ export function BottomNav() {
 
                 {/* Central Floating AI Tutor Button */}
                 <button
-                    aria-label="Open AI Tutor"
+                    aria-label={t('nav.open_tutor')}
                     onClick={() => {
                         haptics.medium()
                         setShowMobileChat(true)
@@ -40,7 +40,7 @@ export function BottomNav() {
                         <Bot className="h-6 w-6 text-white" />
                     </div>
                     <span className="text-[10px] font-bold text-electric-blue uppercase tracking-widest mt-0.5 opacity-80 group-hover:opacity-100 transition-opacity">
-                        Tutor
+                        {t('nav.tutor')}
                     </span>
                 </button>
 

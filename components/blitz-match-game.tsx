@@ -1,10 +1,11 @@
 'use client'
 
 import { useState, useEffect, useRef, useTransition } from 'react'
-import { X, Flame, Sparkles, Trophy, Zap, AlertCircle } from 'lucide-react'
+import { X, Flame, Trophy, AlertCircle } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { reviewFlashcard } from '@/app/actions'
 import { haptics } from '@/utils/haptics'
+import { useLanguage } from './language-provider'
 
 interface Flashcard {
     id: string
@@ -26,6 +27,7 @@ interface GridItem {
 }
 
 export function BlitzMatchGame({ flashcards, onClose, onFinished }: BlitzMatchGameProps) {
+    const { t } = useLanguage()
     const [gridItems, setGridItems] = useState<GridItem[]>([])
     const [selectedId, setSelectedId] = useState<number | null>(null) // index in gridItems
     const [mismatchedPair, setMismatchedPair] = useState<[number, number] | null>(null)
@@ -39,7 +41,7 @@ export function BlitzMatchGame({ flashcards, onClose, onFinished }: BlitzMatchGa
     const lastMatchTimeRef = useRef<number>(Date.now())
     const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
     const audioContextRef = useRef<AudioContext | null>(null)
-
+ 
     // Synthesize quick Web Audio sound effects
     const playSynthesizedChime = (type: 'match' | 'error' | 'overdrive' | 'victory') => {
         try {
@@ -244,17 +246,17 @@ export function BlitzMatchGame({ flashcards, onClose, onFinished }: BlitzMatchGa
                 </button>
 
                 <div className="flex flex-col items-center">
-                    <span className="text-[9px] font-black text-gray-500 uppercase tracking-widest">Blitz Match</span>
+                    <span className="text-[9px] font-black text-gray-500 uppercase tracking-widest">{t('blitz.title')}</span>
                     <div className="flex items-center gap-1.5 mt-0.5">
                         <Flame className={`h-4 w-4 ${isOverdrive ? 'text-orange-500 animate-bounce' : 'text-gray-600'}`} />
                         <span className={`text-sm font-black ${isOverdrive ? 'text-orange-400' : 'text-gray-400'}`}>
-                            {streak} Streak
+                            {t('blitz.streak').replace('{streak}', String(streak))}
                         </span>
                     </div>
                 </div>
 
                 <div className="bg-[#121626] border border-white/5 px-4 py-2 rounded-full text-xs font-bold font-mono">
-                    {timeLeft}s
+                    {t('blitz.timer_seconds').replace('{timeLeft}', String(timeLeft))}
                 </div>
             </div>
 
@@ -308,19 +310,19 @@ export function BlitzMatchGame({ flashcards, onClose, onFinished }: BlitzMatchGa
                                 <Trophy className="h-8 w-8" />
                             </div>
                             <div>
-                                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-yellow-400">Match Cleared</span>
-                                <h2 className="text-3xl font-black tracking-tight text-white mt-1 uppercase italic">Blitz Victory!</h2>
+                                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-yellow-400">{t('blitz.cleared')}</span>
+                                <h2 className="text-3xl font-black tracking-tight text-white mt-1 uppercase italic">{t('blitz.victory')}</h2>
                             </div>
                             <p className="text-gray-400 text-xs max-w-[280px] leading-relaxed">
-                                Exceptional recall speed! You matched all pairs and rescued your active deck records.
+                                {t('blitz.victory_desc')}
                             </p>
                             <div className="bg-[#121626] border border-white/5 rounded-3xl p-5 w-full flex justify-around">
                                 <div>
-                                    <span className="text-[8px] font-black text-gray-500 uppercase tracking-widest block">Matched Pairs</span>
-                                    <span className="text-white font-extrabold text-sm block mt-0.5">{matchedCount} Cards</span>
+                                    <span className="text-[8px] font-black text-gray-500 uppercase tracking-widest block">{t('blitz.matched_pairs')}</span>
+                                    <span className="text-white font-extrabold text-sm block mt-0.5">{t('blitz.cards_count').replace('{count}', String(matchedCount))}</span>
                                 </div>
                                 <div>
-                                    <span className="text-[8px] font-black text-gray-500 uppercase tracking-widest block">Bonus Reward</span>
+                                    <span className="text-[8px] font-black text-gray-500 uppercase tracking-widest block">{t('blitz.bonus_reward')}</span>
                                     <span className="text-yellow-400 font-extrabold text-sm block mt-0.5">+{xpAwarded} XP</span>
                                 </div>
                             </div>
@@ -329,9 +331,9 @@ export function BlitzMatchGame({ flashcards, onClose, onFinished }: BlitzMatchGa
                                     onFinished?.()
                                     onClose()
                                 }}
-                                className="w-full py-4.5 rounded-xl bg-yellow-400 text-black font-black text-xs uppercase tracking-wider hover:opacity-90 transition-all shadow-[0_0_20px_rgba(250,204,21,0.2)]"
+                                className="w-full py-4.5 rounded-xl bg-yellow-400 text-black font-black text-xs uppercase tracking-wider hover:opacity-90 transition-all shadow-[0_0_20px_rgba(250,204,21,0.2)] animate-pulse"
                             >
-                                Collect Rewards
+                                {t('blitz.collect_rewards')}
                             </button>
                         </motion.div>
                     ) : (
@@ -345,19 +347,19 @@ export function BlitzMatchGame({ flashcards, onClose, onFinished }: BlitzMatchGa
                                 <AlertCircle className="h-8 w-8" />
                             </div>
                             <div>
-                                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-rose-400">Time Expired</span>
-                                <h2 className="text-3xl font-black tracking-tight text-white mt-1 uppercase italic">Blitz Failure</h2>
+                                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-rose-400">{t('blitz.time_expired')}</span>
+                                <h2 className="text-3xl font-black tracking-tight text-white mt-1 uppercase italic">{t('blitz.failure')}</h2>
                             </div>
                             <p className="text-gray-400 text-xs max-w-[280px] leading-relaxed">
-                                The timer ran out before all pairs could be matched. Practice card associations to improve recall latency.
+                                {t('blitz.failure_desc')}
                             </p>
                             <div className="bg-[#121626] border border-white/5 rounded-3xl p-5 w-full flex justify-around">
                                 <div>
-                                    <span className="text-[8px] font-black text-gray-500 uppercase tracking-widest block">Completed</span>
-                                    <span className="text-white font-extrabold text-sm block mt-0.5">{matchedCount} / 6 Matches</span>
+                                    <span className="text-[8px] font-black text-gray-500 uppercase tracking-widest block">{t('blitz.completed')}</span>
+                                    <span className="text-white font-extrabold text-sm block mt-0.5">{t('blitz.matches_count').replace('{completed}', String(matchedCount))}</span>
                                 </div>
                                 <div>
-                                    <span className="text-[8px] font-black text-gray-500 uppercase tracking-widest block">XP Gained</span>
+                                    <span className="text-[8px] font-black text-gray-500 uppercase tracking-widest block">{t('blitz.xp_gained')}</span>
                                     <span className="text-rose-400 font-extrabold text-sm block mt-0.5">+{xpAwarded} XP</span>
                                 </div>
                             </div>
@@ -365,7 +367,7 @@ export function BlitzMatchGame({ flashcards, onClose, onFinished }: BlitzMatchGa
                                 onClick={onClose}
                                 className="w-full py-4.5 rounded-xl bg-white/5 border border-white/10 text-white font-black text-xs uppercase tracking-wider hover:bg-white/10 transition-all"
                             >
-                                Exit Game
+                                {t('blitz.exit_game')}
                             </button>
                         </motion.div>
                     )}
@@ -376,12 +378,12 @@ export function BlitzMatchGame({ flashcards, onClose, onFinished }: BlitzMatchGa
             <div className="relative z-10 w-full max-w-sm shrink-0 text-center text-gray-600 text-[8px] font-mono uppercase tracking-widest pb-safe">
                 {gameState === 'playing' ? (
                     isOverdrive ? (
-                        <span className="text-orange-400 animate-pulse font-black">Zen Overdrive Enabled! (+5 XP Bonus)</span>
+                        <span className="text-orange-400 animate-pulse font-black">{t('blitz.overdrive')}</span>
                     ) : (
-                        <span>Match terms with definitions</span>
+                        <span>{t('blitz.instruction')}</span>
                     )
                 ) : (
-                    <span>Recall Battle Complete</span>
+                    <span>{t('blitz.battle_complete')}</span>
                 )}
             </div>
         </div>

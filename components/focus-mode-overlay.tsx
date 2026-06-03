@@ -22,6 +22,7 @@ import { DesktopTutorPanel } from './desktop-tutor-panel'
 import { useEconomy } from './economy-provider'
 import type { Task, Subtask } from '@/utils/types'
 import { SocraticMicroDrills } from './socratic-micro-drills'
+import { useLanguage } from './language-provider'
 
 type FocusState = 'idle' | 'running' | 'paused' | 'drill' | 'finished'
 type TabType = 'timer' | 'notes' | 'resources'
@@ -40,6 +41,7 @@ interface FocusModeOverlayProps {
 }
 
 export function FocusModeOverlay({ task, goalTitle, onClose, onOptimisticGemUpdate, onTaskUpdate }: FocusModeOverlayProps) {
+    const { t } = useLanguage()
     const { activeChatTask, setActiveChatTask } = useEconomy()
     const [mounted, setMounted] = useState(false)
     const [activeTab, setActiveTab] = useState<TabType>('timer')
@@ -413,10 +415,10 @@ export function FocusModeOverlay({ task, goalTitle, onClose, onOptimisticGemUpda
                                     <Sparkles className="h-5 w-5 animate-pulse" />
                                 </div>
                                 <div>
-                                    <h3 className="text-sm font-black text-white uppercase tracking-wider">Socratic Reflection Hint</h3>
+                                    <h3 className="text-sm font-black text-white uppercase tracking-wider">{t('focus.socratic_reflection_hint')}</h3>
                                     {activeSubtask && (
                                         <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wide mt-0.5 truncate max-w-[280px]">
-                                            For: {activeSubtask.title}
+                                            {t('focus.for_subtask').replace('{title}', activeSubtask.title)}
                                         </p>
                                     )}
                                 </div>
@@ -458,12 +460,12 @@ export function FocusModeOverlay({ task, goalTitle, onClose, onOptimisticGemUpda
                                     {isSpeakingHint ? (
                                         <>
                                             <VolumeX className="h-4 w-4" />
-                                            Stop Reading
+                                            {t('focus.stop_reading')}
                                         </>
                                     ) : (
                                         <>
                                             <Volume2 className="h-4 w-4" />
-                                            Read Aloud
+                                            {t('focus.read_aloud')}
                                         </>
                                     )}
                                 </button>
@@ -494,7 +496,7 @@ export function FocusModeOverlay({ task, goalTitle, onClose, onOptimisticGemUpda
                                 ) : (
                                     <div className="flex items-center gap-1.5 text-[10px] text-gray-500 font-bold uppercase tracking-wider pr-2">
                                         <Volume2 className="h-3.5 w-3.5" />
-                                        Audio Ready
+                                        {t('focus.audio_ready')}
                                     </div>
                                 )}
                             </div>
@@ -570,7 +572,7 @@ export function FocusModeOverlay({ task, goalTitle, onClose, onOptimisticGemUpda
                                             }`}
                                         >
                                             <Clock className="h-3.5 w-3.5" />
-                                            Focus
+                                            {t('focus.timer_tab')}
                                         </button>
                                         <button
                                             onClick={() => { haptics.light(); setActiveTab('notes') }}
@@ -581,7 +583,7 @@ export function FocusModeOverlay({ task, goalTitle, onClose, onOptimisticGemUpda
                                             }`}
                                         >
                                             <Edit3 className="h-3.5 w-3.5" />
-                                            Notes
+                                            {t('focus.notes_tab')}
                                             {saveStatus !== 'idle' && (
                                                 <span className="absolute top-1.5 right-1.5 h-1.5 w-1.5 rounded-full bg-primary animate-ping" />
                                             )}
@@ -595,13 +597,13 @@ export function FocusModeOverlay({ task, goalTitle, onClose, onOptimisticGemUpda
                                             }`}
                                         >
                                             <BookOpen className="h-3.5 w-3.5" />
-                                            Sources
+                                            {t('focus.sources_tab')}
                                         </button>
                                     </div>
                                 ) : (
                                     <div className="text-center">
                                         <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1 rounded-full">
-                                            Session Completed
+                                            {t('focus.session_completed')}
                                         </span>
                                     </div>
                                 )}
@@ -622,7 +624,7 @@ export function FocusModeOverlay({ task, goalTitle, onClose, onOptimisticGemUpda
                                     className="absolute right-0 top-1/2 -translate-y-1/2 h-9 px-3 xl:px-4 rounded-xl bg-white/5 border border-white/10 flex items-center gap-2 text-xs font-bold text-gray-400 hover:text-white hover:bg-white/10 active:scale-95 transition-all z-20"
                                 >
                                     <X className="h-4 w-4" />
-                                    <span className="hidden xl:inline">Exit Focus</span>
+                                    <span className="hidden xl:inline">{t('focus.exit_focus')}</span>
                                 </button>
                             </div>
 
@@ -678,13 +680,13 @@ export function FocusModeOverlay({ task, goalTitle, onClose, onOptimisticGemUpda
                                                         {/* Timer text content */}
                                                         <div className="timer-content relative z-20 text-center">
                                                             <span className="text-[9px] font-black text-gray-500 uppercase tracking-[0.25em] mb-1.5 block">
-                                                                {state === 'idle' ? 'Ready' : state === 'paused' ? 'Paused' : 'Focusing'}
+                                                                {state === 'idle' ? t('focus.ready') : state === 'paused' ? t('focus.paused') : t('focus.focusing')}
                                                             </span>
                                                             <div className="font-display-xl text-[64px] font-black text-primary leading-none tracking-tighter" style={{ textShadow: `0 0 15px ${timerColor}60` }}>
                                                                 {formatTime(remaining)}
                                                             </div>
                                                             <span className="text-[9px] text-gray-600 mt-2 font-semibold uppercase tracking-wider block">
-                                                                {task.duration_mins ?? 30} min session
+                                                                {t('focus.duration_min_session').replace('{duration}', String(task.duration_mins ?? 30))}
                                                             </span>
                                                         </div>
                                                     </button>
@@ -702,7 +704,7 @@ export function FocusModeOverlay({ task, goalTitle, onClose, onOptimisticGemUpda
                                                             ) : (
                                                                 <HelpCircle className="h-5 w-5 text-tertiary" />
                                                             )}
-                                                            <span className="text-sm font-bold text-gray-200">I'm Stuck</span>
+                                                            <span className="text-sm font-bold text-gray-200">{t('focus.stuck_btn')}</span>
                                                         </button>
 
                                                         {/* Ask Nexus button */}
@@ -714,7 +716,7 @@ export function FocusModeOverlay({ task, goalTitle, onClose, onOptimisticGemUpda
                                                             className="bg-[#161b2e]/40 backdrop-blur-[12px] border border-primary/20 bg-gradient-to-br from-white/5 to-transparent px-8 py-4 rounded-xl flex items-center gap-3 text-white hover:bg-white/5 active:scale-95 transition-all"
                                                         >
                                                             <MessageSquare className="h-5 w-5 text-primary" />
-                                                            <span className="text-sm font-bold text-gray-200">Ask Nexus</span>
+                                                            <span className="text-sm font-bold text-gray-200">{t('focus.ask_nexus_btn')}</span>
                                                         </button>
                                                     </div>
 
@@ -730,14 +732,14 @@ export function FocusModeOverlay({ task, goalTitle, onClose, onOptimisticGemUpda
                                                                         boxShadow: `0 0 20px ${timerColor}40`
                                                                     }}
                                                                 >
-                                                                    Start Focus Session
+                                                                    {t('focus.start_session_btn')}
                                                                 </button>
                                                                 <button 
                                                                     onClick={handleAlreadyDone} 
                                                                     disabled={isPending}
                                                                     className="px-4 rounded-xl font-bold text-xs text-gray-400 border border-white/5 bg-white/[0.02] hover:bg-white/[0.05] active:scale-[0.98] transition-all disabled:opacity-40 flex items-center justify-center gap-1.5"
                                                                 >
-                                                                    {isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : 'Skip Timer'}
+                                                                    {isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : t('focus.skip_timer_btn')}
                                                                 </button>
                                                             </>
                                                         )}
@@ -747,7 +749,7 @@ export function FocusModeOverlay({ task, goalTitle, onClose, onOptimisticGemUpda
                                                                 onClick={() => { haptics.light(); setState('paused'); stopSound() }}
                                                                 className="w-40 py-3 rounded-xl font-bold text-xs uppercase tracking-wider text-white border border-white/5 bg-white/[0.03] hover:bg-white/[0.06] active:scale-[0.98] transition-all flex items-center justify-center gap-2"
                                                             >
-                                                                <Pause className="h-3.5 w-3.5" /> Pause Session
+                                                                <Pause className="h-3.5 w-3.5" /> {t('focus.pause_btn')}
                                                             </button>
                                                         )}
 
@@ -758,7 +760,7 @@ export function FocusModeOverlay({ task, goalTitle, onClose, onOptimisticGemUpda
                                                                     className="flex-1 py-3 rounded-xl font-black text-xs uppercase tracking-wider text-black hover:opacity-90 active:scale-[0.98] transition-all flex items-center justify-center gap-2"
                                                                     style={{ background: timerColor }}
                                                                 >
-                                                                    <Play className="h-3.5 w-3.5 fill-black" /> Resume
+                                                                    <Play className="h-3.5 w-3.5 fill-black" /> {t('focus.resume_btn')}
                                                                 </button>
                                                                 <button 
                                                                     onClick={() => { 
@@ -774,7 +776,7 @@ export function FocusModeOverlay({ task, goalTitle, onClose, onOptimisticGemUpda
                                                                     }}
                                                                     className="flex-1 py-3 rounded-xl font-bold text-xs uppercase tracking-wider text-red-400 border border-red-500/10 bg-red-500/5 hover:bg-red-500/10 active:scale-[0.98] transition-all flex items-center justify-center gap-2"
                                                                 >
-                                                                    <RotateCcw className="h-3.5 w-3.5" /> Abort
+                                                                    <RotateCcw className="h-3.5 w-3.5" /> {t('focus.abort_btn')}
                                                                 </button>
                                                             </>
                                                         )}
@@ -786,7 +788,7 @@ export function FocusModeOverlay({ task, goalTitle, onClose, onOptimisticGemUpda
                                                     <div className="flex justify-between items-center">
                                                         <h3 className="text-[11px] font-black uppercase tracking-wider text-gray-400 flex items-center gap-2">
                                                             <Headphones className="h-4 w-4 text-primary" />
-                                                            Study Soundscape
+                                                            {t('focus.soundscape')}
                                                         </h3>
                                                         {sound !== 'none' && (
                                                             <div className="flex items-center gap-2.5 bg-black/20 px-3 py-1.5 rounded-xl border border-white/5">
@@ -806,12 +808,12 @@ export function FocusModeOverlay({ task, goalTitle, onClose, onOptimisticGemUpda
                                                     </div>
                                                     <div className="flex justify-start gap-2 overflow-x-auto pb-1.5 no-scrollbar">
                                                         {[
-                                                            { type: 'none', label: 'Mute', icon: VolumeX },
-                                                            { type: 'space', label: 'Space', icon: Sparkles },
-                                                            { type: 'rain', label: 'Rain', icon: Cloud },
-                                                            { type: 'binaural', label: 'Waves', icon: Waves },
-                                                            { type: 'cafe', label: 'Café', icon: Coffee },
-                                                            { type: 'greenhouse', label: 'Glass', icon: Leaf }
+                                                            { type: 'none', label: t('focus.mute'), icon: VolumeX },
+                                                            { type: 'space', label: t('focus.space'), icon: Sparkles },
+                                                            { type: 'rain', label: t('focus.rain'), icon: Cloud },
+                                                            { type: 'binaural', label: t('focus.waves'), icon: Waves },
+                                                            { type: 'cafe', label: t('focus.cafe'), icon: Coffee },
+                                                            { type: 'greenhouse', label: t('focus.glass'), icon: Leaf }
                                                         ]
                                                         .filter(item => unlockedSoundscapes.includes(item.type))
                                                         .map((item) => {
@@ -845,15 +847,15 @@ export function FocusModeOverlay({ task, goalTitle, onClose, onOptimisticGemUpda
                                         {activeTab === 'notes' && (
                                             <div className="flex-1 flex flex-col gap-4 w-full max-w-4xl min-h-[450px]">
                                                 <div className="flex justify-between items-center bg-white/[0.03] px-6 py-4 rounded-2xl border border-white/5 shadow-md">
-                                                    <span className="text-[10px] font-black uppercase tracking-wider text-gray-400">Workspace Scratchpad</span>
+                                                    <span className="text-[10px] font-black uppercase tracking-wider text-gray-400">{t('focus.scratchpad')}</span>
                                                     <span className="text-[9px] font-black text-primary bg-primary/10 border border-primary/20 px-2.5 py-0.5 rounded-full">
-                                                        {saveStatus === 'saving' ? 'Auto-saving...' : saveStatus === 'saved' ? 'Saved' : 'Autosaved'}
+                                                        {saveStatus === 'saving' ? t('focus.auto_saving') : saveStatus === 'saved' ? t('focus.saved') : t('focus.autosaved')}
                                                     </span>
                                                 </div>
                                                 <textarea
                                                     value={notes}
                                                     onChange={(e) => { hasUserEditedNotes.current = true; setNotes(e.target.value) }}
-                                                    placeholder="Jot down notes, formulas, draft summaries, or complete your task answers here..."
+                                                    placeholder={t('focus.notes_placeholder')}
                                                     className="flex-1 w-full bg-black/30 border border-white/5 rounded-3xl p-6 text-sm text-gray-300 placeholder-gray-600 focus:outline-none focus:border-primary/30 focus:ring-1 focus:ring-primary/20 resize-none font-sans leading-relaxed transition-all shadow-[inset_0_2px_12px_rgba(0,0,0,0.6)]"
                                                 />
                                             </div>
@@ -865,7 +867,7 @@ export function FocusModeOverlay({ task, goalTitle, onClose, onOptimisticGemUpda
                                                 {/* Subtasks checklist card */}
                                                 <div className="bg-gradient-to-b from-white/[0.04] to-transparent backdrop-blur-xl border border-white/10 p-6 rounded-[2rem] flex flex-col h-[420px] shadow-xl shadow-black/40">
                                                     <p className="text-[10px] font-black uppercase tracking-wider text-gray-400 mb-3 border-b border-white/5 pb-2.5 flex items-center gap-2">
-                                                        <CheckSquare className="h-4 w-4 text-primary" /> Checklist Progress
+                                                        <CheckSquare className="h-4 w-4 text-primary" /> {t('focus.checklist_progress')}
                                                     </p>
                                                     {localSubtasks.length > 0 ? (
                                                         <div className="flex flex-col gap-2.5 overflow-y-auto pr-1 flex-1 no-scrollbar">
@@ -888,7 +890,7 @@ export function FocusModeOverlay({ task, goalTitle, onClose, onOptimisticGemUpda
                                                         </div>
                                                     ) : (
                                                         <div className="flex-1 flex items-center justify-center text-center text-gray-500 text-xs italic">
-                                                            No subtasks defined. Focus on the main objective.
+                                                            {t('focus.no_subtasks')}
                                                         </div>
                                                     )}
                                                 </div>
@@ -896,16 +898,16 @@ export function FocusModeOverlay({ task, goalTitle, onClose, onOptimisticGemUpda
                                                 {/* Sources list card */}
                                                 <div className="bg-gradient-to-b from-white/[0.04] to-transparent backdrop-blur-xl border border-white/10 p-6 rounded-[2rem] flex flex-col h-[420px] shadow-xl shadow-black/40">
                                                     <p className="text-[10px] font-black uppercase tracking-wider text-gray-400 mb-3 border-b border-white/5 pb-2.5 flex items-center gap-2">
-                                                        <BookOpen className="h-4 w-4 text-primary" /> AI Curated Sources
+                                                        <BookOpen className="h-4 w-4 text-primary" /> {t('focus.curated_sources')}
                                                     </p>
                                                     {resourcesLoading ? (
                                                         <div className="flex-1 flex flex-col items-center justify-center gap-3">
                                                             <Loader2 className="h-6 w-6 text-primary animate-spin" />
-                                                            <p className="text-[9px] text-gray-600 font-bold uppercase tracking-widest">Sourcing guides...</p>
+                                                            <p className="text-[9px] text-gray-600 font-bold uppercase tracking-widest">{t('focus.sourcing_guides')}</p>
                                                         </div>
                                                     ) : resources.length === 0 ? (
                                                         <div className="flex-1 flex items-center justify-center text-center text-gray-500 text-xs italic">
-                                                            No study resources sourced.
+                                                            {t('focus.no_resources')}
                                                         </div>
                                                     ) : (
                                                         <div className="flex flex-col gap-2.5 overflow-y-auto pr-1 flex-1 no-scrollbar">
@@ -941,7 +943,7 @@ export function FocusModeOverlay({ task, goalTitle, onClose, onOptimisticGemUpda
                                                 haptics.medium()
                                                 setState('finished')
                                                 setQuizResult('Pass')
-                                                setQuizFeedback('Comprehension verification passed! Mastery rewards unlocked.')
+                                                setQuizFeedback(t('focus.comprehension_passed'))
                                                 setEarnedGems(GEM_REWARD[task.priority] ?? 1)
                                                 setEarnedXp(task.priority * 10 + 10)
                                             }}
@@ -956,19 +958,19 @@ export function FocusModeOverlay({ task, goalTitle, onClose, onOptimisticGemUpda
                                             <div className="h-16 w-16 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-3xl flex items-center justify-center mx-auto mb-4 shadow-[0_0_15px_rgba(16,185,129,0.15)]">
                                                 <Check className="h-8 w-8" />
                                             </div>
-                                            <h2 className="text-2xl font-black text-white">Focus Complete!</h2>
-                                            <p className="text-xs text-gray-500 mt-1 uppercase tracking-wider font-bold">Evaluation & Reflection</p>
+                                            <h2 className="text-2xl font-black text-white">{t('focus.focus_complete')}</h2>
+                                            <p className="text-xs text-gray-500 mt-1 uppercase tracking-wider font-bold">{t('focus.evaluation_reflection')}</p>
                                         </div>
 
                                         {quizResult === 'Pass' ? (
                                             <div className="bg-emerald-500/5 border border-emerald-500/15 rounded-2xl p-5 flex flex-col gap-3">
-                                                <p className="text-[10px] font-black uppercase tracking-wider text-emerald-400">Mastery Achieved</p>
+                                                <p className="text-[10px] font-black uppercase tracking-wider text-emerald-400">{t('focus.mastery_achieved')}</p>
                                                 <p className="text-xs text-gray-300 italic leading-relaxed">"{quizFeedback}"</p>
                                                 <div className="h-[1px] bg-emerald-500/10 my-1" />
                                                 <div className="flex items-center justify-between">
                                                     <div className="flex items-center gap-1.5 text-primary">
                                                         <Diamond className="h-4 w-4 fill-primary/20" />
-                                                        <span className="text-xs font-black">+{earnedGems} Focus Gems</span>
+                                                        <span className="text-xs font-black">+{earnedGems} {t('focus.focus_gems')}</span>
                                                     </div>
                                                     <div className="flex items-center gap-1.5 text-neon-violet">
                                                         <Flame className="h-4 w-4 fill-neon-violet/20" />
@@ -977,7 +979,7 @@ export function FocusModeOverlay({ task, goalTitle, onClose, onOptimisticGemUpda
                                                 </div>
                                                 {didLevelUp && (
                                                     <div className="mt-2 bg-neon-violet/10 border border-neon-violet/30 p-2.5 rounded-xl text-center text-xs font-black text-white uppercase tracking-wider flex items-center justify-center gap-2">
-                                                        <Sparkles className="h-3.5 w-3.5 text-amber-400" /> Leveled Up to LV {leveledUpTo}! <Sparkles className="h-3.5 w-3.5 text-amber-400" />
+                                                        <Sparkles className="h-3.5 w-3.5 text-amber-400" /> {t('focus.leveled_up_msg').replace('{level}', String(leveledUpTo))} <Sparkles className="h-3.5 w-3.5 text-amber-400" />
                                                     </div>
                                                 )}
                                             </div>
@@ -985,23 +987,22 @@ export function FocusModeOverlay({ task, goalTitle, onClose, onOptimisticGemUpda
                                             <div className="flex flex-col gap-4">
                                                 <div className="bg-amber-500/5 border border-amber-500/15 rounded-2xl p-4 flex flex-col gap-2">
                                                     <p className="text-[10px] font-black uppercase tracking-wider text-amber-400 flex items-center gap-1.5">
-                                                        <ShieldAlert className="h-4 w-4" /> Active Recall Challenge
+                                                        <ShieldAlert className="h-4 w-4" /> {t('focus.active_recall_challenge')}
                                                     </p>
                                                     <p className="text-xs text-gray-400 leading-relaxed">
-                                                        Explain in your own words what you just learned or achieved. Socratic AI will evaluate your recall to award{' '}
-                                                        <span className="text-white font-bold">Bonus Gems & XP</span>.
+                                                        {t('focus.active_recall_desc')}
                                                     </p>
                                                 </div>
                                                 <textarea
                                                     value={reflection}
                                                     onChange={(e) => setReflection(e.target.value)}
-                                                    placeholder="e.g. I understood that refraction happens because light shifts speed entering another medium. I completed exercises 12 to 15 correctly..."
+                                                    placeholder={t('focus.reflection_placeholder')}
                                                     disabled={quizLoading}
                                                     className="h-28 w-full bg-black/40 border border-white/10 rounded-2xl p-4 text-xs text-gray-300 placeholder-gray-600 focus:outline-none focus:border-amber-500/30 resize-none leading-relaxed transition-all shadow-[inset_0_2px_8px_rgba(0,0,0,0.5)] focus:ring-1 focus:ring-amber-500/20"
                                                 />
                                                 {quizFeedback && (
                                                     <div className={`p-4 rounded-xl text-xs leading-relaxed ${quizResult === 'Needs Work' ? 'bg-amber-500/5 border border-amber-500/10 text-amber-400' : 'bg-red-500/5 border border-red-500/10 text-red-400'}`}>
-                                                        <p className="font-bold mb-1 uppercase text-[9px] tracking-wider">Tutor Feedback:</p>
+                                                        <p className="font-bold mb-1 uppercase text-[9px] tracking-wider">{t('focus.tutor_feedback_label')}</p>
                                                         "{quizFeedback}"
                                                     </div>
                                                 )}
@@ -1013,7 +1014,7 @@ export function FocusModeOverlay({ task, goalTitle, onClose, onOptimisticGemUpda
                                                     {quizLoading ? (
                                                         <Loader2 className="h-4 w-4 animate-spin" />
                                                     ) : (
-                                                        <>Submit for Socratic Check <Diamond className="h-3 w-3 fill-black/20" />+2</>
+                                                        <>{t('focus.submit_check')} <Diamond className="h-3 w-3 fill-black/20" />+2</>
                                                     )}
                                                 </button>
                                             </div>
@@ -1038,7 +1039,7 @@ export function FocusModeOverlay({ task, goalTitle, onClose, onOptimisticGemUpda
                                                     }}
                                                     className="w-full py-3.5 rounded-xl font-black text-xs uppercase tracking-wider text-black bg-emerald-500 hover:bg-emerald-400 active:scale-[0.98] transition-all flex items-center justify-center gap-2 shadow-[0_0_15px_rgba(16,185,129,0.2)]"
                                                 >
-                                                    Claim Mastery Rewards
+                                                    {t('focus.claim_mastery')}
                                                 </button>
                                             ) : (
                                                 <>
@@ -1046,14 +1047,14 @@ export function FocusModeOverlay({ task, goalTitle, onClose, onOptimisticGemUpda
                                                         <button onClick={handleAddTime}
                                                             className="w-full py-3.5 rounded-xl font-bold text-xs uppercase tracking-wider text-gray-300 border border-white/5 bg-white/[0.02] hover:bg-white/[0.05] active:scale-[0.98] transition-all flex items-center justify-center gap-2"
                                                         >
-                                                            <Plus className="h-3.5 w-3.5" /> + Add 5 Minutes
+                                                            <Plus className="h-3.5 w-3.5" /> {t('focus.add_5_minutes')}
                                                         </button>
                                                     )}
                                                     <button 
                                                         onClick={handleClaimBaseRewardOnly}
                                                         className="w-full py-2.5 rounded-xl font-bold text-[10px] uppercase tracking-wider text-gray-500 hover:text-gray-400 active:scale-[0.98] transition-all text-center"
                                                     >
-                                                        Skip Active Recall (Claim Base Gems Only)
+                                                        {t('focus.skip_recall')}
                                                     </button>
                                                 </>
                                             )}
@@ -1103,40 +1104,7 @@ export function FocusModeOverlay({ task, goalTitle, onClose, onOptimisticGemUpda
                             {/* ── TASK INFO ── */}
                             <div className="px-6 text-center mt-1">
                                 <h1 className="text-xl font-black text-white leading-tight tracking-tight">{task.title}</h1>
-                                <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider mt-0.5">{goalTitle}</p>
                             </div>
-
-                            {/* ── TABS SELECTOR (Only if not finished and on mobile) ── */}
-                            {state !== 'finished' && (
-                                <div className="flex px-6 mt-4">
-                                    <div className="flex w-full bg-black/20 p-1 rounded-2xl border border-white/5">
-                                        <button
-                                            onClick={() => { haptics.light(); setActiveTab('timer') }}
-                                            className={`flex-1 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 border ${activeTab === 'timer' ? 'bg-electric-blue/10 border-electric-blue/20 text-white shadow-lg' : 'text-gray-500 hover:text-gray-300 border-transparent'}`}
-                                        >
-                                            <Clock className="h-3.5 w-3.5" />
-                                            Focus
-                                        </button>
-                                        <button
-                                            onClick={() => { haptics.light(); setActiveTab('notes') }}
-                                            className={`flex-1 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 relative border ${activeTab === 'notes' ? 'bg-electric-blue/10 border-electric-blue/20 text-white shadow-lg' : 'text-gray-500 hover:text-gray-300 border-transparent'}`}
-                                        >
-                                            <Edit3 className="h-3.5 w-3.5" />
-                                            Notes
-                                            {saveStatus !== 'idle' && (
-                                                <span className="absolute top-1.5 right-1.5 h-1.5 w-1.5 rounded-full bg-electric-blue animate-ping" />
-                                            )}
-                                        </button>
-                                        <button
-                                            onClick={() => { haptics.light(); setActiveTab('resources') }}
-                                            className={`flex-1 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 border ${activeTab === 'resources' ? 'bg-electric-blue/10 border-electric-blue/20 text-white shadow-lg' : 'text-gray-500 hover:text-gray-300 border-transparent'}`}
-                                        >
-                                            <BookOpen className="h-3.5 w-3.5" />
-                                            Sources
-                                        </button>
-                                    </div>
-                                </div>
-                            )}
                         </div>
 
                         {/* ── MAIN CONTENT AREA ── */}
@@ -1164,12 +1132,12 @@ export function FocusModeOverlay({ task, goalTitle, onClose, onOptimisticGemUpda
                                                 </svg>
                                                 <div className="absolute inset-0 flex flex-col items-center justify-center select-none">
                                                     <span className="text-[8px] font-black text-gray-500 uppercase tracking-[0.25em] mb-1">
-                                                        {state === 'idle' ? 'Ready' : state === 'paused' ? 'Paused' : 'Focusing'}
+                                                        {state === 'idle' ? t('focus.ready') : state === 'paused' ? t('focus.paused') : t('focus.focusing')}
                                                     </span>
                                                     <span className="text-4xl font-black tabular-nums text-white tracking-tight">
                                                         {formatTime(remaining)}
                                                     </span>
-                                                    <span className="text-[9px] text-gray-600 mt-1 font-semibold uppercase tracking-wider">{task.duration_mins ?? 30} min session</span>
+                                                    <span className="text-[9px] text-gray-600 mt-1 font-semibold uppercase tracking-wider">{t('focus.duration_min_session').replace('{duration}', String(task.duration_mins ?? 30))}</span>
                                                 </div>
                                             </div>
 
@@ -1178,17 +1146,17 @@ export function FocusModeOverlay({ task, goalTitle, onClose, onOptimisticGemUpda
                                                 <div className="flex items-center justify-between">
                                                     <div className="flex items-center gap-2">
                                                         <Headphones className="h-4 w-4 text-electric-blue" />
-                                                        <span className="text-[10px] font-black uppercase tracking-wider text-gray-400">Study Soundscape</span>
+                                                        <span className="text-[10px] font-black uppercase tracking-wider text-gray-400">{t('focus.soundscape')}</span>
                                                     </div>
                                                 </div>
                                                 <div className="grid grid-cols-3 gap-2 bg-black/20 p-1.5 rounded-2xl border border-white/5">
                                                     {[
-                                                        { type: 'none', label: 'Mute', icon: VolumeX },
-                                                        { type: 'space', label: 'Space', icon: Sparkles },
-                                                        { type: 'rain', label: 'Rain', icon: Cloud },
-                                                        { type: 'binaural', label: 'Waves', icon: Waves },
-                                                        { type: 'cafe', label: 'Café', icon: Coffee },
-                                                        { type: 'greenhouse', label: 'Glass', icon: Leaf }
+                                                        { type: 'none', label: t('focus.mute'), icon: VolumeX },
+                                                        { type: 'space', label: t('focus.space'), icon: Sparkles },
+                                                        { type: 'rain', label: t('focus.rain'), icon: Cloud },
+                                                        { type: 'binaural', label: t('focus.waves'), icon: Waves },
+                                                        { type: 'cafe', label: t('focus.cafe'), icon: Coffee },
+                                                        { type: 'greenhouse', label: t('focus.glass'), icon: Leaf }
                                                     ]
                                                     .filter(item => unlockedSoundscapes.includes(item.type))
                                                     .map((item) => {
@@ -1234,7 +1202,7 @@ export function FocusModeOverlay({ task, goalTitle, onClose, onOptimisticGemUpda
                                             {/* Live checklist HUD */}
                                             {localSubtasks.length > 0 && (
                                                 <div className="w-full bg-white/[0.025] backdrop-blur-md border border-white/5 p-4 rounded-3xl shadow-xl">
-                                                    <p className="text-[10px] font-black uppercase tracking-wider text-gray-400 mb-3">Live Progress Check</p>
+                                                    <p className="text-[10px] font-black uppercase tracking-wider text-gray-400 mb-3">{t('focus.live_progress_check')}</p>
                                                     <div className="flex flex-col gap-2">
                                                         {localSubtasks.map((st) => (
                                                             <button
@@ -1262,15 +1230,15 @@ export function FocusModeOverlay({ task, goalTitle, onClose, onOptimisticGemUpda
                                     {activeTab === 'notes' && (
                                         <div className="flex flex-col gap-3 h-full min-h-[350px]">
                                             <div className="flex justify-between items-center bg-white/[0.03] px-4 py-2.5 rounded-2xl border border-white/5">
-                                                <span className="text-[9px] font-bold text-gray-500 uppercase tracking-widest">Workspace Scratchpad</span>
+                                                <span className="text-[9px] font-bold text-gray-500 uppercase tracking-widest">{t('focus.scratchpad')}</span>
                                                 <span className="text-[8px] font-bold text-electric-blue bg-electric-blue/10 px-2 py-0.5 rounded">
-                                                    {saveStatus === 'saving' ? 'Auto-saving...' : saveStatus === 'saved' ? 'Saved' : 'Autosaved'}
+                                                    {saveStatus === 'saving' ? t('focus.auto_saving') : saveStatus === 'saved' ? t('focus.saved') : t('focus.autosaved')}
                                                 </span>
                                             </div>
                                             <textarea
                                                 value={notes}
                                                 onChange={(e) => { hasUserEditedNotes.current = true; setNotes(e.target.value) }}
-                                                placeholder="Jot down notes, formulas, draft summaries, or complete your task answers here..."
+                                                placeholder={t('focus.notes_placeholder')}
                                                 className="flex-1 min-h-[300px] w-full bg-white/[0.015] border border-white/5 rounded-3xl p-5 text-sm text-gray-300 placeholder-gray-600 focus:outline-none focus:border-electric-blue/30 resize-none font-sans leading-relaxed transition-colors"
                                             />
                                         </div>
@@ -1280,20 +1248,20 @@ export function FocusModeOverlay({ task, goalTitle, onClose, onOptimisticGemUpda
                                     {activeTab === 'resources' && (
                                         <div className="flex flex-col gap-4 h-full min-h-[350px]">
                                             <div className="bg-white/[0.03] px-4 py-3 rounded-2xl border border-white/5">
-                                                <p className="text-[10px] font-black uppercase text-gray-500 tracking-wider">AI Curated Study Materials</p>
+                                                <p className="text-[10px] font-black uppercase text-gray-500 tracking-wider">{t('focus.curated_materials')}</p>
                                                 <p className="text-gray-400 text-xs mt-1 leading-relaxed">
-                                                    We've sourced these links specifically to help you study this task's concepts.
+                                                    {t('focus.curated_desc')}
                                                 </p>
                                             </div>
 
                                             {resourcesLoading ? (
                                                 <div className="flex flex-col items-center justify-center py-16 gap-3">
                                                     <Loader2 className="h-8 w-8 text-electric-blue animate-spin" />
-                                                    <p className="text-xs text-gray-600 font-bold uppercase tracking-widest">Sourcing web guides...</p>
+                                                    <p className="text-xs text-gray-600 font-bold uppercase tracking-widest">{t('focus.sourcing_web_guides')}</p>
                                                 </div>
                                             ) : resources.length === 0 ? (
                                                 <div className="text-center py-16 text-gray-600 text-xs italic">
-                                                    Could not find study resources.
+                                                    {t('focus.no_resources')}
                                                 </div>
                                             ) : (
                                                 <div className="flex flex-col gap-3">
@@ -1331,7 +1299,7 @@ export function FocusModeOverlay({ task, goalTitle, onClose, onOptimisticGemUpda
                                             haptics.medium()
                                             setState('finished')
                                             setQuizResult('Pass')
-                                            setQuizFeedback('Comprehension verification passed! Mastery rewards unlocked.')
+                                            setQuizFeedback(t('focus.comprehension_passed'))
                                             setEarnedGems(GEM_REWARD[task.priority] ?? 1)
                                             setEarnedXp(task.priority * 10 + 10)
                                         }}
@@ -1348,14 +1316,14 @@ export function FocusModeOverlay({ task, goalTitle, onClose, onOptimisticGemUpda
                                         <div className="h-16 w-16 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-3xl flex items-center justify-center mx-auto mb-4">
                                             <Check className="h-8 w-8" />
                                         </div>
-                                        <h2 className="text-2xl font-black text-white">Focus Complete!</h2>
-                                        <p className="text-xs text-gray-500 mt-1">Proof of Work and active recall evaluation.</p>
+                                        <h2 className="text-2xl font-black text-white">{t('focus.focus_complete')}</h2>
+                                        <p className="text-xs text-gray-500 mt-1">{t('focus.proof_of_work_subtitle')}</p>
                                     </div>
 
                                     {/* Socratic quiz check / evaluation result */}
                                     {quizResult === 'Pass' ? (
                                         <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-3xl p-5 flex flex-col gap-3">
-                                            <p className="text-[10px] font-black uppercase tracking-wider text-emerald-400">Mastery Achieved</p>
+                                            <p className="text-[10px] font-black uppercase tracking-wider text-emerald-400">{t('focus.mastery_achieved')}</p>
                                             <p className="text-xs text-gray-300 italic leading-relaxed">"{quizFeedback}"</p>
                                             
                                             <div className="h-[1px] bg-emerald-500/20 my-1" />
@@ -1363,7 +1331,7 @@ export function FocusModeOverlay({ task, goalTitle, onClose, onOptimisticGemUpda
                                             <div className="flex items-center justify-between">
                                                 <div className="flex items-center gap-1.5 text-electric-blue">
                                                     <Diamond className="h-4 w-4 fill-electric-blue/20" />
-                                                    <span className="text-xs font-black">+{earnedGems} Focus Gems</span>
+                                                    <span className="text-xs font-black">+{earnedGems} {t('focus.focus_gems')}</span>
                                                 </div>
                                                 <div className="flex items-center gap-1.5 text-neon-violet">
                                                     <Flame className="h-4 w-4 fill-neon-violet/20" />
@@ -1373,7 +1341,7 @@ export function FocusModeOverlay({ task, goalTitle, onClose, onOptimisticGemUpda
 
                                             {didLevelUp && (
                                                 <div className="mt-3 bg-neon-violet/20 border border-neon-violet/40 p-3 rounded-2xl text-center text-xs font-black text-white uppercase tracking-wider flex items-center justify-center gap-2">
-                                                    <Sparkles className="h-4 w-4 text-amber-400" /> Leveled Up to LV {leveledUpTo}! <Sparkles className="h-4 w-4 text-amber-400" />
+                                                    <Sparkles className="h-4 w-4 text-amber-400" /> {t('focus.leveled_up_msg').replace('{level}', String(leveledUpTo))} <Sparkles className="h-4 w-4 text-amber-400" />
                                                 </div>
                                             )}
                                         </div>
@@ -1381,24 +1349,23 @@ export function FocusModeOverlay({ task, goalTitle, onClose, onOptimisticGemUpda
                                         <div className="bg-white/[0.025] border border-white/5 rounded-3xl p-5 flex flex-col gap-4 shadow-xl">
                                             <div className="flex items-center gap-2 text-amber-400">
                                                 <ShieldAlert className="h-4 w-4" />
-                                                <span className="text-[10px] font-black uppercase tracking-wider">Active Recall Challenge</span>
+                                                <span className="text-[10px] font-black uppercase tracking-wider">{t('focus.active_recall_challenge')}</span>
                                             </div>
                                             <p className="text-xs text-gray-400 leading-relaxed">
-                                                Summarize in your own words what you just learned or solved. Socratic AI will evaluate your reflection to award{' '}
-                                                <span className="text-white font-bold">Bonus Gems & XP</span>.
+                                                {t('focus.active_recall_desc')}
                                             </p>
 
                                             <textarea
                                                 value={reflection}
                                                 onChange={(e) => setReflection(e.target.value)}
-                                                placeholder="e.g. I understood that refraction happens because light shifts speed entering another medium. I completed exercises 12 to 15 correctly..."
+                                                placeholder={t('focus.reflection_placeholder')}
                                                 disabled={quizLoading}
                                                 className="h-28 w-full bg-black/40 border border-white/10 rounded-3xl p-4 text-xs text-gray-300 placeholder-gray-600 focus:outline-none focus:border-amber-500/30 resize-none leading-relaxed transition-colors"
                                             />
 
                                             {quizFeedback && (
                                                 <div className={`p-4 rounded-2xl text-xs leading-relaxed ${quizResult === 'Needs Work' ? 'bg-amber-500/5 border border-amber-500/10 text-amber-400' : 'bg-red-500/5 border border-red-500/10 text-red-400'}`}>
-                                                    <p className="font-bold mb-1 uppercase text-[9px] tracking-wider">Tutor Feedback:</p>
+                                                    <p className="font-bold mb-1 uppercase text-[9px] tracking-wider">{t('focus.tutor_feedback_label')}</p>
                                                     "{quizFeedback}"
                                                 </div>
                                             )}
@@ -1411,7 +1378,7 @@ export function FocusModeOverlay({ task, goalTitle, onClose, onOptimisticGemUpda
                                                 {quizLoading ? (
                                                     <Loader2 className="h-4 w-4 animate-spin" />
                                                 ) : (
-                                                    <>Submit to Professor <Diamond className="h-3 w-3 animate-pulse" />+2</>
+                                                    <>{t('focus.submit_check')} <Diamond className="h-3 w-3 animate-pulse" />+2</>
                                                 )}
                                             </button>
                                         </div>
@@ -1434,7 +1401,7 @@ export function FocusModeOverlay({ task, goalTitle, onClose, onOptimisticGemUpda
                                             state === 'running' ? 'text-electric-blue' 
                                             : state === 'paused' ? 'text-amber-400' 
                                             : 'text-gray-500'
-                                        }`}>{state === 'running' ? '● Live' : state === 'paused' ? '⏸ Paused' : 'Ready'}</span>
+                                        }`}>{state === 'running' ? t('focus.live_status') : state === 'paused' ? t('focus.paused_status') : t('focus.ready_status')}</span>
                                     </div>
                                     {state === 'running' ? (
                                         <button
@@ -1457,7 +1424,7 @@ export function FocusModeOverlay({ task, goalTitle, onClose, onOptimisticGemUpda
                                             className="h-8 px-3 rounded-xl flex items-center gap-1.5 text-black text-[10px] font-black active:scale-95 transition-transform"
                                             style={{ background: timerColor }}
                                         >
-                                            <Play className="h-3 w-3 fill-black" /> Start
+                                            <Play className="h-3 w-3 fill-black" /> {t('focus.start_btn')}
                                         </button>
                                     )}
                                 </div>
@@ -1477,11 +1444,11 @@ export function FocusModeOverlay({ task, goalTitle, onClose, onOptimisticGemUpda
                                                         ? '0 0 24px var(--color-electric-blue)' 
                                                         : `0 0 24px ${timerColor}50` 
                                                 }}>
-                                                Start Focus Session
+                                                {t('focus.start_session_btn')}
                                             </button>
                                             <button onClick={handleAlreadyDone} disabled={isPending}
                                                 className="w-full py-4 rounded-2xl font-bold text-sm text-gray-300 border border-white/5 bg-white/[0.03] hover:bg-white/[0.06] hover:border-white/10 active:scale-[0.98] transition-all disabled:opacity-40 flex items-center justify-center gap-2">
-                                                {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <>Already Done <span className="text-[10px] text-gray-600">(claim without timer)</span></>}
+                                                {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <>{t('focus.already_done_btn')} <span className="text-[10px] text-gray-600">{t('focus.claim_without_timer_label')}</span></>}
                                             </button>
                                         </>
                                     )}
@@ -1492,17 +1459,17 @@ export function FocusModeOverlay({ task, goalTitle, onClose, onOptimisticGemUpda
                                             <div className="grid grid-cols-2 gap-3">
                                                 <button onClick={() => { haptics.light(); setState('paused'); stopSound() }}
                                                     className="py-4 rounded-2xl font-bold text-sm text-white border border-white/5 bg-white/[0.03] hover:bg-white/[0.06] active:scale-[0.98] transition-all flex items-center justify-center gap-2">
-                                                    <Pause className="h-4 w-4" /> Pause
+                                                    <Pause className="h-4 w-4" /> {t('focus.pause_mini_btn')}
                                                 </button>
                                                 <button onClick={handleStuck} disabled={hintLoading}
                                                     className="py-4 rounded-2xl font-bold text-sm text-neon-violet border border-neon-violet/10 bg-neon-violet/5 hover:bg-neon-violet/10 active:scale-[0.98] transition-all flex items-center justify-center gap-1.5 disabled:opacity-50">
-                                                    {hintLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <><HelpCircle className="h-4 w-4" /> Stuck?</>}
+                                                    {hintLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <><HelpCircle className="h-4 w-4" /> {t('focus.stuck_mini_btn')}</>}
                                                 </button>
                                             </div>
                                             <button onClick={() => setShowChat(true)}
                                                 className="w-full py-4 rounded-2xl font-bold text-sm text-electric-blue border border-electric-blue/10 bg-electric-blue/5 hover:bg-electric-blue/10 active:scale-[0.98] transition-all flex items-center justify-center gap-2">
                                                 <MessageSquare className="h-4 w-4" />
-                                                Ask a Question
+                                                {t('focus.ask_question_btn')}
                                             </button>
                                         </>
                                     )}
@@ -1513,7 +1480,7 @@ export function FocusModeOverlay({ task, goalTitle, onClose, onOptimisticGemUpda
                                             <button onClick={() => { haptics.medium(); setState('running'); if (sound !== 'none') startSound(sound, volume) }}
                                                 className="py-4 rounded-2xl font-black text-sm text-black hover:opacity-90 active:scale-[0.98] transition-all flex items-center justify-center gap-2"
                                                 style={{ background: timerColor }}>
-                                                <Play className="h-4 w-4 fill-black" /> Resume
+                                                <Play className="h-4 w-4 fill-black" /> {t('focus.resume_btn')}
                                             </button>
                                             <button onClick={() => { 
                                                 stopSound(); 
@@ -1527,7 +1494,7 @@ export function FocusModeOverlay({ task, goalTitle, onClose, onOptimisticGemUpda
                                                 onClose() 
                                             }}
                                                 className="py-4 rounded-2xl font-bold text-sm text-red-400 border border-red-500/10 bg-red-500/5 hover:bg-red-500/10 active:scale-[0.98] transition-all flex items-center justify-center gap-2">
-                                                <RotateCcw className="h-4 w-4" /> Abort
+                                                <RotateCcw className="h-4 w-4" /> {t('focus.abort_btn')}
                                             </button>
                                         </div>
                                     )}
@@ -1552,7 +1519,7 @@ export function FocusModeOverlay({ task, goalTitle, onClose, onOptimisticGemUpda
                                         }}
                                             className="w-full py-4 rounded-2xl font-black text-sm text-black bg-emerald-500 hover:bg-emerald-400 active:scale-[0.98] transition-all flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(16,185,129,0.2)]"
                                         >
-                                            Claim Mastery Rewards
+                                            {t('focus.claim_mastery')}
                                         </button>
                                     ) : (
                                         <div className="flex flex-col gap-2 w-full">
@@ -1560,14 +1527,14 @@ export function FocusModeOverlay({ task, goalTitle, onClose, onOptimisticGemUpda
                                                 <button onClick={handleAddTime}
                                                     className="w-full py-4 rounded-2xl font-bold text-sm text-gray-300 border border-white/5 bg-white/[0.03] hover:bg-white/[0.06] active:scale-[0.98] transition-all flex items-center justify-center gap-2"
                                                 >
-                                                    <Plus className="h-4 w-4" /> + Add 5 Minutes
+                                                    <Plus className="h-4 w-4" /> {t('focus.add_5_minutes')}
                                                 </button>
                                             )}
                                             <button 
                                                 onClick={handleClaimBaseRewardOnly}
                                                 className="w-full py-4 rounded-2xl font-bold text-xs text-gray-500 hover:text-gray-400 active:scale-[0.98] transition-all text-center"
                                             >
-                                                Skip Active Recall Quiz (Claim Base Gems Only)
+                                                {t('focus.skip_recall')}
                                             </button>
                                         </div>
                                     )}

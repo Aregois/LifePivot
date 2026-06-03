@@ -1,20 +1,22 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useLanguage } from './language-provider'
 
 export function ClientGreeting() {
-  const [greeting, setGreeting] = useState('Welcome back')
+  const { t } = useLanguage()
+  const [greetingKey, setGreetingKey] = useState('dashboard.welcome_back')
 
   useEffect(() => {
     const hour = new Date().getHours()
     if (hour < 12) {
-      setGreeting('Good Morning')
+      setGreetingKey('dashboard.good_morning')
     } else if (hour < 18) {
-      setGreeting('Good Afternoon')
+      setGreetingKey('dashboard.good_afternoon')
     } else {
-      setGreeting('Good Evening')
+      setGreetingKey('dashboard.good_evening')
     }
   }, [])
 
-  return <>{greeting}</>
+  return <>{t(greetingKey)}</>
 }

@@ -5,6 +5,7 @@ import { haptics } from '@/utils/haptics'
 import { useState } from 'react'
 import { motion, useMotionValue, useTransform, AnimatePresence, PanInfo } from 'framer-motion'
 import type { Task, Subtask } from '@/utils/types'
+import { useLanguage } from './language-provider'
 
 const GEM_REWARD: Record<number, number> = { 0: 0, 1: 1, 2: 1, 3: 1, 4: 2, 5: 3 }
 
@@ -20,6 +21,7 @@ interface TaskCardProps {
 }
 
 export function TaskCard({ task, onCheck, onSubtaskCheck, onFocus, onReschedule, index: _index, isLocked, isCrunch }: TaskCardProps) {
+    const { t } = useLanguage()
     const isCompleted = task.status === 'completed'
     const isVoid = task.priority === 0
     const [subtasksOpen, setSubtasksOpen] = useState(false)
@@ -152,7 +154,7 @@ export function TaskCard({ task, onCheck, onSubtaskCheck, onFocus, onReschedule,
                                     className="flex items-center gap-2"
                                 >
                                     <CheckCircle2 className="h-5 w-5" />
-                                    <span className="text-xs font-black uppercase tracking-widest">Complete</span>
+                                    <span className="text-xs font-black uppercase tracking-widest">{t('task_card.swipe_complete')}</span>
                                 </motion.div>
                             </motion.div>
 
@@ -168,7 +170,7 @@ export function TaskCard({ task, onCheck, onSubtaskCheck, onFocus, onReschedule,
                                     }}
                                     className="flex items-center gap-2"
                                 >
-                                    <span className="text-xs font-black uppercase tracking-widest">Tomorrow</span>
+                                    <span className="text-xs font-black uppercase tracking-widest">{t('task_card.swipe_tomorrow')}</span>
                                     <Calendar className="h-5 w-5" />
                                 </motion.div>
                             </motion.div>
@@ -215,7 +217,7 @@ export function TaskCard({ task, onCheck, onSubtaskCheck, onFocus, onReschedule,
 
                             {task.pivoted_count > 0 && (
                                 <p className="text-[11px] text-red-400 font-bold uppercase tracking-wider mt-1">
-                                    Pivoted ×{task.pivoted_count}
+                                    {t('task_card.pivoted_count').replace('{count}', String(task.pivoted_count))}
                                 </p>
                             )}
 
@@ -238,9 +240,9 @@ export function TaskCard({ task, onCheck, onSubtaskCheck, onFocus, onReschedule,
                                 {onFocus && (
                                     <button
                                         onClick={(e) => { e.stopPropagation(); haptics.medium(); onFocus(task) }}
-                                        className="flex-1 py-2.5 rounded-2xl bg-electric-blue/10 border border-electric-blue/20 flex items-center justify-center gap-1.5 active:scale-95 transition-transform">
+                                        className="flex-1 py-2.5 rounded-2xl bg-electric-blue/10 border border-electric-blue/20 flex items-center justify-center gap-1.5 active:scale-95 transition-transform animate-fade-in">
                                         <Target className="h-4 w-4 text-electric-blue" />
-                                        <span className="text-xs font-bold text-electric-blue">Focus</span>
+                                        <span className="text-xs font-bold text-electric-blue">{t('task_card.btn_focus')}</span>
                                     </button>
                                 )}
 
@@ -248,16 +250,18 @@ export function TaskCard({ task, onCheck, onSubtaskCheck, onFocus, onReschedule,
                                 {hasSubtasks && (
                                     <button
                                         onClick={(e) => { e.stopPropagation(); haptics.light(); setSubtasksOpen(p => !p) }}
-                                        className="flex-1 py-2.5 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center gap-1.5 active:scale-95 transition-transform">
+                                        className="flex-1 py-2.5 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center gap-1.5 active:scale-95 transition-transform animate-fade-in">
                                         <ChevronDown className={`h-4 w-4 text-gray-400 transition-transform duration-300 ${subtasksOpen ? 'rotate-180' : ''}`} />
-                                        <span className="text-xs font-bold text-gray-400">Subtasks</span>
+                                        <span className="text-xs font-bold text-gray-400">{t('task_card.btn_subtasks')}</span>
                                     </button>
                                 )}
 
                                 {/* Mark done button (as a backup tap area) */}
                                 <button
                                     onClick={(e) => { e.stopPropagation(); haptics.medium(); onCheck(task.id, task.status) }}
-                                    className="h-10 w-10 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center active:scale-95 transition-transform shrink-0">
+                                    className="h-10 w-10 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center active:scale-95 transition-transform shrink-0 animate-fade-in"
+                                    aria-label={t('task_card.btn_mark_completed')}
+                                >
                                     <Circle className="h-5 w-5 text-gray-500" />
                                 </button>
                             </div>
@@ -265,8 +269,8 @@ export function TaskCard({ task, onCheck, onSubtaskCheck, onFocus, onReschedule,
 
                         {/* Completed status row */}
                         {isCompleted && (
-                            <div className="flex items-center justify-between px-4 pb-3">
-                                <span className="text-[11px] text-gray-600 font-medium uppercase tracking-wider">Completed</span>
+                            <div className="flex items-center justify-between px-4 pb-3 animate-fade-in">
+                                <span className="text-[11px] text-gray-600 font-medium uppercase tracking-wider">{t('task_card.status_completed')}</span>
                                 <button onClick={(e) => { e.stopPropagation(); haptics.light(); onCheck(task.id, task.status) }}
                                     className="active:scale-95 transition-transform">
                                     <CheckCircle2 className="h-5 w-5 text-electric-blue" />
@@ -276,9 +280,9 @@ export function TaskCard({ task, onCheck, onSubtaskCheck, onFocus, onReschedule,
 
                         {/* VOID day label */}
                         {isVoid && (
-                            <div className="px-4 pb-4 flex items-center gap-2">
+                            <div className="px-4 pb-4 flex items-center gap-2 animate-fade-in">
                                 <Zap className="h-4 w-4 text-soft-cyan animate-pulse" />
-                                <span className="text-xs text-soft-cyan font-bold">Rest Day — No tasks</span>
+                                <span className="text-xs text-soft-cyan font-bold">{t('task_card.status_void')}</span>
                             </div>
                         )}
 

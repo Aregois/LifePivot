@@ -5,6 +5,7 @@ import { Trophy, ArrowUp, ArrowDown, Sparkles, Diamond, Flame, ShieldAlert } fro
 import { useEconomy } from './economy-provider'
 import { haptics } from '@/utils/haptics'
 import { AvatarIcon } from './avatar-icons'
+import { useLanguage } from './language-provider'
 
 interface Competitor {
     name: string
@@ -28,6 +29,7 @@ const FIRST_NAMES = ['Astro', 'Quantum', 'Pixel', 'Void', 'Nebula', 'Chrono', 'S
 const LAST_NAMES = ['Scholar', 'Seeker', 'Sage', 'Walker', 'Catalyst', 'Runner', 'Alchemist', 'Navigator', 'Nomad', 'Oracle']
 
 export function PathseekerLeagues() {
+    const { t } = useLanguage()
     const { xp, level, avatarId } = useEconomy()
     const [mounted, setMounted] = useState(false)
     const [currentLeague, setCurrentLeague] = useState('Bronze')
@@ -146,24 +148,34 @@ export function PathseekerLeagues() {
         let nextLeague = leagueName
         let promotionMsg = ''
 
+        const getLocalizedLeague = (name: string) => {
+            return t(`leagues.name_${name.toLowerCase()}`)
+        }
+
         if (rank <= 5) {
             // Promoted!
             const leagueIdx = LEAGUE_NAMES.indexOf(leagueName)
             if (leagueIdx < LEAGUE_NAMES.length - 1) {
                 nextLeague = LEAGUE_NAMES[leagueIdx + 1]
-                promotionMsg = `Congratulations! You placed Rank ${rank} and were PROMOTED to the ${nextLeague} League! 🚀`
+                promotionMsg = t('leagues.promo_success')
+                    .replace('{rank}', rank.toString())
+                    .replace('{nextLeague}', getLocalizedLeague(nextLeague))
             } else {
-                promotionMsg = `Incredible! You won the champion league Zenith! 🏆`
+                promotionMsg = t('leagues.zenith_champion')
             }
         } else if (rank >= 25) {
             // Demoted
             const leagueIdx = LEAGUE_NAMES.indexOf(leagueName)
             if (leagueIdx > 0) {
                 nextLeague = LEAGUE_NAMES[leagueIdx - 1]
-                promotionMsg = `You placed Rank ${rank} and were demoted to the ${nextLeague} League. Keep focusing to get back up!`
+                promotionMsg = t('leagues.demoted')
+                    .replace('{rank}', rank.toString())
+                    .replace('{nextLeague}', getLocalizedLeague(nextLeague))
             }
         } else {
-            promotionMsg = `You placed Rank ${rank} and maintained your spot in the ${leagueName} League.`
+            promotionMsg = t('leagues.maintained')
+                .replace('{rank}', rank.toString())
+                .replace('{league}', getLocalizedLeague(leagueName))
         }
 
         alert(promotionMsg) // Fallback alert box
@@ -178,6 +190,10 @@ export function PathseekerLeagues() {
 
     const userRank = cohort.findIndex(c => c.isUser) + 1
 
+    const getLocalizedLeague = (name: string) => {
+        return t(`leagues.name_${name.toLowerCase()}`)
+    }
+
     return (
         <div className="flex flex-col gap-6 animate-fade-in select-none">
             {/* League Header Card */}
@@ -189,31 +205,31 @@ export function PathseekerLeagues() {
                             <Trophy className="h-5 w-5 text-white" />
                         </div>
                         <div>
-                            <span className="text-[9px] font-black uppercase tracking-widest text-white/70">Competitive Leagues</span>
-                            <h3 className="text-xl font-black text-white leading-tight">{currentLeague} League</h3>
+                            <span className="text-[9px] font-black uppercase tracking-widest text-white/70">{t('leagues.title')}</span>
+                            <h3 className="text-xl font-black text-white leading-tight">{getLocalizedLeague(currentLeague)} {t('leagues.league')}</h3>
                         </div>
                     </div>
                     <div className="text-right shrink-0">
-                        <span className="text-[9px] font-black text-white/50 uppercase tracking-widest block">Ends In</span>
-                        <span className="text-white font-black text-lg block mt-0.5">{daysRemaining} days</span>
+                        <span className="text-[9px] font-black text-white/50 uppercase tracking-widest block">{t('leagues.ends_in')}</span>
+                        <span className="text-white font-black text-lg block mt-0.5">{t('leagues.days_remaining').replace('{count}', daysRemaining.toString())}</span>
                     </div>
                 </div>
 
                 <div className="bg-black/20 border border-white/5 px-4 py-2.5 rounded-xl flex items-center justify-between text-xs font-bold text-white/80">
-                    <span>Your Placement: Rank {userRank} of 30</span>
+                    <span>{t('leagues.user_rank').replace('{rank}', userRank.toString()).replace('{total}', '30')}</span>
                     <span className="flex items-center gap-1">
                         {userRank <= 5 ? (
                             <>
                                 <ArrowUp className="h-3.5 w-3.5 text-emerald-400" />
-                                <span className="text-emerald-400 font-extrabold uppercase text-[10px]">Promotion Zone</span>
+                                <span className="text-emerald-400 font-extrabold uppercase text-[10px]">{t('leagues.promotion_zone')}</span>
                             </>
                         ) : userRank >= 25 ? (
                             <>
                                 <ArrowDown className="h-3.5 w-3.5 text-red-400" />
-                                <span className="text-red-400 font-extrabold uppercase text-[10px]">Demotion Zone</span>
+                                <span className="text-red-400 font-extrabold uppercase text-[10px]">{t('leagues.demotion_zone')}</span>
                             </>
                         ) : (
-                            <span className="text-gray-400 uppercase text-[10px]">Safe Zone</span>
+                            <span className="text-gray-400 uppercase text-[10px]">{t('leagues.safe_zone')}</span>
                         )}
                     </span>
                 </div>
@@ -222,8 +238,8 @@ export function PathseekerLeagues() {
             {/* Competitors List */}
             <div className="bg-[#141824] border border-white/5 p-4 rounded-[2.5rem] shadow-xl flex flex-col gap-3">
                 <div className="flex items-center justify-between text-gray-500 text-[10px] font-black uppercase tracking-wider px-2 pb-2 border-b border-white/5">
-                    <span>Rank / Pathseeker</span>
-                    <span>Weekly XP</span>
+                    <span>{t('leagues.header_rank_seeker')}</span>
+                    <span>{t('leagues.header_weekly_xp')}</span>
                 </div>
 
                 <div className="flex flex-col gap-2.5 max-h-[380px] overflow-y-auto pr-1 no-scrollbar pb-1">
@@ -264,7 +280,7 @@ export function PathseekerLeagues() {
                                         {/* Competitor Details */}
                                         <div className="min-w-0">
                                             <p className={`text-xs font-extrabold truncate ${isUser ? 'text-electric-blue' : 'text-white'}`}>
-                                                {isUser ? 'You' : competitor.name}
+                                                {isUser ? t('leagues.you') : competitor.name}
                                             </p>
                                             <p className="text-[8px] text-gray-500 uppercase tracking-widest mt-0.5 truncate">
                                                 {competitor.title}
@@ -284,7 +300,7 @@ export function PathseekerLeagues() {
                                 {isPromoBoundary && (
                                     <div className="flex items-center gap-2 py-0.5 px-1.5 shrink-0 select-none">
                                         <div className="h-[1px] flex-1 bg-emerald-500/25" />
-                                        <span className="text-[8px] font-black text-emerald-400 uppercase tracking-widest">Promotion Zone Limit</span>
+                                        <span className="text-[8px] font-black text-emerald-400 uppercase tracking-widest">{t('leagues.promo_limit')}</span>
                                         <div className="h-[1px] flex-1 bg-emerald-500/25" />
                                     </div>
                                 )}
@@ -292,7 +308,7 @@ export function PathseekerLeagues() {
                                 {isDemoBoundary && (
                                     <div className="flex items-center gap-2 py-0.5 px-1.5 shrink-0 select-none">
                                         <div className="h-[1px] flex-1 bg-red-500/25" />
-                                        <span className="text-[8px] font-black text-red-400 uppercase tracking-widest">Demotion Zone Limit</span>
+                                        <span className="text-[8px] font-black text-red-400 uppercase tracking-widest">{t('leagues.demo_limit')}</span>
                                         <div className="h-[1px] flex-1 bg-red-500/25" />
                                     </div>
                                 )}

@@ -265,7 +265,7 @@ export function ProfileClient({
     const handleResetOnboarding = () => {
         if (hapticsEnabled) webHaptics.medium()
         localStorage.setItem('lifepivot_onboarding_completed', 'false')
-        setOnboardingStatus("Tutorial Reset! Head to the dashboard to begin.")
+        setOnboardingStatus(t('profile.tutorial_reset_success'))
         setTimeout(() => setOnboardingStatus(null), 5000)
     }
 
@@ -390,7 +390,7 @@ export function ProfileClient({
                 {/* XP bar (wide on desktop, pushed right) */}
                 <div className="w-full md:max-w-md flex flex-col gap-2 mt-2 md:mt-0 relative z-10">
                     <div className="flex justify-between text-[9px] font-black text-gray-500 uppercase tracking-widest">
-                        <span className="text-electric-blue">Experience to Level {level + 1}</span>
+                        <span className="text-electric-blue">{t('profile.xp_needed').replace('{level}', (level + 1).toString())}</span>
                         <span>{xp} / {xpNeeded} XP</span>
                     </div>
                     <div className="w-full h-2 bg-[#1C2033]/50 rounded-full overflow-hidden border border-white/5 shadow-inner">
@@ -437,15 +437,15 @@ export function ProfileClient({
                     {/* Left Column */}
                     <div className="flex-1 flex flex-col gap-6 min-w-0">
                         {/* Stats Grid */}
-                        <div className="grid grid-cols-3 gap-3 lg:gap-6">
+                        <div className="grid grid-cols-2 gap-3 lg:gap-6">
                             <div className="bg-[#141824] border border-white/5 p-4 lg:p-6 rounded-3xl text-center shadow-lg">
                                 <CheckCircle className="h-5 w-5 lg:h-6 lg:w-6 text-emerald-400 mx-auto mb-2" />
-                                <p className="text-[8px] lg:text-[10px] font-black text-gray-500 uppercase tracking-wider">Completed</p>
+                                <p className="text-[8px] lg:text-[10px] font-black text-gray-500 uppercase tracking-wider">{t('profile.completed')}</p>
                                 <p className="text-sm lg:text-xl font-extrabold text-white mt-1 tabular-nums">{totalCompleted}</p>
                             </div>
                             <div className="bg-[#141824] border border-white/5 p-4 lg:p-6 rounded-3xl text-center shadow-lg">
                                 <Clock className="h-5 w-5 lg:h-6 lg:w-6 text-electric-blue mx-auto mb-2" />
-                                <p className="text-[8px] lg:text-[10px] font-black text-gray-500 uppercase tracking-wider">Study Time</p>
+                                <p className="text-[8px] lg:text-[10px] font-black text-gray-500 uppercase tracking-wider">{t('profile.study_time')}</p>
                                 <p className="text-sm lg:text-xl font-extrabold text-white mt-1 tabular-nums">{totalFocusMins}m</p>
                             </div>
                             {/* Streak stat hidden 
@@ -462,11 +462,11 @@ export function ProfileClient({
                             <div className="flex items-center justify-between mb-2">
                                 <div className="flex items-center gap-2">
                                     <CalendarRange className="h-4 w-4 lg:h-5 lg:w-5 text-electric-blue" />
-                                    <h3 className="text-xs lg:text-sm font-black uppercase tracking-wider text-gray-400">Weekly Journey</h3>
+                                    <h3 className="text-xs lg:text-sm font-black uppercase tracking-wider text-gray-400">{t('profile.weekly_journey')}</h3>
                                 </div>
                                 <span className="text-[8px] lg:text-[10px] font-black uppercase text-orange-400 bg-orange-500/10 border border-orange-500/20 px-2 lg:px-3 py-0.5 lg:py-1 rounded-full shrink-0 flex items-center gap-1">
                                     <Flame className="h-2.5 w-2.5 lg:h-3 lg:w-3 fill-orange-500/20" />
-                                    {currentStreak}d Streak
+                                    {t('profile.day_streak').replace('{count}', currentStreak.toString())}
                                 </span>
                             </div>
 
@@ -516,9 +516,9 @@ export function ProfileClient({
                             <div className="flex items-center justify-between mb-2">
                                 <div className="flex items-center gap-2">
                                     <Sparkles className="h-4 w-4 lg:h-5 lg:w-5 text-electric-blue animate-pulse" />
-                                    <h3 className="text-xs lg:text-sm font-black uppercase tracking-wider text-gray-400">Daily Quests</h3>
+                                    <h3 className="text-xs lg:text-sm font-black uppercase tracking-wider text-gray-400">{t('profile.daily_quests')}</h3>
                                 </div>
-                                <span className="text-[8px] lg:text-[10px] font-black uppercase text-gray-500 bg-white/5 px-2 lg:px-3 py-0.5 lg:py-1 rounded-full shrink-0">Resets Daily</span>
+                                <span className="text-[8px] lg:text-[10px] font-black uppercase text-gray-500 bg-white/5 px-2 lg:px-3 py-0.5 lg:py-1 rounded-full shrink-0">{t('profile.resets_daily')}</span>
                             </div>
 
                             <div className="flex flex-col gap-3 lg:gap-4">
@@ -538,8 +538,12 @@ export function ProfileClient({
                                         >
                                             <div className="flex items-start justify-between gap-4">
                                                 <div className="flex-1">
-                                                    <h4 className="text-xs lg:text-sm font-extrabold text-white">{quest.title}</h4>
-                                                    <p className="text-[10px] lg:text-xs text-gray-400 mt-1">{quest.description}</p>
+                                                    <h4 className="text-xs lg:text-sm font-extrabold text-white">
+                                                        {quest.id === 'daily_focus' ? t('profile.quest_focus_title') : t('profile.quest_tasks_title')}
+                                                    </h4>
+                                                    <p className="text-[10px] lg:text-xs text-gray-400 mt-1">
+                                                        {quest.id === 'daily_focus' ? t('profile.quest_focus_desc') : t('profile.quest_tasks_desc')}
+                                                    </p>
                                                 </div>
                                                 <div className="flex items-center gap-1 text-[9px] lg:text-[11px] font-black text-electric-blue shrink-0">
                                                     <span>+{quest.xpReward} XP</span>
@@ -573,14 +577,14 @@ export function ProfileClient({
                                                         {claimingId === quest.id ? (
                                                             <Loader2 className="h-3 w-3 animate-spin mx-auto" />
                                                         ) : isClaimed ? (
-                                                            'Claimed'
+                                                            t('profile.claimed')
                                                         ) : (
-                                                            'Claim'
+                                                            t('profile.claim')
                                                         )}
                                                     </button>
                                                 ) : (
                                                     <span className="text-[9px] lg:text-[10px] font-black uppercase text-gray-500 bg-white/5 border border-white/5 px-2.5 py-1.5 lg:px-3 lg:py-2 rounded-xl shrink-0">
-                                                        Studying
+                                                        {t('profile.studying')}
                                                     </span>
                                                 )}
                                             </div>
@@ -597,7 +601,7 @@ export function ProfileClient({
                         <div className="bg-[#141824] border border-white/5 p-5 lg:p-6 rounded-[2.5rem] shadow-lg sticky top-24">
                             <div className="flex items-center gap-2 mb-4 lg:mb-6">
                                 <Award className="h-4 w-4 lg:h-5 lg:w-5 text-electric-blue" />
-                                <h3 className="text-xs lg:text-sm font-black uppercase tracking-wider text-gray-400">Path of Mastery</h3>
+                                <h3 className="text-xs lg:text-sm font-black uppercase tracking-wider text-gray-400">{t('profile.mastery_path')}</h3>
                             </div>
 
                             <div className="flex flex-col gap-3 lg:gap-4">
@@ -630,10 +634,10 @@ export function ProfileClient({
                                                 </div>
                                                 <div className="flex-1 min-w-0">
                                                     <h4 className={`text-xs lg:text-sm font-extrabold truncate ${isUnlocked ? 'text-white' : 'text-gray-500'}`}>
-                                                        {ach.title}
+                                                        {t(`profile.achievement_${ach.id}_title`)}
                                                     </h4>
                                                     <p className="text-[10px] lg:text-xs text-gray-400 mt-0.5 lg:mt-1 leading-tight">
-                                                        {ach.description}
+                                                        {t(`profile.achievement_${ach.id}_desc`)}
                                                     </p>
                                                 </div>
                                             </div>
@@ -650,23 +654,23 @@ export function ProfileClient({
 
                                                 {isClaimed ? (
                                                     <span className="text-[8px] lg:text-[9px] font-black uppercase text-gray-600 bg-white/5 border border-white/5 px-2.5 py-1.5 rounded-xl">
-                                                        Claimed
+                                                        {t('profile.claimed')}
                                                     </span>
                                                 ) : isUnlocked ? (
                                                     <button
                                                         onClick={() => handleClaimAchievement(ach.id)}
                                                         disabled={claimingId === ach.id}
-                                                        className="px-3.5 py-1.5 lg:px-4 lg:py-2 rounded-xl text-[9px] lg:text-[10px] font-black uppercase tracking-wider bg-electric-blue text-black hover:scale-105 active:scale-95 shadow-[0_0_10px_rgba(0,240,255,0.25)] transition-transform"
+                                                        className="px-3.5 py-1.5 lg:px-4 lg:py-2 rounded-xl text-[9px] lg:text-[10px] font-black tracking-wider bg-electric-blue text-black hover:scale-105 active:scale-95 shadow-[0_0_10px_rgba(0,240,255,0.25)] transition-transform"
                                                     >
                                                         {claimingId === ach.id ? (
                                                             <Loader2 className="h-3 w-3 animate-spin" />
                                                         ) : (
-                                                            'Claim Reward'
+                                                            t('profile.claim_reward')
                                                         )}
                                                     </button>
                                                 ) : (
                                                     <span className="text-[8px] lg:text-[9px] font-black uppercase text-gray-500 bg-white/5 border border-white/5 px-2.5 py-1.5 rounded-xl">
-                                                        Locked
+                                                        {t('profile.locked')}
                                                     </span>
                                                 )}
                                             </div>
@@ -781,18 +785,18 @@ export function ProfileClient({
                     <div className="bg-[#141824] border border-white/5 p-5 rounded-[2.5rem] shadow-lg flex flex-col gap-4">
                         <div className="flex items-center gap-2">
                             <Palette className="h-4 w-4 text-electric-blue" />
-                            <h3 className="text-xs font-black uppercase tracking-wider text-gray-400">Design Theme</h3>
+                            <h3 className="text-xs font-black uppercase tracking-wider text-gray-400">{t('profile.design_theme')}</h3>
                         </div>
 
                         {/* Theme Accent Select */}
                         <div>
-                            <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-2.5">Theme Accent Color</p>
+                            <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-2.5">{t('profile.theme_accent')}</p>
                             <div className="grid grid-cols-4 gap-3">
                                 {[
-                                    { id: 'blue', label: 'Electric Blue', bg: 'bg-[#00f0ff]' },
-                                    { id: 'violet', label: 'Neon Violet', bg: 'bg-[#bd00ff]' },
-                                    { id: 'green', label: 'Emerald Green', bg: 'bg-[#10b981]' },
-                                    { id: 'sunset', label: 'Sunset Amber', bg: 'bg-[#f59e0b]' }
+                                    { id: 'blue', bg: 'bg-[#00f0ff]' },
+                                    { id: 'violet', bg: 'bg-[#bd00ff]' },
+                                    { id: 'green', bg: 'bg-[#10b981]' },
+                                    { id: 'sunset', bg: 'bg-[#f59e0b]' }
                                 ].map((swatch) => (
                                     <button
                                         key={swatch.id}
@@ -805,7 +809,7 @@ export function ProfileClient({
                                     >
                                         <div className={`h-6 w-6 rounded-full ${swatch.bg} shadow-md`} />
                                         <span className="text-[8px] font-black uppercase tracking-tight text-gray-400 truncate w-full text-center">
-                                            {swatch.id}
+                                            {t(`profile.accent_${swatch.id}`)}
                                         </span>
                                     </button>
                                 ))}
@@ -817,17 +821,17 @@ export function ProfileClient({
                     <div className="bg-[#141824] border border-white/5 p-5 rounded-[2.5rem] shadow-lg flex flex-col gap-4">
                         <div className="flex items-center gap-2">
                             <Cpu className="h-4 w-4 text-electric-blue" />
-                            <h3 className="text-xs font-black uppercase tracking-wider text-gray-400">Tutor Settings</h3>
+                            <h3 className="text-xs font-black uppercase tracking-wider text-gray-400">{t('profile.tutor_settings')}</h3>
                         </div>
 
                         {/* Socratic Persona selection */}
                         <div>
-                            <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-2.5">Socratic Tutor Persona</p>
+                            <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-2.5">{t('profile.tutor_persona')}</p>
                             <div className="grid grid-cols-3 gap-2">
                                 {[
-                                    { id: 'feynman', name: 'Feynman', desc: 'Intuitive & Simple' },
-                                    { id: 'socrates', name: 'Socrates', desc: 'Pure Questioning' },
-                                    { id: 'stoic', name: 'Marcus', desc: 'Stoic Discipline' }
+                                    { id: 'feynman', name: t('tutor.feynman'), desc: t('profile.persona_feynman_desc') },
+                                    { id: 'socrates', name: t('tutor.socrates'), desc: t('profile.persona_socrates_desc') },
+                                    { id: 'stoic', name: t('tutor.aurelius'), desc: t('profile.persona_stoic_desc') }
                                 ].map((p) => (
                                     <button
                                         key={p.id}
@@ -850,12 +854,12 @@ export function ProfileClient({
                     <div className="bg-[#141824] border border-white/5 p-5 rounded-[2.5rem] shadow-lg flex flex-col gap-4">
                         <div className="flex items-center gap-2">
                             <Clock className="h-4 w-4 text-electric-blue" />
-                            <h3 className="text-xs font-black uppercase tracking-wider text-gray-400">Timer & Sounds</h3>
+                            <h3 className="text-xs font-black uppercase tracking-wider text-gray-400">{t('profile.timer_sounds')}</h3>
                         </div>
 
                         {/* Default Focus Duration */}
                         <div>
-                            <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-2.5">Default Session Length</p>
+                            <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-2.5">{t('profile.default_length')}</p>
                             <div className="flex gap-2 bg-[#0c0e17] p-1 rounded-2xl border border-white/5 overflow-x-auto no-scrollbar">
                                 {[15, 25, 30, 45, 60].map((mins) => (
                                     <button
@@ -876,18 +880,18 @@ export function ProfileClient({
                         {/* Preferred Soundscape */}
                         <div>
                             <div className="flex items-center justify-between">
-                                <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Default Ambient Sound</p>
+                                <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">{t('profile.default_sound')}</p>
                                 <select 
                                     value={soundscape} 
                                     onChange={(e) => handleSoundscapeChange(e.target.value as SoundscapeType)}
                                     className="bg-[#0c0e17] border border-white/10 text-xs rounded-xl px-2.5 py-1.5 focus:outline-none text-gray-300 font-bold"
                                 >
-                                    <option value="none">Mute</option>
-                                    <option value="space">Deep Space</option>
-                                    <option value="rain">Autumn Rain</option>
-                                    <option value="binaural">Binaural Waves</option>
-                                    <option value="cafe">Cyberpunk Café</option>
-                                    <option value="greenhouse">Greenhouse Rain</option>
+                                    <option value="none">{t('focus.sound_mute')}</option>
+                                    <option value="space">{t('focus.sound_space')}</option>
+                                    <option value="rain">{t('focus.sound_rain')}</option>
+                                    <option value="binaural">{t('focus.sound_binaural')}</option>
+                                    <option value="cafe">{t('focus.sound_cafe')}</option>
+                                    <option value="greenhouse">{t('focus.sound_greenhouse')}</option>
                                 </select>
                             </div>
                         </div>
@@ -897,14 +901,14 @@ export function ProfileClient({
                     <div className="bg-[#141824] border border-white/5 p-5 rounded-[2.5rem] shadow-lg flex flex-col gap-4">
                         <div className="flex items-center gap-2">
                             <Headphones className="h-4 w-4 text-electric-blue" />
-                            <h3 className="text-xs font-black uppercase tracking-wider text-gray-400">Device Feedback</h3>
+                            <h3 className="text-xs font-black uppercase tracking-wider text-gray-400">{t('profile.device_feedback')}</h3>
                         </div>
 
                         {/* Haptic vibration toggle */}
                         <div className="flex items-center justify-between">
                             <div>
-                                <p className="text-[10px] text-white font-black uppercase tracking-wide">Tactile Haptics</p>
-                                <p className="text-[9px] text-gray-500 font-bold mt-0.5 leading-tight">Vibrate device on toggles and clicks.</p>
+                                <p className="text-[10px] text-white font-black uppercase tracking-wide">{t('profile.haptics_title')}</p>
+                                <p className="text-[9px] text-gray-500 font-bold mt-0.5 leading-tight">{t('profile.haptics_desc')}</p>
                             </div>
                             <button 
                                 onClick={handleHapticsToggle}
@@ -927,8 +931,8 @@ export function ProfileClient({
                         </div>
                         <div className="flex items-center justify-between gap-4">
                             <div>
-                                <p className="text-[10px] text-white font-black uppercase tracking-wide">Language</p>
-                                <p className="text-[9px] text-gray-500 font-bold mt-0.5 leading-tight">Switch the workspace language.</p>
+                                <p className="text-[10px] text-white font-black uppercase tracking-wide">{t('profile.language_title')}</p>
+                                <p className="text-[9px] text-gray-500 font-bold mt-0.5 leading-tight">{t('profile.language_desc')}</p>
                             </div>
                             <select
                                 value={locale}
@@ -951,14 +955,14 @@ export function ProfileClient({
                     <div className="bg-[#141824] border border-white/5 p-5 rounded-[2.5rem] shadow-lg flex flex-col gap-4">
                         <div className="flex items-center gap-2">
                             <EyeOff className="h-4 w-4 text-electric-blue" />
-                            <h3 className="text-xs font-black uppercase tracking-wider text-gray-400">Mindfulness & Guide</h3>
+                            <h3 className="text-xs font-black uppercase tracking-wider text-gray-400">{t('profile.mindfulness_guide')}</h3>
                         </div>
 
                         {/* Mindful Mode Toggle */}
                         <div className="flex items-center justify-between">
                             <div>
-                                <p className="text-[10px] text-white font-black uppercase tracking-wide">Mindful Study Mode</p>
-                                <p className="text-[9px] text-gray-500 font-bold mt-0.5 leading-tight">Hide level, league badges, and gamification HUD panels to focus purely on your studies.</p>
+                                <p className="text-[10px] text-white font-black uppercase tracking-wide">{t('profile.mindful_mode_title')}</p>
+                                <p className="text-[9px] text-gray-500 font-bold mt-0.5 leading-tight">{t('profile.mindful_mode_desc')}</p>
                             </div>
                             <button 
                                 onClick={handleMindfulModeToggle}
@@ -977,16 +981,16 @@ export function ProfileClient({
                         {/* Onboarding replay */}
                         <div className="flex items-center justify-between">
                             <div>
-                                <p className="text-[10px] text-white font-black uppercase tracking-wide">Tutorial Guide</p>
+                                <p className="text-[10px] text-white font-black uppercase tracking-wide">{t('profile.tutorial_guide_title')}</p>
                                 <p className="text-[9px] text-gray-500 font-bold mt-0.5 leading-tight">
-                                    {onboardingStatus || "Replay the interactive onboarding walkthrough tour."}
+                                    {onboardingStatus || t('profile.tutorial_guide_desc')}
                                 </p>
                             </div>
                             <button 
                                 onClick={handleResetOnboarding}
                                 className="px-4 py-2 bg-white/5 border border-white/10 hover:bg-white/10 text-white font-extrabold text-[10px] uppercase tracking-wider rounded-xl transition-all active:scale-95 shrink-0"
                             >
-                                Replay Tour
+                                {t('profile.replay_tour')}
                             </button>
                         </div>
                     </div>

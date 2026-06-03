@@ -7,6 +7,7 @@ import { sendSocraticMessage } from '@/app/actions'
 import { speakText, stopSpeaking } from '@/utils/tts'
 import { haptics } from '@/utils/haptics'
 import type { Task } from '@/utils/types'
+import { useLanguage } from './language-provider'
 
 interface Message { role: 'user' | 'model'; text: string }
 
@@ -19,6 +20,7 @@ interface FocusChatProps {
 }
 
 export function FocusChat({ task, goalTitle, activeSubtaskTitle, onClose, persona: initialPersona }: FocusChatProps) {
+    const { t } = useLanguage()
     const [mounted, setMounted] = useState(false)
     const [messages, setMessages] = useState<Message[]>([])
     const [input, setInput] = useState('')
@@ -32,9 +34,9 @@ export function FocusChat({ task, goalTitle, activeSubtaskTitle, onClose, person
     const bottomRef = useRef<HTMLDivElement>(null)
 
     const personas = [
-        { id: 'feynman', label: 'Feynman' },
-        { id: 'socrates', label: 'Socrates' },
-        { id: 'stoic', label: 'Aurelius' },
+        { id: 'feynman', label: t('tutor.feynman') },
+        { id: 'socrates', label: t('tutor.socrates') },
+        { id: 'stoic', label: t('tutor.aurelius') },
     ]
 
     useEffect(() => {
@@ -92,7 +94,7 @@ export function FocusChat({ task, goalTitle, activeSubtaskTitle, onClose, person
         const trimmed = input.trim()
         if (!trimmed || isPending) return
         if (!task) {
-            setError('Please create or select a study task to start tutoring.')
+            setError(t('tutor.error_select'))
             return
         }
         setInput('')
@@ -102,7 +104,7 @@ export function FocusChat({ task, goalTitle, activeSubtaskTitle, onClose, person
         startTransition(async () => {
             const result = await sendSocraticMessage(task.id, trimmed, history, activeSubtaskTitle, persona)
             if ('error' in result && result.error) {
-                setError('The Council is unavailable. Try again.')
+                setError(t('tutor.error_council'))
                 return
             }
             const reply = result.reply ?? ''
@@ -121,8 +123,8 @@ export function FocusChat({ task, goalTitle, activeSubtaskTitle, onClose, person
             {/* Header */}
             <div className="flex items-center justify-between px-5 pt-4 pb-4 border-b border-white/5 shrink-0">
                 <div className="flex-1 min-w-0 mr-3">
-                    <p className="text-[10px] font-black text-electric-blue uppercase tracking-[0.2em]">Socratic Tutor</p>
-                    <p className="text-white font-bold text-sm mt-0.5 truncate">{task ? task.title : 'General Companion'}</p>
+                    <p className="text-[10px] font-black text-electric-blue uppercase tracking-[0.2em]">{t('tutor.title')}</p>
+                    <p className="text-white font-bold text-sm mt-0.5 truncate">{task ? task.title : t('tutor.companion')}</p>
                     {task && activeSubtaskTitle && <p className="text-[10px] text-gray-500 truncate">↳ {activeSubtaskTitle}</p>}
                 </div>
                 <button onClick={onClose}
@@ -133,7 +135,7 @@ export function FocusChat({ task, goalTitle, activeSubtaskTitle, onClose, person
 
             {/* Persona Selector pills */}
             <div className="flex items-center gap-2 px-5 py-2 border-b border-white/5 bg-white/[0.01] overflow-x-auto no-scrollbar shrink-0">
-                <span className="text-[9px] font-black text-gray-500 uppercase tracking-widest shrink-0 mr-1 select-none">Persona:</span>
+                <span className="text-[9px] font-black text-gray-500 uppercase tracking-widest shrink-0 mr-1 select-none">{t('tutor.persona')}</span>
                 {personas.map(p => {
                     const isActive = persona === p.id
                     return (
@@ -163,9 +165,9 @@ export function FocusChat({ task, goalTitle, activeSubtaskTitle, onClose, person
                             <AlertCircle className="h-7 w-7 text-amber-500" />
                         </div>
                         <div>
-                            <p className="text-white font-black uppercase tracking-wider text-xs">No Active Study Context</p>
+                            <p className="text-white font-black uppercase tracking-wider text-xs">{t('tutor.no_context_title')}</p>
                             <p className="text-gray-400 text-xs mt-2 leading-relaxed max-w-[240px]">
-                                Go to the **Plan** page to create or select a study task. Nexus needs an active task context to start a Socratic dialogue.
+                                {t('tutor.no_context_desc')}
                             </p>
                         </div>
                     </div>
@@ -177,7 +179,7 @@ export function FocusChat({ task, goalTitle, activeSubtaskTitle, onClose, person
                                     <Bot className="h-7 w-7 text-electric-blue animate-float" />
                                 </div>
                                 <p className="text-gray-400 text-xs font-bold uppercase tracking-wider max-w-[240px] leading-relaxed">
-                                    I'll guide your thinking, but I won't give you direct answers.
+                                    {t('tutor.guide_text')}
                                 </p>
                             </div>
                         )}
@@ -208,7 +210,7 @@ export function FocusChat({ task, goalTitle, activeSubtaskTitle, onClose, person
                                     {isPending && !isTyping ? (
                                         <span className="flex items-center gap-2 text-gray-500 italic text-[11px]">
                                             <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                                            Tutor is thinking...
+                                            {t('tutor.thinking')}
                                         </span>
                                     ) : (
                                         <span>
@@ -233,7 +235,7 @@ export function FocusChat({ task, goalTitle, activeSubtaskTitle, onClose, person
                         value={input} 
                         onChange={e => setInput(e.target.value)}
                         onKeyDown={e => e.key === 'Enter' && handleSend()}
-                        placeholder={task ? "Ask tutor..." : "Select a task to start..."}
+                        placeholder={task ? t('tutor.placeholder') : t('tutor.select_task')}
                         disabled={isPending || !task}
                         className="flex-1 bg-transparent text-xs text-white placeholder-gray-600 focus:outline-none py-2 pl-1" 
                     />
@@ -251,4 +253,3 @@ export function FocusChat({ task, goalTitle, activeSubtaskTitle, onClose, person
 
     return createPortal(chat, document.body)
 }
-
