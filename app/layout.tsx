@@ -84,10 +84,10 @@ export default async function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased selection:bg-neon-violet selection:text-white`}
         suppressHydrationWarning
       >
-        <ThemeInitializer />
-        <RegisterServiceWorker />
-        <PwaInstallPrompt />
         <LanguageProvider>
+          <ThemeInitializer />
+          <RegisterServiceWorker />
+          <PwaInstallPrompt />
           {user ? (
             <EconomyProvider
               initialLives={initialLives}
