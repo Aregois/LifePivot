@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react'
 import { TRANSLATIONS, Locale } from '@/utils/translations'
+import { updateActiveGoalsLanguage } from '@/app/actions'
 
 interface LanguageContextProps {
     locale: Locale
@@ -29,10 +30,15 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
         setMounted(true)
     }, [])
 
-    const setLocale = (newLocale: Locale) => {
+    const setLocale = async (newLocale: Locale) => {
         if (TRANSLATIONS[newLocale]) {
             setLocaleState(newLocale)
             localStorage.setItem('lifepivot-locale', newLocale)
+            try {
+                await updateActiveGoalsLanguage(newLocale)
+            } catch (err) {
+                console.error('Failed to update active goals language in DB:', err)
+            }
         }
     }
 

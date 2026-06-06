@@ -1,5 +1,6 @@
 'use client'
 
+import { useState, useMemo } from 'react'
 import { Sparkles, Calendar, Zap, LayoutDashboard, Flame, TrendingUp, BookOpen } from 'lucide-react'
 import Link from 'next/link'
 import { CircadianChests } from '@/components/circadian-chests'
@@ -7,6 +8,7 @@ import { ReactiveAvatar } from '@/components/reactive-avatar'
 import { SocraticCheckpointBattle } from '@/components/socratic-checkpoint-battle'
 import { ClientGreeting } from '@/components/client-greeting'
 import { useLanguage } from '@/components/language-provider'
+import { translateGoal } from '@/utils/translations'
 
 interface DashboardClientProps {
   username: string
@@ -34,7 +36,11 @@ export function DashboardClient({
   stats,
   todayStr
 }: DashboardClientProps) {
-  const { t } = useLanguage()
+  const { t, locale } = useLanguage()
+
+  const translatedGoalData = useMemo(() => {
+    return translateGoal(goalData, locale)
+  }, [goalData, locale])
 
   const userLevel = profile?.level ?? 1
   let levelTitleLocalized = t('dashboard.level_titles.pathseeker')
@@ -45,9 +51,9 @@ export function DashboardClient({
 
   return (
     <div className="flex flex-col gap-5 sm:gap-6 lg:gap-8 py-4 flex-1 w-full max-w-7xl mx-auto">
-      {checkpointBattleDue && goalData && (
+      {checkpointBattleDue && translatedGoalData && (
         <SocraticCheckpointBattle
-          goalId={goalData.id}
+          goalId={translatedGoalData.id}
           wallDate={checkpointBattleDue.date}
           wallLabel={checkpointBattleDue.label}
         />
@@ -142,7 +148,7 @@ export function DashboardClient({
                     </div>
                     <div className="flex items-baseline gap-2">
                       <span className="text-3xl font-black text-white">{t('dashboard.day')} {stats.currentDay}</span>
-                      {goalData && <span className="text-sm font-bold text-gray-500">/ {goalData.duration_days}</span>}
+                      {translatedGoalData && <span className="text-sm font-bold text-gray-500">/ {translatedGoalData.duration_days}</span>}
                     </div>
                   </div>
                   {/* Streak badge hidden for now
@@ -194,8 +200,8 @@ export function DashboardClient({
               </div>
               
               <div className="space-y-3 flex-1">
-                {goalData?.tasks && goalData.tasks.filter((t: any) => t.due_date === todayStr).length > 0 ? (
-                  goalData.tasks
+                {translatedGoalData?.tasks && translatedGoalData.tasks.filter((t: any) => t.due_date === todayStr).length > 0 ? (
+                  translatedGoalData.tasks
                     .filter((t: any) => t.due_date === todayStr && t.task_type !== 'void')
                     .map((task: any) => {
                       const isDone = task.status === 'completed'

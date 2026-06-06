@@ -2,7 +2,7 @@
 
 import { CheckCircle2, Clock, Target, ChevronDown, Diamond, CheckSquare, Square, Zap, Circle, Calendar } from 'lucide-react'
 import { haptics } from '@/utils/haptics'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion, useMotionValue, useTransform, AnimatePresence, PanInfo } from 'framer-motion'
 import type { Task, Subtask } from '@/utils/types'
 import { useLanguage } from './language-provider'
@@ -18,16 +18,21 @@ interface TaskCardProps {
     index: number
     isLocked?: boolean
     isCrunch?: boolean
+    planLanguage?: string
 }
 
-export function TaskCard({ task, onCheck, onSubtaskCheck, onFocus, onReschedule, index: _index, isLocked, isCrunch }: TaskCardProps) {
-    const { t } = useLanguage()
+export function TaskCard({ task, onCheck, onSubtaskCheck, onFocus, onReschedule, index: _index, isLocked, isCrunch, planLanguage }: TaskCardProps) {
+    const { t, locale } = useLanguage()
     const isCompleted = task.status === 'completed'
     const isVoid = task.priority === 0
     const [subtasksOpen, setSubtasksOpen] = useState(false)
     const [localSubtasks, setLocalSubtasks] = useState<Subtask[]>(task.subtasks ?? [])
     const [isDismissed, setIsDismissed] = useState(false)
     const [thresholdCrossed, setThresholdCrossed] = useState<'left' | 'right' | null>(null)
+
+    useEffect(() => {
+        setLocalSubtasks(task.subtasks ?? [])
+    }, [task.subtasks])
 
     const hasSubtasks = localSubtasks.length > 0
     const completedSubtasks = localSubtasks.filter(s => s.completed).length

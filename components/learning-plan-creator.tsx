@@ -83,7 +83,7 @@ const CATEGORIES: CategoryItem[] = [
         suggestedGoal: 'CRITIQUE KANTIAN METAPHYSICAL CRITICAL PIECES'
     },
     {
-        id: 'Arts & Design',
+        id: 'Arts',
         name: 'Arts & Design',
         icon: Palette,
         color: 'text-[#FF33A3] border-[#FF33A3]/20',
@@ -127,7 +127,7 @@ const CATEGORIES: CategoryItem[] = [
         suggestedGoal: 'MAP THE RISE OF BYZANTINE CORRIDORS'
     },
     {
-        id: 'Social Sciences',
+        id: 'Social',
         name: 'Social Sciences',
         icon: Users,
         color: 'text-[#3B82F6] border-[#3B82F6]/20',
@@ -138,7 +138,7 @@ const CATEGORIES: CategoryItem[] = [
         suggestedGoal: 'ANALYZE DIVERGENT SOCIOLOGICAL BIAS'
     },
     {
-        id: 'Health & Fitness',
+        id: 'Health',
         name: 'Health & Fitness',
         icon: Dumbbell,
         color: 'text-[#EF4444] border-[#EF4444]/20',
@@ -451,36 +451,18 @@ export function LearningPlanCreator() {
                                     </div>
                                 </div>
 
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div className="space-y-2">
-                                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">{t('creator.initial_level')}</label>
-                                        <div className="relative">
-                                            <select
-                                                value={level}
-                                                onChange={(e) => setLevel(e.target.value)}
-                                                className="w-full bg-[#121626]/50 border border-white/5 rounded-2xl px-5 py-4 text-white focus:border-electric-blue focus:outline-none transition-all font-bold appearance-none cursor-pointer"
-                                            >
-                                                <option>Beginner</option>
-                                                <option>Intermediate</option>
-                                                <option>Advanced</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                    <div className="space-y-2">
-                                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">{t('creator.plan_language')}</label>
-                                        <div className="relative">
-                                            <select
-                                                value={activePlanLanguage}
-                                                onChange={(e) => setPlanLanguage(e.target.value)}
-                                                className="w-full bg-[#121626]/50 border border-white/5 rounded-2xl px-5 py-4 text-white focus:border-electric-blue focus:outline-none transition-all font-bold appearance-none cursor-pointer"
-                                            >
-                                                {Object.entries(LANGUAGE_NAMES).map(([code, name]) => (
-                                                    <option key={code} value={code}>
-                                                        {name}
-                                                    </option>
-                                                ))}
-                                            </select>
-                                        </div>
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">{t('creator.initial_level')}</label>
+                                    <div className="relative">
+                                        <select
+                                            value={level}
+                                            onChange={(e) => setLevel(e.target.value)}
+                                            className="w-full bg-[#121626]/50 border border-white/5 rounded-2xl px-5 py-4 text-white focus:border-electric-blue focus:outline-none transition-all font-bold appearance-none cursor-pointer"
+                                        >
+                                            <option>Beginner</option>
+                                            <option>Intermediate</option>
+                                            <option>Advanced</option>
+                                        </select>
                                     </div>
                                 </div>
 

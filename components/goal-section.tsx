@@ -5,7 +5,7 @@ import { toggleTask, addTask, toggleSubtask, rescheduleTaskToTomorrow } from '@/
 import { useEconomy } from './economy-provider'
 import { FocusModeOverlay } from './focus-mode-overlay'
 import { Plus } from 'lucide-react'
-import { useRef, useState } from 'react'
+import { useRef, useState, useEffect } from 'react'
 import type { Task } from '@/utils/types'
 import { useLanguage } from './language-provider'
 
@@ -24,14 +24,16 @@ interface GoalWithTasks {
     tasks: Task[]
     plan_metadata?: {
         is_crunch_mode?: boolean
+        language?: string
     }
 }
 
-
-
 export function GoalSection({ goal, selectedDate }: { goal: GoalWithTasks, selectedDate: string }) {
     const { setGems, setXp, setLevel, level } = useEconomy()
-    const { t } = useLanguage()
+    const { t, locale } = useLanguage()
+    
+    const planLanguage = goal.plan_metadata?.language || 'en'
+
     const isCrunchMode = goal.plan_metadata?.is_crunch_mode
     const formRef = useRef<HTMLFormElement>(null)
     const [focusTask, setFocusTask] = useState<Task | null>(null)
@@ -120,6 +122,7 @@ export function GoalSection({ goal, selectedDate }: { goal: GoalWithTasks, selec
                         index={index}
                         isLocked={hasUnfinishedPredecessors}
                         isCrunch={isCrunchMode}
+                        planLanguage={planLanguage}
                     />
                 ))}
 
@@ -158,6 +161,7 @@ export function GoalSection({ goal, selectedDate }: { goal: GoalWithTasks, selec
                                 onSubtaskCheck={handleSubtaskCheck}
                                 index={index + pendingTasks.length}
                                 isLocked={false}
+                                planLanguage={planLanguage}
                             />
                         ))}
                     </div>

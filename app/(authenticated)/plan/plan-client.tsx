@@ -1,7 +1,7 @@
 'use client'
 
 import { useRouter, useSearchParams } from 'next/navigation'
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { DateSelector } from '@/components/date-selector'
 import { TodaysFocusHeader } from '@/components/todays-focus-header'
 import { GoalSection } from '@/components/goal-section'
@@ -14,6 +14,7 @@ import { MindMap } from '@/components/mind-map'
 import { haptics } from '@/utils/haptics'
 import { useEconomy } from '@/components/economy-provider'
 import { useLanguage } from '@/components/language-provider'
+import { translateGoalsArray } from '@/utils/translations'
 
 interface PlanClientProps {
     user: any
@@ -29,7 +30,11 @@ export function PlanClient({ user, goals, goalsError }: PlanClientProps) {
     const [selectedDate, setSelectedDate] = useState(urlDate || getLocalDateString())
     const [viewMode, setViewMode] = useState<'list' | 'map'>('list')
     const { setGems } = useEconomy()
-    const { t } = useLanguage()
+    const { t, locale } = useLanguage()
+
+    const translatedGoals = useMemo(() => {
+        return translateGoalsArray(goals, locale)
+    }, [goals, locale])
 
     const handleSelectDate = useCallback((date: string) => {
         setSelectedDate(date)
@@ -44,13 +49,13 @@ export function PlanClient({ user, goals, goalsError }: PlanClientProps) {
 
     if (!user) return null
 
-    const totalRemaining = goals?.reduce((acc, goal) => {
+    const totalRemaining = translatedGoals?.reduce((acc, goal) => {
         return acc + goal.tasks.filter((t: any) => t.status === 'pending').length
     }, 0) || 0
 
     return (
         <div className="flex flex-col gap-6 pb-48 w-full max-w-7xl mx-auto pt-4">
-            {!goalsError && goals && goals.length > 0 && (
+            {!goalsError && translatedGoals && translatedGoals.length > 0 && (
                 <div className="flex items-center justify-between px-6 pb-2">
                     <div className="flex flex-col">
                         <h2 className="text-2xl lg:text-3xl font-extrabold text-white tracking-tight">
@@ -85,7 +90,7 @@ export function PlanClient({ user, goals, goalsError }: PlanClientProps) {
                 </div>
             )}
 
-            {!goalsError && goals && goals.length > 0 && viewMode === 'list' && (
+            {!goalsError && translatedGoals && translatedGoals.length > 0 && viewMode === 'list' && (
                 <div className="px-6">
                     <DateSelector
                         selectedDate={selectedDate}
@@ -112,15 +117,15 @@ export function PlanClient({ user, goals, goalsError }: PlanClientProps) {
                     </div>
                 )}
 
-                {!goalsError && (!goals || goals.length === 0) ? (
+                {!goalsError && (!translatedGoals || translatedGoals.length === 0) ? (
                     <div className="mt-8 max-w-2xl mx-auto">
                         <LearningPlanCreator />
                     </div>
-                ) : !goalsError && goals && goals.length > 0 && (
+                ) : !goalsError && translatedGoals && translatedGoals.length > 0 && (
                     <>
                         {viewMode === 'list' ? (
                             <>
-                                {goals.map((goal) => (
+                                {translatedGoals.map((goal) => (
                                     <div key={goal.id} className="flex flex-col xl:flex-row gap-8 w-full items-start">
                                         {/* Left Column: Progress Card */}
                                         <div className="flex-1 min-w-0 w-full">
@@ -151,7 +156,7 @@ export function PlanClient({ user, goals, goalsError }: PlanClientProps) {
                         ) : (
                             <div className="w-full h-[600px] lg:h-[800px] border border-white/5 rounded-[2.5rem] overflow-hidden bg-[#141824]/30">
                                 <MindMap 
-                                    goal={goals[0]} 
+                                    goal={translatedGoals[0]} 
                                     onOptimisticGemUpdate={(delta) => setGems(prev => Math.max(0, prev + delta))}
                                 />
                             </div>

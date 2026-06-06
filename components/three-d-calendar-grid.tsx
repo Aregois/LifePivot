@@ -14,6 +14,7 @@ import { getLocalDateString } from '@/utils/date-utils'
 import { useEconomy } from './economy-provider'
 import { toggleTask, processPivot } from '@/app/actions'
 import { useLanguage } from './language-provider'
+import { translateTasksArray } from '@/utils/translations'
 
 interface ThreeDCalendarGridProps {
     activeDates: string[]    // Pending tasks
@@ -51,12 +52,16 @@ export function ThreeDCalendarGrid({
     const [drawerOpen, setDrawerOpen] = useState(false)
     const [drawerDate, setDrawerDate] = useState('')
 
-    const [localTasks, setLocalTasks] = useState<Task[]>(tasks)
+    const translatedTasks = useMemo(() => {
+        return translateTasksArray(tasks, locale)
+    }, [tasks, locale])
+
+    const [localTasks, setLocalTasks] = useState<Task[]>(translatedTasks)
     const { setGems, setXp, setLevel, level, setLives } = useEconomy()
 
     useEffect(() => {
-        setLocalTasks(tasks)
-    }, [tasks])
+        setLocalTasks(translatedTasks)
+    }, [translatedTasks])
 
     useEffect(() => {
         setMounted(true)

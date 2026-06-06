@@ -4869,3 +4869,62 @@ export const LANGUAGE_NAMES: Record<Locale, string> = {
     ja: "日本語",
     zh: "简体中文"
 };
+
+export function translateGoal(goal: any, locale: string): any {
+    if (!goal) return goal;
+    const goalMetadata = goal.plan_metadata || {};
+    const translatedTitles = goalMetadata.translated_titles || {};
+    const goalTitle = translatedTitles[locale] || goal.title;
+
+    let translatedTasks = goal.tasks;
+    if (translatedTasks) {
+        translatedTasks = translateTasksArray(translatedTasks, locale);
+    }
+
+    return {
+        ...goal,
+        title: goalTitle,
+        tasks: translatedTasks
+    };
+}
+
+export function translateTask(task: any, locale: string): any {
+    if (!task) return task;
+    const subtasksArray = task.subtasks ?? [];
+    const translationsSubtask = subtasksArray.find((s: any) => s.id === 'translations') as any;
+    const realSubtasks = subtasksArray.filter((s: any) => s.id !== 'translations');
+
+    const taskTitle = translationsSubtask?.translations?.title?.[locale] || task.title;
+    const translatedSubtasks = realSubtasks.map((sub: any) => ({
+        ...sub,
+        title: translationsSubtask?.translations?.subtasks?.[sub.id]?.[locale] || sub.title
+    }));
+
+    let learningGoals = task.learning_goals;
+    if (learningGoals) {
+        const goalMetadata = learningGoals.plan_metadata || {};
+        const translatedTitles = goalMetadata.translated_titles || {};
+        const goalTitle = translatedTitles[locale] || learningGoals.title;
+        learningGoals = {
+            ...learningGoals,
+            title: goalTitle
+        };
+    }
+
+    return {
+        ...task,
+        title: taskTitle,
+        subtasks: translatedSubtasks,
+        learning_goals: learningGoals
+    };
+}
+
+export function translateTasksArray(tasks: any[] | null | undefined, locale: string): any[] {
+    if (!tasks) return [];
+    return tasks.map(task => translateTask(task, locale));
+}
+
+export function translateGoalsArray(goals: any[] | null | undefined, locale: string): any[] {
+    if (!goals) return [];
+    return goals.map(goal => translateGoal(goal, locale));
+}

@@ -12,8 +12,8 @@ export default async function Home() {
     supabase
       .from('learning_goals')
       .select(`
-        id, title, created_at, duration_days,
-        tasks ( id, status, due_date, task_type, title, duration_mins, priority )
+        id, title, created_at, duration_days, plan_metadata,
+        tasks ( id, status, due_date, task_type, title, duration_mins, priority, subtasks )
       `)
       .eq('user_id', user.id)
       .order('created_at', { ascending: false })

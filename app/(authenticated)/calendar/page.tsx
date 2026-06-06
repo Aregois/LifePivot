@@ -14,7 +14,7 @@ export default async function CalendarPage() {
         .from('tasks')
         .select(`
             *,
-            learning_goals ( title )
+            learning_goals ( title, plan_metadata )
         `)
         .eq('user_id', user.id)
 
