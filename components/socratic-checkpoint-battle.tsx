@@ -29,7 +29,7 @@ export function SocraticCheckpointBattle({ goalId, wallDate, wallLabel, onResolv
             window.location.reload()
         }
     }
-    const { setLives, setGems } = useEconomy()
+    const { setTokens } = useEconomy()
     const { t } = useLanguage()
     const [messages, setMessages] = useState<Message[]>([])
     const [input, setInput] = useState('')
@@ -122,10 +122,10 @@ export function SocraticCheckpointBattle({ goalId, wallDate, wallLabel, onResolv
                     if (rating === 'Pass') {
                         haptics.medium()
                         setStep('passed')
-                        setGems(prev => prev + 15)
+                        setTokens(prev => prev + 15)
                     } else {
                         haptics.error()
-                        setLives(prev => Math.max(0, prev - 1))
+                        setTokens(prev => Math.max(0, prev - 2))
                         setStep('failed')
                     }
                     setBattleResultText(reply)
@@ -351,7 +351,7 @@ export function SocraticCheckpointBattle({ goalId, wallDate, wallLabel, onResolv
                             </div>
                             <div className="bg-emerald-500/5 border border-emerald-500/10 rounded-2xl py-3 text-center">
                                 <span className="text-[8px] font-black text-gray-500 uppercase tracking-widest block">{t('socratic.rewards_granted')}</span>
-                                <span className="text-emerald-400 font-extrabold text-sm block mt-0.5">+15 {t('hud.gems')} / +100 {t('hud.xp')}</span>
+                                <span className="text-emerald-400 font-extrabold text-sm block mt-0.5">+15 Tokens / +100 XP</span>
                             </div>
                         </div>
                         
@@ -391,7 +391,7 @@ export function SocraticCheckpointBattle({ goalId, wallDate, wallLabel, onResolv
                             </div>
                             <div className="bg-rose-500/5 border border-rose-500/10 rounded-2xl py-3 text-center">
                                 <span className="text-[8px] font-black text-gray-500 uppercase tracking-widest block">{t('socratic.cost_sustained')}</span>
-                                <span className="text-rose-400 font-extrabold text-sm block mt-0.5">-1 {t('profile.lives')}</span>
+                                <span className="text-rose-400 font-extrabold text-sm block mt-0.5">-2 Tokens</span>
                             </div>
                         </div>
                         

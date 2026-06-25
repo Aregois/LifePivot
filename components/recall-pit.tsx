@@ -4,7 +4,7 @@ import { useState, useEffect, useTransition } from 'react'
 import { motion, AnimatePresence, useMotionValue, useTransform } from 'framer-motion'
 import { AlertCircle, RefreshCw, Check, X } from 'lucide-react'
 import { haptics } from '@/utils/haptics'
-import { fetchRecallPitItems, reviewFlashcard, recoverLifeFromRecallPit, rewardWagerServer, rescueOverdueTask } from '@/app/actions'
+import { fetchRecallPitItems, reviewFlashcard, recoverTokensFromRecallPit, rescueOverdueTask } from '@/app/actions'
 import { useEconomy } from './economy-provider'
 import { BlitzMatchGame } from './blitz-match-game'
 import { useLanguage } from './language-provider'
@@ -18,7 +18,7 @@ interface RecallItem {
 }
 
 export function RecallPit() {
-    const { setLives, setGems, lives } = useEconomy()
+    const { setTokens, tokens } = useEconomy()
     const { t } = useLanguage()
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
@@ -27,7 +27,7 @@ export function RecallPit() {
     const [isFlipped, setIsFlipped] = useState(false)
     const [isPending, startTransition] = useTransition()
     const [sessionCleared, setSessionCleared] = useState(0)
-    const [rewardEarned, setRewardEarned] = useState<'heart' | 'gems' | null>(null)
+    const [rewardEarned, setRewardEarned] = useState<'tokens' | null>(null)
     
     // States for Blitz Match Game integration
     const [rawFlashcards, setRawFlashcards] = useState<any[]>([])
@@ -110,20 +110,11 @@ export function RecallPit() {
 
             // Trigger reward milestones every 3 cleared items
             if (rating === 'easy' && clearedCount > 0 && clearedCount % 3 === 0) {
-                if (lives < 5) {
-                    const res = await recoverLifeFromRecallPit()
-                    if (res.success) {
-                        setLives(res.newLives ?? (lives + 1))
-                        setRewardEarned('heart')
-                        haptics.medium()
-                    }
-                } else {
-                    const res = await rewardWagerServer(5)
-                    if (res.success) {
-                        setGems(res.newGems ?? (prev => prev + 5))
-                        setRewardEarned('gems')
-                        haptics.medium()
-                    }
+                const res = await recoverTokensFromRecallPit()
+                if (res.success) {
+                    setTokens(res.newTokens ?? (tokens + 2))
+                    setRewardEarned('tokens')
+                    haptics.medium()
                 }
                 setTimeout(() => setRewardEarned(null), 3000)
             }
@@ -222,7 +213,7 @@ export function RecallPit() {
                         exit={{ opacity: 0, y: -20, scale: 0.8 }}
                         className="absolute -top-12 z-50 bg-emerald-500 text-black px-4 py-2.5 rounded-full font-black text-xs flex items-center gap-1.5 shadow-[0_0_20px_rgba(16,185,129,0.4)]"
                     >
-                        {rewardEarned === 'heart' ? t('recall_pit.heart_restored') : t('recall_pit.gems_awarded')}
+                        Tokens Awarded! 🪙
                     </motion.div>
                 )}
             </AnimatePresence>

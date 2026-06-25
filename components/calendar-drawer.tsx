@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion, AnimatePresence, type PanInfo } from 'framer-motion'
 import { X, Calendar } from 'lucide-react'
 import { TaskCard } from './task-card'
 import { FocusModeOverlay } from './focus-mode-overlay'
@@ -11,7 +11,7 @@ import type { Task } from '@/utils/types'
 import { haptics } from '@/utils/haptics'
 import { useLanguage } from './language-provider'
 
-const GEM_REWARD: Record<number, number> = { 0: 0, 1: 1, 2: 1, 3: 1, 4: 2, 5: 3 }
+const TOKEN_REWARD: Record<number, number> = { 0: 0, 1: 1, 2: 1, 3: 1, 4: 2, 5: 3 }
 
 interface CalendarDrawerProps {
     isOpen: boolean
@@ -22,7 +22,7 @@ interface CalendarDrawerProps {
 }
 
 export function CalendarDrawer({ isOpen, onClose, dateStr, tasks, onTasksUpdate }: CalendarDrawerProps) {
-    const { setGems, setXp, setLevel, level } = useEconomy()
+    const { setTokens, setXp, setLevel, level } = useEconomy()
     const { t, locale } = useLanguage()
     const [focusTask, setFocusTask] = useState<Task | null>(null)
     const [localTasks, setLocalTasks] = useState<Task[]>(tasks)
@@ -42,7 +42,7 @@ export function CalendarDrawer({ isOpen, onClose, dateStr, tasks, onTasksUpdate 
 
     const handleToggle = async (taskId: string, currentStatus: string) => {
         const task = localTasks.find(t => t.id === taskId)
-        const gemDelta = GEM_REWARD[task?.priority ?? 3] ?? 1
+        const tokenDelta = TOKEN_REWARD[task?.priority ?? 3] ?? 1
         const baseXp = task?.priority && task.priority > 0 ? (task.priority * 10 + 10) : 0
 
         haptics.medium()
@@ -57,7 +57,7 @@ export function CalendarDrawer({ isOpen, onClose, dateStr, tasks, onTasksUpdate 
         onTasksUpdate?.(updated)
 
         if (currentStatus === 'pending') {
-            setGems(prev => prev + gemDelta)
+            setTokens(prev => prev + tokenDelta)
             setXp(prev => {
                 let nextXp = prev + baseXp
                 let xpNeeded = level * 100
@@ -68,7 +68,7 @@ export function CalendarDrawer({ isOpen, onClose, dateStr, tasks, onTasksUpdate 
                 return nextXp
             })
         } else {
-            setGems(prev => Math.max(0, prev - gemDelta))
+            setTokens(prev => Math.max(0, prev - tokenDelta))
             setXp(prev => Math.max(0, prev - baseXp))
         }
 
@@ -122,14 +122,14 @@ export function CalendarDrawer({ isOpen, onClose, dateStr, tasks, onTasksUpdate 
                     task={focusTask}
                     goalTitle={(focusTask as any).learning_goals?.title ?? t('dashboard.focus_session')}
                     onClose={() => setFocusTask(null)}
-                    onOptimisticGemUpdate={(delta) => setGems(prev => Math.max(0, prev + delta))}
+                    onOptimisticTokenUpdate={(delta) => setTokens(prev => Math.max(0, prev + delta))}
                     onTaskUpdate={handleFocusTaskUpdate}
                 />
             )}
 
             <AnimatePresence>
                 {isOpen && (
-                    <div className="fixed inset-0 z-[200] flex items-end justify-center md:items-center p-4">
+                    <div className="fixed inset-0 z-[200] flex items-end justify-center md:items-center p-0 md:p-4">
                         
                         {/* Backdrop overlay */}
                         <motion.div
@@ -147,9 +147,13 @@ export function CalendarDrawer({ isOpen, onClose, dateStr, tasks, onTasksUpdate 
                             exit={isDesktop ? { scale: 0.95, opacity: 0 } : { y: '100%' }}
                             transition={{ type: 'spring', damping: 25, stiffness: 220 }}
                             drag={isDesktop ? false : 'y'}
-                            dragConstraints={{ top: 0 }}
+                            dragConstraints={{ top: 0, bottom: 0 }}
                             dragElastic={0.3}
-                            onDragEnd={(_, info) => { if (info.offset.y > 80) onClose() }}
+                            onDragEnd={(_, info: PanInfo) => { 
+                                if (info.offset.y > 80 || info.velocity.y > 400) {
+                                    onClose() 
+                                }
+                            }}
                             className="relative w-full max-w-md md:max-w-xl bg-[#0c0e17] border border-white/10 rounded-t-[2.5rem] md:rounded-[2.5rem] p-6 shadow-[0_-15px_30px_rgba(0,0,0,0.5)] md:shadow-[0_20px_50px_rgba(0,0,0,0.6)] z-10 flex flex-col max-h-[85vh] overflow-hidden"
                             style={{ paddingBottom: 'calc(1.5rem + env(safe-area-inset-bottom, 0px))' }}
                         >

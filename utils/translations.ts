@@ -20,7 +20,9 @@ export const TRANSLATIONS: Record<Locale, Record<string, any>> = {
             shop: "Shop",
             profile: "Profile",
             tutor: "Tutor",
-            open_tutor: "Open Socratic Tutor"
+            open_tutor: "Open Socratic Tutor",
+            cohorts: "Cohorts",
+            marketplace: "Marketplace"
         },
         hud: {
             level: "Lvl",
@@ -64,6 +66,9 @@ export const TRANSLATIONS: Record<Locale, Record<string, any>> = {
             button_generate: "Forge Learning Path",
             generating: "Initializing Plan Structure...",
             success: "PLAN ACQUIRED",
+            step_category: "Category",
+            step_configure: "Configure",
+            step_commit: "Commit",
             plan_language: "Plan Language"
         },
         profile: {
@@ -377,7 +382,7 @@ export const TRANSLATIONS: Record<Locale, Record<string, any>> = {
             defeat_penalty: "Defeat: -1 Life / Compulsory Review session",
             enter_arena: "Enter Arena",
             formulating_drill: "Formulating Socratic Drill",
-            structuring_mcqs: "Gemini is structuring MCQs...",
+            structuring_mcqs: "AI is structuring MCQs...",
             drill_offline: "Drill Generation Offline",
             try_again: "Try Again",
             skip_drill: "Skip Drill",
@@ -714,7 +719,9 @@ export const TRANSLATIONS: Record<Locale, Record<string, any>> = {
             shop: "Магазин",
             profile: "Профиль",
             tutor: "Тьютор",
-            open_tutor: "Открыть Тьютора"
+            open_tutor: "Открыть Тьютора",
+            cohorts: "Когорты",
+            marketplace: "Маркетплейс"
         },
         hud: {
             level: "Ур",
@@ -758,6 +765,9 @@ export const TRANSLATIONS: Record<Locale, Record<string, any>> = {
             button_generate: "Выковать Путь Обучения",
             generating: "Инициализация структуры плана...",
             success: "ПЛАН ПРИНЯТ",
+            step_category: "Категория",
+            step_configure: "Настройка",
+            step_commit: "Обязательство",
             plan_language: "Язык плана"
         },
         profile: {
@@ -1071,7 +1081,7 @@ export const TRANSLATIONS: Record<Locale, Record<string, any>> = {
             defeat_penalty: "Поражение: -1 жизнь / Обязательное повторение",
             enter_arena: "Войти на арену",
             formulating_drill: "Формулирование упражнения",
-            structuring_mcqs: "Gemini структурирует вопросы...",
+            structuring_mcqs: "ИИ структурирует вопросы...",
             drill_offline: "Генерация упражнения оффлайн",
             try_again: "Попробовать снова",
             skip_drill: "Пропустить упражнение",
@@ -1408,7 +1418,9 @@ export const TRANSLATIONS: Record<Locale, Record<string, any>> = {
             shop: "Boutique",
             profile: "Profil",
             tutor: "Tuteur",
-            open_tutor: "Ouvrir le Tuteur Socratique"
+            open_tutor: "Ouvrir le Tuteur Socratique",
+            cohorts: "Cohortes",
+            marketplace: "Marché"
         },
         hud: {
             level: "Niv",
@@ -1452,6 +1464,9 @@ export const TRANSLATIONS: Record<Locale, Record<string, any>> = {
             button_generate: "Forger le Parcours d'Apprentissage",
             generating: "Initialisation de la structure du plan...",
             success: "PLAN ACQUIS",
+            step_category: "Catégorie",
+            step_configure: "Configurer",
+            step_commit: "S'engager",
             plan_language: "Langue du plan"
         },
         profile: {
@@ -1765,7 +1780,7 @@ export const TRANSLATIONS: Record<Locale, Record<string, any>> = {
             defeat_penalty: "Défaite: -1 Vie / Session de révision obligatoire",
             enter_arena: "Entrer dans l'arène",
             formulating_drill: "Formulation de l'exercice",
-            structuring_mcqs: "Gemini prépare les questions...",
+            structuring_mcqs: "L'IA prépare les questions...",
             drill_offline: "Génération hors ligne",
             try_again: "Réessayer",
             skip_drill: "Passer l'exercice",
@@ -2102,7 +2117,9 @@ export const TRANSLATIONS: Record<Locale, Record<string, any>> = {
             shop: "Tienda",
             profile: "Perfil",
             tutor: "Tutor",
-            open_tutor: "Abrir Tutor Socrático"
+            open_tutor: "Abrir Tutor Socrático",
+            cohorts: "Cohortes",
+            marketplace: "Mercado"
         },
         hud: {
             level: "Niv",
@@ -2146,6 +2163,9 @@ export const TRANSLATIONS: Record<Locale, Record<string, any>> = {
             button_generate: "Forjar Ruta de Aprendizaje",
             generating: "Inicializando estructura del plan...",
             success: "PLAN ADQUIRIDO",
+            step_category: "Categoría",
+            step_configure: "Configurar",
+            step_commit: "Comprometerse",
             plan_language: "Idioma del plan"
         },
         profile: {
@@ -2459,7 +2479,7 @@ export const TRANSLATIONS: Record<Locale, Record<string, any>> = {
             defeat_penalty: "Derrota: -1 Vida / Sesión de revisión obligatoria",
             enter_arena: "Entrar a la arena",
             formulating_drill: "Formulando ejercicio",
-            structuring_mcqs: "Gemini estructurando preguntas...",
+            structuring_mcqs: "La IA estructurando preguntas...",
             drill_offline: "Generación fuera de línea",
             try_again: "Intentar de nuevo",
             skip_drill: "Omitir ejercicio",
@@ -2796,7 +2816,9 @@ export const TRANSLATIONS: Record<Locale, Record<string, any>> = {
             shop: "Խանութ",
             profile: "Պրոֆիլ",
             tutor: "Ուսուցիչ",
-            open_tutor: "Բացել Սոկրատյան Ուսուցիչը"
+            open_tutor: "Բացել Սոկրատյան Ուսուցիչը",
+            cohorts: "Խմբեր",
+            marketplace: "Շուկա"
         },
         hud: {
             level: "Մակ",
@@ -2840,6 +2862,9 @@ export const TRANSLATIONS: Record<Locale, Record<string, any>> = {
             button_generate: "Կերտել Ուսումնական Ուղին",
             generating: "Ծրագրի կառուցվածքի նախապատրաստում...",
             success: "ԾՐԱԳԻՐԸ ՍՏԵՂԾՎԱԾ Է",
+            step_category: "Կատեգորիա",
+            step_configure: "Կարգավորել",
+            step_commit: "Հանձնառություն",
             plan_language: "Ծրագրի Լեզու"
         },
         profile: {
@@ -3153,7 +3178,7 @@ export const TRANSLATIONS: Record<Locale, Record<string, any>> = {
             defeat_penalty: "Պարտություն. -1 կյանք / Պարտադիր կրկնողություն",
             enter_arena: "Մտնել արենա",
             formulating_drill: "Մշակվում է առաջադրանքը",
-            structuring_mcqs: "Gemini-ն պատրաստում է հարցերը...",
+            structuring_mcqs: "ԱԻ-ն պատրաստում է հարցերը...",
             drill_offline: "Առաջադրանքի ստեղծումն օֆլայն է",
             try_again: "Փորձել նորից",
             skip_drill: "Բաց թողնել առաջադրանքը",
@@ -3490,7 +3515,9 @@ export const TRANSLATIONS: Record<Locale, Record<string, any>> = {
             shop: "取引所",
             profile: "名簿",
             tutor: "教師",
-            open_tutor: "ソクラテス式教師を開く"
+            open_tutor: "ソクラテス式教師を開く",
+            cohorts: "コホート",
+            marketplace: "マーケットプレイス"
         },
         hud: {
             level: "Lv",
@@ -3534,6 +3561,9 @@ export const TRANSLATIONS: Record<Locale, Record<string, any>> = {
             button_generate: "計画の錬成",
             generating: "構築中...",
             success: "錬成完了",
+            step_category: "カテゴリ",
+            step_configure: "設定",
+            step_commit: "コミット",
             plan_language: "計画の言語"
         },
         profile: {
@@ -3847,7 +3877,7 @@ export const TRANSLATIONS: Record<Locale, Record<string, any>> = {
             defeat_penalty: "敗北ペナルティ: -1 ライフ / 強制復習セッション",
             enter_arena: "試練の間に入る",
             formulating_drill: "ソクラテス演習を構築中",
-            structuring_mcqs: "Geminiが選択肢を錬成中...",
+            structuring_mcqs: "AIが選択肢を錬成中...",
             drill_offline: "演習生成オフライン",
             try_again: "再試行",
             skip_drill: "演習をスキップ",
@@ -4184,7 +4214,9 @@ export const TRANSLATIONS: Record<Locale, Record<string, any>> = {
             shop: "商店",
             profile: "个人",
             tutor: "导师",
-            open_tutor: "打开苏格拉底导师"
+            open_tutor: "打开苏格拉底导师",
+            cohorts: "学习小组",
+            marketplace: "精品广场"
         },
         hud: {
             level: "等级",
@@ -4228,6 +4260,9 @@ export const TRANSLATIONS: Record<Locale, Record<string, any>> = {
             button_generate: "锻造学习路径",
             generating: "正在初始化计划结构...",
             success: "计划已生成",
+            step_category: "类别",
+            step_configure: "配置",
+            step_commit: "承诺",
             plan_language: "计划语言"
         },
         profile: {
@@ -4541,7 +4576,7 @@ export const TRANSLATIONS: Record<Locale, Record<string, any>> = {
             defeat_penalty: "未通过扣罚: -1 生命值 / 强制复习会话",
             enter_arena: "进入试炼场",
             formulating_drill: "正在构建苏格拉底练习",
-            structuring_mcqs: "Gemini 正在设计测试题...",
+            structuring_mcqs: "AI 正在设计测试题...",
             drill_offline: "练习生成离线",
             try_again: "重试",
             skip_drill: "跳过练习",

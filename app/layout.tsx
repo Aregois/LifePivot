@@ -60,7 +60,7 @@ export default async function RootLayout({
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
-  let initialLives = 3;
+  let initialTokens = 0;
   let initialGems = 3;
   let initialVoidDays = 0;
   let initialXp = 0;
@@ -68,12 +68,12 @@ export default async function RootLayout({
 
   if (user) {
     const [{ data: profile }, { data: voidDaysData }] = await Promise.all([
-      supabase.from("profiles").select("lives, gems, xp, level").eq("id", user.id).single(),
+      supabase.from("profiles").select("tokens_balance, gems, xp, level").eq("id", user.id).single(),
       supabase.from("tasks").select("id").eq("user_id", user.id).eq("priority", 0).eq("status", "pending")
     ]);
 
     if (profile) {
-      initialLives = profile.lives;
+      initialTokens = profile.tokens_balance ?? 0;
       initialGems = profile.gems;
       initialXp = profile.xp ?? 0;
       initialLevel = profile.level ?? 1;
@@ -95,7 +95,7 @@ export default async function RootLayout({
           <PwaInstallPrompt />
           {user ? (
             <EconomyProvider
-              initialLives={initialLives}
+              initialTokens={initialTokens}
               initialGems={initialGems}
               initialVoidDays={initialVoidDays}
               initialXp={initialXp}

@@ -1,13 +1,15 @@
 'use client'
 
 import { useState, useEffect, useTransition, ComponentType } from 'react'
-import { Heart, Zap, Sparkles, Diamond, ShieldCheck, Loader2, Crown, Palette, Music, RotateCcw, Flame } from 'lucide-react'
+import { Coins, Zap, Sparkles, ShieldCheck, Loader2, Crown, Palette, Music, RotateCcw, Flame } from 'lucide-react'
 import { useLanguage } from './language-provider'
 import { useEconomy } from './economy-provider'
 import { verifyShopPurchase, purchaseCustomization, placeWagerServer, rewardWagerServer } from '@/app/actions'
 import { createClient } from '@/utils/supabase/client'
 import { haptics } from '@/utils/haptics'
 import { motion, AnimatePresence } from 'framer-motion'
+import { EarnTokensCard } from './earn-tokens-card'
+
 
 
 
@@ -25,7 +27,7 @@ interface ShopItem {
 
 export function ShopClient() {
     const { t } = useLanguage()
-    const { gems, setGems, setLives, setVoidDays, wager, setWager } = useEconomy()
+    const { tokens, setTokens, setVoidDays, wager, setWager } = useEconomy()
     const [isPending, startTransition] = useTransition()
     const [purchaseError, setPurchaseError] = useState<string | null>(null)
     const [purchaseSuccess, setPurchaseSuccess] = useState<string | null>(null)
@@ -46,7 +48,7 @@ export function ShopClient() {
 
         // Fetch current streak
         const supabase = createClient()
-        const fetchStreak = async () => {
+        const fetchData = async () => {
             try {
                 const { data } = await supabase.from('profiles')
                     .select('current_streak')
@@ -61,8 +63,9 @@ export function ShopClient() {
                 setMounted(true)
             }
         }
-        fetchStreak()
+        fetchData()
     }, [])
+
 
     const wagerResolution = (() => {
         if (!wager || !mounted) return null
@@ -83,9 +86,9 @@ export function ShopClient() {
     })()
 
     const handlePlaceWager = async () => {
-        if (gems < wagerAmount) {
+        if (tokens < wagerAmount) {
             haptics.error()
-            setWagerError(t('shop.wager_insufficient_gems'))
+            setWagerError("Insufficient tokens")
             setTimeout(() => setWagerError(null), 3000)
             return
         }
@@ -103,7 +106,7 @@ export function ShopClient() {
 
             // Success
             haptics.medium()
-            setGems(res.newGems ?? (gems - wagerAmount))
+            setTokens(res.newTokens ?? (tokens - wagerAmount))
             setWager({
                 amount: wagerAmount,
                 startStreak: currentStreak,
@@ -132,7 +135,7 @@ export function ShopClient() {
             }
 
             haptics.medium()
-            setGems(res.newGems ?? (gems + rewardAmount))
+            setTokens(res.newTokens ?? (tokens + rewardAmount))
             setWager(null)
             setPurchaseSuccess(t('shop.wager_reward_claimed').replace('{amount}', rewardAmount.toString()))
             setTimeout(() => setPurchaseSuccess(null), 5000)
@@ -146,17 +149,6 @@ export function ShopClient() {
 
 
     const shopItems: ShopItem[] = [
-        {
-            id: 'heart',
-            type: 'utility',
-            title: t('shop.items.heart.title'),
-            description: t('shop.items.heart.desc'),
-            cost: 5,
-            icon: Heart,
-            color: 'from-rose-500 to-red-600 text-rose-500',
-            glowColor: 'rgba(244,63,94,0.3)',
-            badge: t('shop.items.heart.badge')
-        },
         {
             id: 'void',
             type: 'utility',
@@ -291,11 +283,8 @@ export function ShopClient() {
         }
     ]
 
-    // Filter out streak and cosmetic items for now
-    const activeShopItems = shopItems.filter(item => 
-        !['shield', 'repair'].includes(item.id) && 
-        !['title', 'frame', 'soundscape'].includes(item.type)
-    )
+    // Re-expose all items in the exchange grid
+    const activeShopItems = shopItems
 
     const executePurchase = (itemId: string, voidPlacement?: 'tomorrow' | 'end') => {
         const item = shopItems.find(i => i.id === itemId)
@@ -306,12 +295,10 @@ export function ShopClient() {
             let message = ''
 
             if (item.type === 'utility') {
-                const result = await verifyShopPurchase(item.id as 'heart' | 'void' | 'multiplier' | 'shield' | 'repair', voidPlacement)
+                const result = await verifyShopPurchase(item.id as any, voidPlacement)
                 if (result && 'error' in result && result.error) {
                     haptics.error()
-                    if (result.error === 'LIVES_FULL') {
-                        setPurchaseError(t('shop.hearts_full'))
-                    } else if (result.error === 'MULTIPLIER_ALREADY_ACTIVE') {
+                    if (result.error === 'MULTIPLIER_ALREADY_ACTIVE') {
                         setPurchaseError(t('shop.multiplier_active'))
                     } else if (result.error === 'SHIELDS_FULL') {
                         setPurchaseError(t('shop.shields_full'))
@@ -328,8 +315,8 @@ export function ShopClient() {
                 success = true
                 message = result.message || t('shop.purchased_success').replace('{name}', item.title)
 
-                if (item.id === 'heart') {
-                    setLives(prev => Math.min(5, prev + 1))
+                if (item.id === 'heart' || item.id === 'tokens') {
+                    setTokens(prev => prev + 5)
                 } else if (item.id === 'void') {
                     setVoidDays(prev => prev + 1)
                 }
@@ -371,7 +358,7 @@ export function ShopClient() {
 
             if (success) {
                 haptics.medium()
-                setGems(prev => Math.max(0, prev - item.cost))
+                setTokens(prev => Math.max(0, prev - item.cost))
                 setPurchaseSuccess(message)
                 setTimeout(() => setPurchaseSuccess(null), 3000)
             }
@@ -379,9 +366,9 @@ export function ShopClient() {
     }
 
     const handlePurchase = (item: ShopItem) => {
-        if (gems < item.cost) {
+        if (tokens < item.cost) {
             haptics.error()
-            setPurchaseError(t('shop.not_enough_gems').replace('{count}', (item.cost - gems).toString()))
+            setPurchaseError(`Not enough tokens. You need ${item.cost - tokens} more.`)
             setTimeout(() => setPurchaseError(null), 3000)
             return
         }
@@ -407,18 +394,150 @@ export function ShopClient() {
             </div>
             {/* Header / Balance */}
             <div className="flex items-center justify-between bg-gradient-to-r from-[#1E2338] to-[#141829] border border-white/5 p-6 rounded-[2rem] shadow-2xl relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-electric-blue/10 rounded-full blur-[40px] pointer-events-none" />
+                <div className="absolute top-0 right-0 w-32 h-32 bg-yellow-500/10 rounded-full blur-[40px] pointer-events-none" />
                 <div>
                     <h2 className="text-gray-400 text-[10px] font-black uppercase tracking-[0.2em]">{t('shop.wallet')}</h2>
-                    <p className="text-2xl font-black text-white mt-1">{t('shop.exchange')}</p>
+                    <p className="text-2xl font-black text-white mt-1">Tokens Balance</p>
                 </div>
-                <div className="flex items-center gap-1.5 bg-electric-blue/10 border border-electric-blue/20 px-4 py-2.5 rounded-2xl">
-                    <Diamond className="h-4 w-4 text-electric-blue fill-electric-blue/30" />
-                    <span className="text-lg font-black text-electric-blue tabular-nums">{gems}</span>
+                <div className="flex items-center gap-1.5 bg-yellow-500/10 border border-yellow-500/20 px-4 py-2.5 rounded-2xl">
+                    <Coins className="h-4 w-4 text-yellow-500 fill-yellow-500/30 filter drop-shadow-[0_0_8px_rgba(234,179,8,0.5)]" />
+                    <span className="text-lg font-black text-white tabular-nums">{tokens}</span>
                 </div>
             </div>
 
-            {/* Wager challenge hidden for now */}
+            {/* Secured Ad Integration */}
+            <EarnTokensCard tokens={tokens} setTokens={setTokens} />
+
+            {/* Wager consistency widget */}
+            {mounted && (
+                <div className="bg-[#141824] border border-white/5 p-6 rounded-[2.2rem] shadow-xl relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-6">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-neon-violet/5 rounded-full blur-[40px] pointer-events-none" />
+                    
+                    {!wager ? (
+                        /* No wager active: show setup form */
+                        <div className="flex-1 flex flex-col gap-3">
+                            <div className="flex items-center gap-2">
+                                <div className="h-8 w-8 bg-neon-violet/10 border border-neon-violet/25 flex items-center justify-center rounded-xl text-neon-violet">
+                                    <Flame className="h-4 w-4" />
+                                </div>
+                                <span className="text-[10px] font-black text-neon-violet uppercase tracking-widest">{t('shop.wager_title') || 'Streak Wager'}</span>
+                            </div>
+                            <h3 className="text-white font-extrabold text-base">{t('shop.wager_challenge') || 'Streak Wager Challenge'}</h3>
+                            <p className="text-gray-400 text-xs leading-relaxed max-w-xl">
+                                {t('shop.wager_desc') || 'Bet your Gems on your daily consistency. Reach a 7-day streak target to double your gems!'}
+                            </p>
+                            
+                            {/* Bet selection */}
+                            <div className="flex flex-col sm:flex-row sm:items-center gap-4 mt-2">
+                                <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Select Bet Amount:</span>
+                                <div className="flex gap-2">
+                                    {[20, 50, 100].map(amount => (
+                                        <button
+                                            key={amount}
+                                            type="button"
+                                            onClick={() => { haptics.light(); setWagerAmount(amount) }}
+                                            className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all ${
+                                                wagerAmount === amount
+                                                    ? 'bg-neon-violet/15 text-neon-violet border border-neon-violet/25'
+                                                    : 'bg-[#0B0D17] text-gray-500 border border-white/5 hover:text-gray-300'
+                                            }`}
+                                        >
+                                            {amount} Tokens
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                    ) : (
+                        /* Wager active: show progress & status */
+                        <div className="flex-1 flex flex-col gap-3">
+                            <div className="flex items-center gap-2">
+                                <div className="h-8 w-8 bg-emerald-500/10 border border-emerald-500/25 flex items-center justify-center rounded-xl text-emerald-400">
+                                    <Flame className="h-4 w-4" />
+                                </div>
+                                <span className="text-[10px] font-black text-emerald-400 uppercase tracking-widest">
+                                    {wagerResolution === 'won' ? 'Wager Completed!' : 'Active Consistency Wager'}
+                                </span>
+                            </div>
+                            <h3 className="text-white font-extrabold text-base">
+                                {wagerResolution === 'won' ? 'Double Reward Claimable' : `Consistency Target: ${wager.targetStreak} Days`}
+                            </h3>
+                            <p className="text-gray-400 text-xs leading-relaxed max-w-xl">
+                                {wagerResolution === 'won'
+                                    ? t('shop.won_desc')?.replace('{target}', wager.targetStreak.toString()) || `Amazing job! You reached your target streak of ${wager.targetStreak} days. Your bet paid off!`
+                                    : wagerResolution === 'lost'
+                                        ? `Streak broken! You bet ${wager.amount} tokens but did not reach the target.`
+                                        : `Maintain your focus streak. Reach a ${wager.targetStreak}-day streak to double your tokens bet. Current Streak: ${currentStreak}/${wager.targetStreak} Days.`
+                                }
+                            </p>
+                            
+                            {/* Progress bar */}
+                            {wagerResolution === 'active' && (
+                                <div className="w-full max-w-md space-y-1.5 mt-1">
+                                    <div className="flex items-center justify-between text-[9px] font-black uppercase text-gray-500 tracking-wider">
+                                        <span>Streak Progress</span>
+                                        <span className="text-emerald-400">{currentStreak} / {wager.targetStreak} Days</span>
+                                    </div>
+                                    <div className="w-full h-2 bg-[#0B0D17] rounded-full overflow-hidden border border-white/5">
+                                        <div
+                                            className="h-full bg-gradient-to-r from-emerald-400 to-teal-500 rounded-full transition-all duration-1000"
+                                            style={{ width: `${Math.min(100, Math.max(0, ((currentStreak - wager.startStreak) / 7) * 100))}%` }}
+                                        />
+                                    </div>
+                                </div>
+                            )}
+
+                            <div className="bg-[#0B0D17]/40 border border-white/5 px-4 py-2.5 rounded-xl flex items-center justify-between text-[10px] font-black uppercase tracking-wider text-gray-400 mt-2 max-w-md">
+                                <span>Tokens Locked: {wager.amount}</span>
+                                <span className="text-emerald-400 font-extrabold flex items-center gap-1">
+                                    Claim Reward: <Coins className="w-3.5 h-3.5 inline text-emerald-400" /> {wager.amount * 2}
+                                </span>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* CTA Actions */}
+                    <div className="w-full md:w-auto shrink-0 flex flex-col gap-2">
+                        {wagerError && (
+                            <p className="text-[10px] text-red-400 font-bold text-center bg-red-500/5 py-2 border border-red-500/10 rounded-xl max-w-[200px]">
+                                {wagerError}
+                            </p>
+                        )}
+                        
+                        {!wager ? (
+                            <button
+                                onClick={handlePlaceWager}
+                                disabled={isPending}
+                                className="px-6 py-4 rounded-xl bg-neon-violet text-white hover:scale-[1.02] active:scale-95 transition-all font-black text-xs uppercase tracking-wider shadow-[0_0_20px_rgba(189,0,255,0.25)] flex items-center justify-center gap-1.5"
+                            >
+                                {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Confirm Wager'}
+                            </button>
+                        ) : wagerResolution === 'won' ? (
+                            <button
+                                onClick={handleClaimWager}
+                                disabled={isPending}
+                                className="px-6 py-4 rounded-xl bg-emerald-500 text-black hover:scale-[1.02] active:scale-95 transition-all font-black text-xs uppercase tracking-wider shadow-[0_0_20px_rgba(16,185,129,0.3)] flex items-center justify-center gap-1.5 animate-bounce"
+                            >
+                                {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Claim Double Reward'}
+                            </button>
+                        ) : wagerResolution === 'lost' ? (
+                            <button
+                                onClick={handleDismissWager}
+                                className="px-6 py-4 rounded-xl bg-white/5 border border-white/10 text-white font-black text-xs uppercase tracking-wider hover:bg-white/10 transition-all flex items-center justify-center"
+                            >
+                                Acknowledge Loss
+                            </button>
+                        ) : (
+                            <button
+                                disabled
+                                className="px-6 py-4 rounded-xl bg-white/5 border border-white/10 text-gray-500 font-black text-xs uppercase tracking-wider flex items-center justify-center cursor-not-allowed"
+                            >
+                                Active Challenge
+                            </button>
+                        )}
+                    </div>
+                </div>
+            )}
 
             {/* Notification center */}
             <div className="min-h-[40px] relative z-20">
@@ -453,7 +572,7 @@ export function ShopClient() {
                 {activeShopItems.map((item) => {
                     const IconComponent = item.icon
                     const isPurchased = unlockedItems.includes(item.id.startsWith('sound_') ? item.id.replace('sound_', '') : item.id)
-                    const isAffordable = gems >= item.cost
+                    const isAffordable = tokens >= item.cost
 
                     return (
                         <div
@@ -488,7 +607,7 @@ export function ShopClient() {
                                 {/* Cost & Buy Button */}
                                 <div className="flex items-center justify-between mt-3 pt-3 border-t border-white/5">
                                     <div className="flex items-center gap-1 text-electric-blue">
-                                        {!isPurchased && <Diamond className="h-3.5 w-3.5 fill-electric-blue/20" />}
+                                        {!isPurchased && <Coins className="h-3.5 w-3.5 text-yellow-500 fill-yellow-500/20" />}
                                         <span className="text-xs font-black tabular-nums">{isPurchased ? t('shop.unlocked') : item.cost}</span>
                                     </div>
 

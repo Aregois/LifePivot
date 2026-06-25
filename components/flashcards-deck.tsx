@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useTransition } from 'react'
 import { motion, AnimatePresence, useMotionValue, useTransform } from 'framer-motion'
-import { BookOpen, Sparkles, AlertCircle, RefreshCw, Check, X, Diamond, Star } from 'lucide-react'
+import { BookOpen, Sparkles, AlertCircle, RefreshCw, Check, X, Coins, Star } from 'lucide-react'
 import { haptics } from '@/utils/haptics'
 import { fetchFlashcards, reviewFlashcard } from '@/app/actions'
 import { useEconomy } from './economy-provider'
@@ -18,7 +18,7 @@ interface Flashcard {
 }
 
 export function FlashcardsDeck() {
-    const { setGems, setXp, setLevel } = useEconomy()
+    const { setTokens, setXp, setLevel } = useEconomy()
     const { locale, t } = useLanguage()
     const [flashcards, setFlashcards] = useState<Flashcard[]>([])
     const [loading, setLoading] = useState(true)
@@ -32,7 +32,7 @@ export function FlashcardsDeck() {
     
     // Stats for current session
     const [sessionXP, setSessionXP] = useState(0)
-    const [sessionGems, setSessionGems] = useState(0)
+    const [sessionTokens, setSessionTokens] = useState(0)
 
     useEffect(() => {
         loadCards()
@@ -64,7 +64,7 @@ export function FlashcardsDeck() {
         setIsFlipped(false)
         setReviewFinished(false)
         setSessionXP(0)
-        setSessionGems(0)
+        setSessionTokens(0)
     }
 
     const handleSwipe = (rating: 'easy' | 'hard') => {
@@ -78,8 +78,8 @@ export function FlashcardsDeck() {
             const res = await reviewFlashcard(card.id, rating)
             if (res && 'success' in res && res.success) {
                 setSessionXP(prev => prev + (res.xpAwarded ?? 10))
-                setSessionGems(prev => prev + (res.gemsAwarded ?? 1))
-                setGems(prev => prev + (res.gemsAwarded ?? 1))
+                setSessionTokens(prev => prev + (res.tokensAwarded ?? 1))
+                setTokens(prev => prev + (res.tokensAwarded ?? 1))
                 
                 // Update local list state
                 setFlashcards(prev => prev.map(c => c.id === card.id ? { ...c, leitner_box: res.nextBox!, next_review: res.nextReview! } : c))
@@ -277,10 +277,10 @@ export function FlashcardsDeck() {
                         <span className="text-sm font-extrabold text-white mt-1">+{sessionXP} XP</span>
                     </div>
                     <div className="bg-[#141824] border border-white/5 px-4 py-3 rounded-2xl flex flex-col items-center min-w-[90px]">
-                        <span className="text-[8px] font-black text-gray-500 uppercase tracking-widest">{t('flashcards.stardust')}</span>
+                        <span className="text-[8px] font-black text-gray-500 uppercase tracking-widest">Tokens</span>
                         <span className="text-sm font-extrabold text-electric-blue mt-1 flex items-center gap-0.5">
-                            <Diamond className="h-3 w-3 fill-electric-blue/20" />
-                            +{sessionGems}
+                            <Coins className="h-3 w-3 fill-electric-blue/20" />
+                            +{sessionTokens}
                         </span>
                     </div>
                 </div>

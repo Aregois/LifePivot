@@ -2,16 +2,17 @@
 
 import { useState, useEffect, useTransition } from 'react'
 import { 
-    User, Award, Flame, CheckCircle, Clock, Diamond, 
+    User, Award, Flame, CheckCircle, Clock, Coins, 
     Sparkles, BookOpen, LogOut, Settings, ToggleLeft, ToggleRight, 
     Palette, Headphones, ShieldAlert, Cpu, Check, Loader2, CalendarRange,
-    EyeOff, HelpCircle, Globe
+    EyeOff, HelpCircle, Globe, Crown
 } from 'lucide-react'
 import { haptics as webHaptics } from '@/utils/haptics'
 import { useEconomy } from './economy-provider'
 import { claimAchievementReward } from '@/app/actions'
 import { AvatarIcon, AVATAR_LIST } from './avatar-icons'
 import { getLocalDateString } from '@/utils/date-utils'
+import { SubscribeModal } from './subscribe-modal'
 import { useSearchParams } from 'next/navigation'
 import { FlashcardsDeck } from './flashcards-deck'
 import { RecallPit } from './recall-pit'
@@ -49,6 +50,7 @@ interface ProfileClientProps {
     focusToday?: number
     signOutAction: () => void
     completedDates?: string[]
+    isSubscribed?: boolean
 }
 
 type TabType = 'mastery' | 'flashcards' | 'cosmetics' | 'settings' | 'recall-pit' | 'leagues'
@@ -63,11 +65,11 @@ const TITLE_NAMES: Record<string, string> = {
     title_legend: 'Focus Legend'
 }
 
-const ACHIEVEMENT_REWARDS: Record<string, { xp: number; gems: number }> = {
-    first_focus: { xp: 20, gems: 3 },
-    recall_master: { xp: 30, gems: 5 },
-    deep_learner: { xp: 40, gems: 8 },
-    streak_starter: { xp: 50, gems: 10 }
+const ACHIEVEMENT_REWARDS: Record<string, { xp: number; tokens: number }> = {
+    first_focus: { xp: 20, tokens: 3 },
+    recall_master: { xp: 30, tokens: 5 },
+    deep_learner: { xp: 40, tokens: 8 },
+    streak_starter: { xp: 50, tokens: 10 }
 }
 
 export function ProfileClient({
@@ -82,14 +84,17 @@ export function ProfileClient({
     completedToday = 0,
     focusToday = 0,
     signOutAction,
-    completedDates = []
+    completedDates = [],
+    isSubscribed = false
 }: ProfileClientProps) {
-    const { setGems, setXp, setLevel, level, xp, avatarId, setAvatarId } = useEconomy()
+    const { setTokens, setXp, setLevel, level, xp, avatarId, setAvatarId } = useEconomy()
     const { t, locale, setLocale } = useLanguage()
     const [activeTab, setActiveTab] = useState<TabType>('mastery')
     const [mounted, setMounted] = useState(false)
     const [isPending, startTransition] = useTransition()
     const [claimingId, setClaimingId] = useState<string | null>(null)
+    const [subscribed, setSubscribed] = useState(isSubscribed)
+    const [showSubscribeModal, setShowSubscribeModal] = useState(false)
 
     const searchParams = useSearchParams()
     const [mindfulModeEnabled, setMindfulModeEnabled] = useState(false)
@@ -157,7 +162,7 @@ export function ProfileClient({
             progress: focusToday,
             target: 25,
             xpReward: 15,
-            gemReward: 2
+            tokenReward: 2
         },
         {
             id: 'daily_tasks',
@@ -166,7 +171,7 @@ export function ProfileClient({
             progress: completedToday,
             target: 2,
             xpReward: 15,
-            gemReward: 2
+            tokenReward: 2
         },
         // {
         //     id: 'daily_streak',
@@ -175,7 +180,7 @@ export function ProfileClient({
         //     progress: completedToday >= 1 ? 1 : 0,
         //     target: 1,
         //     xpReward: 10,
-        //     gemReward: 1
+        //     tokenReward: 1
         // }
     ]
 
@@ -283,13 +288,13 @@ export function ProfileClient({
 
     const handleClaimAchievement = (achId: string) => {
         if (claimedAchievements.includes(achId) || claimingId !== null) return
-        const rewards = ACHIEVEMENT_REWARDS[achId] || { xp: 20, gems: 2 }
+        const rewards = ACHIEVEMENT_REWARDS[achId] || { xp: 20, tokens: 2 }
 
         if (hapticsEnabled) webHaptics.medium()
         setClaimingId(achId)
 
         startTransition(async () => {
-            const res = await claimAchievementReward(rewards.xp, rewards.gems, achId)
+            const res = await claimAchievementReward(rewards.xp, rewards.tokens, achId)
             if (res && 'error' in res && res.error) {
                 if (hapticsEnabled) webHaptics.error()
                 console.error(res.error)
@@ -298,7 +303,7 @@ export function ProfileClient({
             }
 
             // Sync with local context state
-            setGems(prev => prev + rewards.gems)
+            setTokens(prev => prev + rewards.tokens)
             setXp(res.newXp)
             setLevel(res.newLevel)
 
@@ -316,7 +321,7 @@ export function ProfileClient({
         setClaimingId(quest.id)
 
         startTransition(async () => {
-            const res = await claimAchievementReward(quest.xpReward, quest.gemReward, quest.title)
+            const res = await claimAchievementReward(quest.xpReward, quest.tokenReward, quest.title)
             if (res && 'error' in res && res.error) {
                 if (hapticsEnabled) webHaptics.error()
                 console.error(res.error)
@@ -324,7 +329,7 @@ export function ProfileClient({
                 return
             }
 
-            setGems(prev => prev + quest.gemReward)
+            setTokens(prev => prev + quest.tokenReward)
             setXp(res.newXp)
             setLevel(res.newLevel)
 
@@ -384,6 +389,20 @@ export function ProfileClient({
                         <p className="text-xs font-black text-electric-blue uppercase tracking-widest mt-1 bg-electric-blue/5 border border-electric-blue/10 px-3 py-1 rounded-full md:px-0 md:py-0 md:bg-transparent md:border-none md:mt-1.5 md:text-gray-400">
                             {activeTitle}
                         </p>
+                        {subscribed ? (
+                            <span className="text-[9px] font-black text-neon-violet bg-neon-violet/10 border border-neon-violet/20 px-2.5 py-0.5 rounded-full select-none uppercase mt-1 tracking-widest flex items-center gap-1">
+                                <Crown className="w-3 h-3 text-neon-violet fill-neon-violet" />
+                                Solo Power Active
+                            </span>
+                        ) : (
+                            <button
+                                onClick={() => { if (hapticsEnabled) webHaptics.medium(); setShowSubscribeModal(true) }}
+                                className="text-[9px] font-black text-gray-500 bg-white/5 border border-white/10 px-2.5 py-0.5 rounded-full hover:bg-neon-violet/15 hover:text-neon-violet hover:border-neon-violet/20 transition-all select-none uppercase mt-1 tracking-widest flex items-center gap-1 cursor-pointer"
+                            >
+                                <Crown className="w-3 h-3 text-gray-500" />
+                                Standard Tier (Upgrade)
+                            </button>
+                        )}
                     </div>
                 </div>
 
@@ -548,9 +567,9 @@ export function ProfileClient({
                                                 <div className="flex items-center gap-1 text-[9px] lg:text-[11px] font-black text-electric-blue shrink-0">
                                                     <span>+{quest.xpReward} XP</span>
                                                     <span>•</span>
-                                                    <div className="flex items-center gap-0.5 bg-electric-blue/5 border border-electric-blue/15 px-1 lg:px-1.5 py-0.5 lg:py-1 rounded">
-                                                        <Diamond className="h-2.5 w-2.5 lg:h-3 lg:w-3 text-electric-blue fill-electric-blue/20" />
-                                                        <span>+{quest.gemReward}</span>
+                                                    <div className="flex items-center gap-0.5 bg-yellow-500/5 border border-yellow-500/15 px-1 lg:px-1.5 py-0.5 lg:py-1 rounded text-yellow-500">
+                                                        <Coins className="h-2.5 w-2.5 lg:h-3 lg:w-3 text-yellow-500 fill-yellow-500/20" />
+                                                        <span>+{quest.tokenReward}</span>
                                                     </div>
                                                 </div>
                                             </div>
@@ -646,9 +665,9 @@ export function ProfileClient({
                                                 <div className="flex items-center gap-1.5 text-[9px] lg:text-[10px] font-black text-electric-blue">
                                                     <span>+{reward.xp} XP</span>
                                                     <span>•</span>
-                                                    <div className="flex items-center gap-0.5 bg-electric-blue/5 border border-electric-blue/15 px-1 lg:px-1.5 py-0.5 lg:py-1 rounded">
-                                                        <Diamond className="h-2.5 w-2.5 lg:h-3 lg:w-3 text-electric-blue fill-electric-blue/20" />
-                                                        <span>+{reward.gems}</span>
+                                                    <div className="flex items-center gap-0.5 bg-yellow-500/5 border border-yellow-500/15 px-1 lg:px-1.5 py-0.5 lg:py-1 rounded text-yellow-500">
+                                                        <Coins className="h-2.5 w-2.5 lg:h-3 lg:w-3 text-yellow-500 fill-yellow-500/20" />
+                                                        <span>+{reward.tokens}</span>
                                                     </div>
                                                 </div>
 
@@ -1010,6 +1029,12 @@ export function ProfileClient({
                     LifePivot v1.0.5-beta
                 </p>
             </div>
+
+            <SubscribeModal 
+                isOpen={showSubscribeModal}
+                onClose={() => setShowSubscribeModal(false)}
+                onSuccess={() => setSubscribed(true)}
+            />
         </div>
     )
 }

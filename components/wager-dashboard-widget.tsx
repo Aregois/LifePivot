@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useEconomy } from './economy-provider'
-import { Flame, Diamond, ChevronRight, Loader2, Sparkles } from 'lucide-react'
+import { Flame, ChevronRight, Loader2, Sparkles, Coins } from 'lucide-react'
 import Link from 'next/link'
 import { createClient } from '@/utils/supabase/client'
 import { haptics } from '@/utils/haptics'
@@ -121,9 +121,9 @@ export function WagerDashboardWidget() {
             )}
 
             <div className="bg-[#0B0D17]/50 border border-white/5 px-4 py-2 rounded-xl flex items-center justify-between text-[10px] font-bold text-gray-400">
-                <span>{t('shop.gems_locked')}: {wager.amount}</span>
+                <span>Tokens Locked: {wager.amount}</span>
                 <span className="text-emerald-400 flex items-center gap-0.5 font-extrabold">
-                    {t('shop.wins')}: <Diamond className="h-3 w-3 fill-emerald-500/20 text-emerald-400 inline" /> {wager.amount * 2}
+                    {t('shop.wins')}: <Coins className="h-3 w-3 fill-emerald-500/20 text-emerald-400 inline" /> {wager.amount * 2}
                 </span>
             </div>
         </Link>

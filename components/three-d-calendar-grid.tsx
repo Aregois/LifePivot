@@ -57,7 +57,7 @@ export function ThreeDCalendarGrid({
     }, [tasks, locale])
 
     const [localTasks, setLocalTasks] = useState<Task[]>(translatedTasks)
-    const { setGems, setXp, setLevel, level, setLives } = useEconomy()
+    const { setTokens, setXp, setLevel, level } = useEconomy()
 
     useEffect(() => {
         setLocalTasks(translatedTasks)
@@ -153,13 +153,13 @@ export function ThreeDCalendarGrid({
         
         // Economy Provider updates
         const task = localTasks.find(t => t.id === taskId)
-        const GEM_REWARD: Record<number, number> = { 0: 0, 1: 1, 2: 1, 3: 1, 4: 2, 5: 3 }
+        const TOKEN_REWARD: Record<number, number> = { 0: 0, 1: 1, 2: 1, 3: 1, 4: 2, 5: 3 }
         if (task) {
-            const gemDelta = GEM_REWARD[task?.priority ?? 3] ?? 1
+            const tokenDelta = TOKEN_REWARD[task?.priority ?? 3] ?? 1
             const baseXp = task.priority && task.priority > 0 ? (task.priority * 10 + 10) : 10
             
             if (newStatus === 'completed') {
-                setGems(prev => prev + gemDelta)
+                setTokens(prev => prev + tokenDelta)
                 setXp(prev => {
                     const nextXp = prev + baseXp
                     const xpNeeded = level * 100
@@ -170,7 +170,7 @@ export function ThreeDCalendarGrid({
                     return nextXp
                 })
             } else {
-                setGems(prev => Math.max(0, prev - gemDelta))
+                setTokens(prev => Math.max(0, prev - tokenDelta))
                 setXp(prev => Math.max(0, prev - baseXp))
             }
         }
@@ -190,7 +190,7 @@ export function ThreeDCalendarGrid({
             } else {
                 haptics.medium()
                 if (result.tier === 2) {
-                    setLives(prev => Math.max(0, prev - 1))
+                    setTokens(prev => Math.max(0, prev - 1))
                 }
                 router.refresh()
             }
@@ -489,7 +489,8 @@ export function ThreeDCalendarGrid({
     }
 
     return (
-        <div className="w-full h-full flex flex-col perspective-1000 overflow-hidden">
+        <>
+            <div className="w-full h-full flex flex-col perspective-1000 overflow-hidden">
             <div className="flex flex-col gap-6 mb-8 md:mb-16 px-4 md:px-8">
                 <div className="flex items-center justify-between">
                     <h2 className={`${isIOSDevice ? 'text-xl' : 'text-3xl'} md:text-6xl font-black text-white tracking-tighter uppercase italic truncate mr-4 drop-shadow-2xl`}>
@@ -601,6 +602,8 @@ export function ThreeDCalendarGrid({
                 </button>
             )}
 
+            </div>
+
             <CalendarDrawer
                 isOpen={drawerOpen}
                 onClose={() => setDrawerOpen(false)}
@@ -608,7 +611,7 @@ export function ThreeDCalendarGrid({
                 tasks={drawerTasks}
                 onTasksUpdate={handleDrawerTasksUpdate}
             />
-        </div>
+        </>
     )
 }
 

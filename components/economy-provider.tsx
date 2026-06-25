@@ -12,7 +12,7 @@ export interface WagerState {
 }
 
 interface EconomyContextType {
-    lives: number
+    tokens: number
     gems: number
     voidDays: number
     xp: number
@@ -21,7 +21,7 @@ interface EconomyContextType {
     activeChatTask: Task | null
     showMobileChat: boolean
     wager: WagerState | null
-    setLives: (lives: number | ((prev: number) => number)) => void
+    setTokens: (tokens: number | ((prev: number) => number)) => void
     setGems: (gems: number | ((prev: number) => number)) => void
     setVoidDays: (voidDays: number | ((prev: number) => number)) => void
     setXp: (xp: number | ((prev: number) => number)) => void
@@ -36,7 +36,7 @@ const EconomyContext = createContext<EconomyContextType | undefined>(undefined)
 
 interface EconomyProviderProps {
     children: ReactNode
-    initialLives: number
+    initialTokens: number
     initialGems: number
     initialVoidDays: number
     initialXp?: number
@@ -46,14 +46,14 @@ interface EconomyProviderProps {
 
 export function EconomyProvider({ 
     children, 
-    initialLives, 
+    initialTokens, 
     initialGems, 
     initialVoidDays, 
     initialXp = 0, 
     initialLevel = 1,
     initialChatTask = null
 }: EconomyProviderProps) {
-    const [lives, setLives] = useState(initialLives)
+    const [tokens, setTokens] = useState(initialTokens)
     const [gems, setGems] = useState(initialGems)
     const [voidDays, setVoidDays] = useState(initialVoidDays)
     const [xp, setXp] = useState(initialXp)
@@ -64,8 +64,8 @@ export function EconomyProvider({
     const [wager, setWagerState] = useState<WagerState | null>(null)
 
     useEffect(() => {
-        setLives(initialLives)
-    }, [initialLives])
+        setTokens(initialTokens)
+    }, [initialTokens])
 
     useEffect(() => {
         setGems(initialGems)
@@ -113,7 +113,7 @@ export function EconomyProvider({
 
     return (
         <EconomyContext.Provider value={{ 
-            lives, 
+            tokens, 
             gems, 
             voidDays, 
             xp, 
@@ -122,7 +122,7 @@ export function EconomyProvider({
             activeChatTask,
             showMobileChat,
             wager,
-            setLives, 
+            setTokens, 
             setGems, 
             setVoidDays, 
             setXp, 

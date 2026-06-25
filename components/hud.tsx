@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useEconomy } from './economy-provider'
-import { Heart, Diamond, Sparkles } from 'lucide-react'
+import { Coins } from 'lucide-react'
 import { usePathname, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { haptics } from '@/utils/haptics'
@@ -10,7 +10,7 @@ import { AvatarIcon } from './avatar-icons'
 import { useLanguage } from './language-provider'
 
 export function HUD() {
-    const { lives, gems, xp, level, avatarId } = useEconomy()
+    const { tokens, xp, level, avatarId } = useEconomy()
     const { t } = useLanguage()
     const pathname = usePathname()
     const router = useRouter()
@@ -37,6 +37,10 @@ export function HUD() {
     if (pathname === '/plan') routeTitle = t('nav.plan')
     else if (pathname === '/shop') routeTitle = t('nav.shop')
     else if (pathname === '/profile') routeTitle = t('nav.profile')
+    else if (pathname === '/workspaces') routeTitle = t('nav.cohorts') || 'Study Cohorts'
+    else if (pathname.startsWith('/workspaces/')) routeTitle = 'Cohort Portal'
+    else if (pathname === '/marketplace') routeTitle = t('nav.marketplace') || 'Plan Marketplace'
+    else if (pathname.startsWith('/marketplace/')) routeTitle = 'Plan Detail'
 
     return (
         <header role="banner" className="sticky top-0 z-[100] w-full bg-[#050508]/85 backdrop-blur-xl border-b border-white/5">
@@ -64,15 +68,10 @@ export function HUD() {
 
                     {/* Right: Resources Pill */}
                     {!mindfulMode && (
-                        <div className="flex items-center gap-3 px-3.5 py-1.5 rounded-full bg-[#1C2033] border border-white/5 shadow-md">
-                            <div className="flex items-center gap-1" aria-label={`${gems} gems`}>
-                                <Diamond className="h-3.5 w-3.5 text-electric-blue fill-electric-blue/20" />
-                                <span className="text-xs font-black text-electric-blue">{gems}</span>
-                            </div>
-                            <div className="h-3 w-[1px] bg-white/10" aria-hidden="true" />
-                            <div className="flex items-center gap-1" aria-label={`${lives} lives`}>
-                                <Heart className="h-3.5 w-3.5 text-red-500 fill-red-500" />
-                                <span className="text-xs font-black text-white">{lives}</span>
+                        <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#1C2033] border border-white/5 shadow-md">
+                            <div className="flex items-center gap-1.5" aria-label={`${tokens} tokens`}>
+                                <Coins className="h-3.5 w-3.5 text-yellow-500 fill-yellow-500/20" />
+                                <span className="text-xs font-black text-white">{tokens} Tokens</span>
                             </div>
                         </div>
                     )}
@@ -102,16 +101,10 @@ export function HUD() {
                     {/* Right: Gamification HUD */}
                     {!mindfulMode && (
                         <div className="flex items-center gap-4">
-                            {/* Lives/Hearts Pill */}
-                            <div className="flex items-center gap-2 bg-[#141824] px-4 py-2 rounded-xl border border-red-500/20 md:border-white/10 shadow-[0_0_12px_rgba(255,46,99,0.05)] md:shadow-none">
-                                <Heart className="h-4 w-4 text-red-500 md:text-slate-400 fill-red-500 md:fill-slate-400/20 filter drop-shadow-[0_0_8px_rgba(255,46,99,0.8)] md:filter-none" />
-                                <span className="text-xs font-black text-red-500 md:text-slate-300">{lives}/5</span>
-                            </div>
-
-                            {/* Gems Pill */}
-                            <div className="flex items-center gap-2 bg-[#141824] px-4 py-2 rounded-xl border border-electric-blue/20 md:border-white/10 shadow-[0_0_12px_rgba(0,240,255,0.05)] md:shadow-none">
-                                <Diamond className="h-4 w-4 text-electric-blue md:text-slate-400 fill-electric-blue/20 md:fill-slate-400/20 filter drop-shadow-[0_0_8px_rgba(0,240,255,0.8)] md:filter-none" />
-                                <span className="text-xs font-black text-electric-blue md:text-slate-300">{gems}</span>
+                            {/* Tokens Pill */}
+                            <div className="flex items-center gap-2 bg-[#141824] px-4 py-2 rounded-xl border border-yellow-500/20 md:border-white/10 shadow-[0_0_12px_rgba(234,179,8,0.05)] md:shadow-none">
+                                <Coins className="h-4 w-4 text-yellow-500 md:text-slate-400 fill-yellow-500/20 filter drop-shadow-[0_0_8px_rgba(234,179,8,0.8)] md:filter-none" />
+                                <span className="text-xs font-black text-yellow-500 md:text-slate-300">{tokens} Tokens</span>
                             </div>
 
                             {/* Level Up Button */}

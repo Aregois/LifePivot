@@ -9,7 +9,7 @@ import { useRef, useState, useEffect } from 'react'
 import type { Task } from '@/utils/types'
 import { useLanguage } from './language-provider'
 
-const GEM_REWARD: Record<number, number> = {
+const TOKEN_REWARD: Record<number, number> = {
     0: 0,
     1: 1,
     2: 1,
@@ -29,7 +29,7 @@ interface GoalWithTasks {
 }
 
 export function GoalSection({ goal, selectedDate }: { goal: GoalWithTasks, selectedDate: string }) {
-    const { setGems, setXp, setLevel, level } = useEconomy()
+    const { setTokens, setXp, setLevel, level } = useEconomy()
     const { t, locale } = useLanguage()
     
     const planLanguage = goal.plan_metadata?.language || 'en'
@@ -39,13 +39,13 @@ export function GoalSection({ goal, selectedDate }: { goal: GoalWithTasks, selec
     const [focusTask, setFocusTask] = useState<Task | null>(null)
 
     const handleToggle = async (taskId: string, currentStatus: string) => {
-        // Find the task to get its priority for the optimistic gem delta
+        // Find the task to get its priority for the optimistic token delta
         const task = goal.tasks.find(t => t.id === taskId)
-        const gemDelta = GEM_REWARD[task?.priority ?? 3] ?? 1
+        const tokenDelta = TOKEN_REWARD[task?.priority ?? 3] ?? 1
         const baseXp = task?.priority && task.priority > 0 ? (task.priority * 10 + 10) : 0
 
         if (currentStatus === 'pending') {
-            setGems(prev => prev + gemDelta)
+            setTokens(prev => prev + tokenDelta)
             setXp(prev => {
                 let nextXp = prev + baseXp
                 let xpNeeded = level * 100
@@ -56,7 +56,7 @@ export function GoalSection({ goal, selectedDate }: { goal: GoalWithTasks, selec
                 return nextXp
             })
         } else if (currentStatus === 'completed') {
-            setGems(prev => Math.max(0, prev - gemDelta))
+            setTokens(prev => Math.max(0, prev - tokenDelta))
             setXp(prev => Math.max(0, prev - baseXp))
         }
 
@@ -96,7 +96,7 @@ export function GoalSection({ goal, selectedDate }: { goal: GoalWithTasks, selec
                     task={focusTask}
                     goalTitle={goal.title}
                     onClose={() => setFocusTask(null)}
-                    onOptimisticGemUpdate={(delta) => setGems(prev => Math.max(0, prev + delta))}
+                    onOptimisticTokenUpdate={(delta) => setTokens(prev => Math.max(0, prev + delta))}
                 />
             )}
 

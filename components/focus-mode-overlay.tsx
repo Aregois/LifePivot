@@ -3,9 +3,9 @@
 import { useState, useEffect, useRef, useTransition, useCallback } from 'react'
 import type { PanInfo } from 'framer-motion'
 import { createPortal } from 'react-dom'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion, AnimatePresence, useDragControls } from 'framer-motion'
 import { 
-    X, Play, Pause, RotateCcw, CheckCircle2, Plus, Diamond, 
+    X, Play, Pause, RotateCcw, CheckCircle2, Plus, Coins, 
     HelpCircle, MessageSquare, Loader2, Volume2, VolumeX, Cloud, Waves,
     BookOpen, Edit3, Clock, CheckSquare, Square, ShieldAlert,
     ExternalLink, Check, Headphones, Flame, Sparkles, Coffee, Leaf
@@ -29,19 +29,20 @@ type TabType = 'timer' | 'notes' | 'resources'
 import { useAmbientSynth } from './use-ambient-synth'
 import type { SoundType } from './use-ambient-synth'
 
-const GEM_REWARD: Record<number, number> = { 0: 0, 1: 1, 2: 1, 3: 1, 4: 2, 5: 3 }
+const TOKEN_REWARD: Record<number, number> = { 0: 0, 1: 1, 2: 1, 3: 1, 4: 2, 5: 3 }
 const ADD_TIME_SECONDS = 300 // 5 minutes
 
 interface FocusModeOverlayProps {
     task: Task
     goalTitle: string
     onClose: () => void
-    onOptimisticGemUpdate: (delta: number) => void
+    onOptimisticTokenUpdate: (delta: number) => void
     onTaskUpdate?: (updatedTask: Task) => void
 }
 
-export function FocusModeOverlay({ task, goalTitle, onClose, onOptimisticGemUpdate, onTaskUpdate }: FocusModeOverlayProps) {
+export function FocusModeOverlay({ task, goalTitle, onClose, onOptimisticTokenUpdate, onTaskUpdate }: FocusModeOverlayProps) {
     const { t } = useLanguage()
+    const dragControls = useDragControls()
     const { activeChatTask, setActiveChatTask } = useEconomy()
     const [mounted, setMounted] = useState(false)
     const [activeTab, setActiveTab] = useState<TabType>('timer')
@@ -97,7 +98,7 @@ export function FocusModeOverlay({ task, goalTitle, onClose, onOptimisticGemUpda
     const [quizLoading, setQuizLoading] = useState(false)
     const [quizFeedback, setQuizFeedback] = useState<string | null>(null)
     const [quizResult, setQuizResult] = useState<'Pass' | 'Needs Work' | null>(null)
-    const [earnedGems, setEarnedGems] = useState<number | null>(null)
+    const [earnedTokens, setEarnedTokens] = useState<number | null>(null)
     const [earnedXp, setEarnedXp] = useState<number | null>(null)
     const [didLevelUp, setDidLevelUp] = useState(false)
     const [leveledUpTo, setLeveledUpTo] = useState<number>(1)
@@ -233,12 +234,12 @@ export function FocusModeOverlay({ task, goalTitle, onClose, onOptimisticGemUpda
 
     const handleClaimBaseRewardOnly = () => {
         haptics.medium()
-        // Claim the focus reward without active recall Socratic quiz (e.g. skips bonus gems)
-        const baseGemReward = GEM_REWARD[task.priority] ?? 1
+        // Claim the focus reward without active recall Socratic quiz (e.g. skips bonus tokens)
+        const baseTokenReward = TOKEN_REWARD[task.priority] ?? 1
         const isFullTimer = remaining === 0
-        const gemAwarded = state === 'finished' && isFullTimer ? baseGemReward * 2 : baseGemReward
+        const tokenAwarded = state === 'finished' && isFullTimer ? baseTokenReward * 2 : baseTokenReward
         
-        onOptimisticGemUpdate(gemAwarded)
+        onOptimisticTokenUpdate(tokenAwarded)
         checkAndRegisterCircadianKey()
 
         const isCatalystActive = (() => {
@@ -295,12 +296,12 @@ export function FocusModeOverlay({ task, goalTitle, onClose, onOptimisticGemUpda
             if (evaluation.rating === 'Pass') {
                 haptics.medium()
                 
-                const evaluationGems = evaluation.gemsAwarded ?? 2
+                const evaluationTokens = evaluation.tokensAwarded ?? 2
                 const evaluationXp = evaluation.xpAwarded ?? 30
-                const finalEvalGems = isCatalystActive ? evaluationGems * 2 : evaluationGems
+                const finalEvalTokens = isCatalystActive ? evaluationTokens * 2 : evaluationTokens
                 const finalEvalXp = isCatalystActive ? evaluationXp * 2 : evaluationXp
 
-                setEarnedGems(finalEvalGems)
+                setEarnedTokens(finalEvalTokens)
                 setEarnedXp(finalEvalXp)
                 if (evaluation.leveledUp) {
                     setDidLevelUp(true)
@@ -308,14 +309,14 @@ export function FocusModeOverlay({ task, goalTitle, onClose, onOptimisticGemUpda
                 }
 
                 // Award client state updates optimistically (the Socratic Quiz base actions were already recorded)
-                onOptimisticGemUpdate(finalEvalGems)
+                onOptimisticTokenUpdate(finalEvalTokens)
                 
-                // Complete the standard focus mode as well to get base focus gems
-                const baseGemReward = GEM_REWARD[task.priority] ?? 1
+                // Complete the standard focus mode as well to get base focus tokens
+                const baseTokenReward = TOKEN_REWARD[task.priority] ?? 1
                 const isFullTimer = remaining === 0
-                const focusGemAward = isFullTimer ? baseGemReward * 2 : baseGemReward
-                const finalFocusGems = isCatalystActive ? focusGemAward * 2 : focusGemAward
-                onOptimisticGemUpdate(finalFocusGems)
+                const focusTokenAward = isFullTimer ? baseTokenReward * 2 : baseTokenReward
+                const finalFocusTokens = isCatalystActive ? focusTokenAward * 2 : focusTokenAward
+                onOptimisticTokenUpdate(finalFocusTokens)
                 await completeTaskFocusMode(task.id, isFullTimer, isCatalystActive)
             } else {
                 haptics.error()
@@ -537,9 +538,15 @@ export function FocusModeOverlay({ task, goalTitle, onClose, onOptimisticGemUpda
                 exit={{ y: '100%', opacity: 0 }}
                 transition={{ type: 'spring', stiffness: 300, damping: 32, mass: 0.9 }}
                 drag={isDesktop ? false : 'y'}
-                dragConstraints={{ top: 0 }}
+                dragControls={dragControls}
+                dragListener={false}
+                dragConstraints={{ top: 0, bottom: 0 }}
                 dragElastic={0.2}
-                onDragEnd={(_: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => { if (info.offset.y > 100) onClose(); }}
+                onDragEnd={(_: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => { 
+                    if (info.offset.y > 100 || info.velocity.y > 500) {
+                        onClose(); 
+                    }
+                }}
             >
 
                 {/* Background Ambient Glows */}
@@ -944,7 +951,7 @@ export function FocusModeOverlay({ task, goalTitle, onClose, onOptimisticGemUpda
                                                 setState('finished')
                                                 setQuizResult('Pass')
                                                 setQuizFeedback(t('focus.comprehension_passed'))
-                                                setEarnedGems(GEM_REWARD[task.priority] ?? 1)
+                                                setEarnedTokens(TOKEN_REWARD[task.priority] ?? 1)
                                                 setEarnedXp(task.priority * 10 + 10)
                                             }}
                                             onSkip={handleClaimBaseRewardOnly}
@@ -969,8 +976,8 @@ export function FocusModeOverlay({ task, goalTitle, onClose, onOptimisticGemUpda
                                                 <div className="h-[1px] bg-emerald-500/10 my-1" />
                                                 <div className="flex items-center justify-between">
                                                     <div className="flex items-center gap-1.5 text-primary">
-                                                        <Diamond className="h-4 w-4 fill-primary/20" />
-                                                        <span className="text-xs font-black">+{earnedGems} {t('focus.focus_gems')}</span>
+                                                        <Coins className="h-4 w-4 fill-primary/20" />
+                                                        <span className="text-xs font-black">+{earnedTokens} Tokens</span>
                                                     </div>
                                                     <div className="flex items-center gap-1.5 text-neon-violet">
                                                         <Flame className="h-4 w-4 fill-neon-violet/20" />
@@ -1014,7 +1021,7 @@ export function FocusModeOverlay({ task, goalTitle, onClose, onOptimisticGemUpda
                                                     {quizLoading ? (
                                                         <Loader2 className="h-4 w-4 animate-spin" />
                                                     ) : (
-                                                        <>{t('focus.submit_check')} <Diamond className="h-3 w-3 fill-black/20" />+2</>
+                                                        <>{t('focus.submit_check')} <Coins className="h-3 w-3 fill-black/20" />+2</>
                                                     )}
                                                 </button>
                                             </div>
@@ -1077,6 +1084,13 @@ export function FocusModeOverlay({ task, goalTitle, onClose, onOptimisticGemUpda
                     <>
                         {/* ── FIXED HEADER GROUP ── */}
                         <div className="shrink-0 relative z-20 bg-[#050508]/80 backdrop-blur-xl border-b border-white/5 pb-4">
+                            {/* Drag handle bar indicator & grab zone */}
+                            <div 
+                                onPointerDown={(e) => dragControls.start(e)}
+                                className="w-full py-3 flex items-center justify-center cursor-grab active:cursor-grabbing touch-none shrink-0"
+                            >
+                                <div className="w-12 h-1 bg-white/15 rounded-full" />
+                            </div>
                             {/* ── TOP NAV BAR ── */}
                             <div className="flex items-center justify-between px-5 pt-4 pb-2">
                                 <button 
@@ -1300,7 +1314,7 @@ export function FocusModeOverlay({ task, goalTitle, onClose, onOptimisticGemUpda
                                             setState('finished')
                                             setQuizResult('Pass')
                                             setQuizFeedback(t('focus.comprehension_passed'))
-                                            setEarnedGems(GEM_REWARD[task.priority] ?? 1)
+                                            setEarnedTokens(TOKEN_REWARD[task.priority] ?? 1)
                                             setEarnedXp(task.priority * 10 + 10)
                                         }}
                                         onSkip={handleClaimBaseRewardOnly}
@@ -1330,8 +1344,8 @@ export function FocusModeOverlay({ task, goalTitle, onClose, onOptimisticGemUpda
                                             
                                             <div className="flex items-center justify-between">
                                                 <div className="flex items-center gap-1.5 text-electric-blue">
-                                                    <Diamond className="h-4 w-4 fill-electric-blue/20" />
-                                                    <span className="text-xs font-black">+{earnedGems} {t('focus.focus_gems')}</span>
+                                                    <Coins className="h-4 w-4 fill-electric-blue/20" />
+                                                    <span className="text-xs font-black">+{earnedTokens} Tokens</span>
                                                 </div>
                                                 <div className="flex items-center gap-1.5 text-neon-violet">
                                                     <Flame className="h-4 w-4 fill-neon-violet/20" />
@@ -1378,7 +1392,7 @@ export function FocusModeOverlay({ task, goalTitle, onClose, onOptimisticGemUpda
                                                 {quizLoading ? (
                                                     <Loader2 className="h-4 w-4 animate-spin" />
                                                 ) : (
-                                                    <>{t('focus.submit_check')} <Diamond className="h-3 w-3 animate-pulse" />+2</>
+                                                    <>{t('focus.submit_check')} <Coins className="h-3 w-3 animate-pulse" />+2</>
                                                 )}
                                             </button>
                                         </div>

@@ -54,10 +54,10 @@ interface MindMapProps {
             is_crunch_mode?: boolean
         }
     }
-    onOptimisticGemUpdate?: (delta: number) => void
+    onOptimisticTokenUpdate?: (delta: number) => void
 }
 
-export function MindMap({ goal, onOptimisticGemUpdate }: MindMapProps) {
+export function MindMap({ goal, onOptimisticTokenUpdate }: MindMapProps) {
     const { t } = useLanguage()
     const [selectedWeek, setSelectedWeek] = useState(1)
     const [expandedBranches, setExpandedBranches] = useState<Set<string>>(new Set())
@@ -618,13 +618,13 @@ export function MindMap({ goal, onOptimisticGemUpdate }: MindMapProps) {
             setSelectedTask(prev => prev ? { ...prev, status: newStatus } : null)
         }
 
-        // Base reward gem calculation
-        const gemReward: Record<number, number> = { 0: 0, 1: 1, 2: 1, 3: 1, 4: 2, 5: 3 }
-        const gemDelta = gemReward[task.priority] ?? 1
-        if (newStatus === 'completed' && onOptimisticGemUpdate) {
-            onOptimisticGemUpdate(gemDelta)
-        } else if (newStatus === 'pending' && onOptimisticGemUpdate) {
-            onOptimisticGemUpdate(-gemDelta)
+        // Base reward token calculation
+        const tokenReward: Record<number, number> = { 0: 0, 1: 1, 2: 1, 3: 1, 4: 2, 5: 3 }
+        const tokenDelta = tokenReward[task.priority] ?? 1
+        if (newStatus === 'completed' && onOptimisticTokenUpdate) {
+            onOptimisticTokenUpdate(tokenDelta)
+        } else if (newStatus === 'pending' && onOptimisticTokenUpdate) {
+            onOptimisticTokenUpdate(-tokenDelta)
         }
 
         startTransition(async () => {
@@ -678,7 +678,7 @@ export function MindMap({ goal, onOptimisticGemUpdate }: MindMapProps) {
     }
 
     return (
-        <div className="flex flex-col gap-3 w-full relative">
+        <div className="flex flex-col gap-4 w-full h-full relative overflow-hidden">
             {/* Horizontal Week Navigation Tabs */}
             <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar shrink-0 max-w-full">
                 {Array.from({ length: totalWeeks }).map((_, i) => {
@@ -760,7 +760,7 @@ export function MindMap({ goal, onOptimisticGemUpdate }: MindMapProps) {
             {mapViewMode === 'canvas' ? (
                 <div 
                     ref={viewportRef}
-                    className="relative w-full h-[62dvh] bg-[#070912] border border-white/5 rounded-3xl overflow-hidden select-none shadow-[inset_0_0_50px_rgba(0,0,0,0.8)]"
+                    className="relative w-full flex-1 min-h-0 bg-[#070912] border border-white/5 rounded-3xl overflow-hidden select-none shadow-[inset_0_0_50px_rgba(0,0,0,0.8)]"
                 >
                     {/* Visual Grid Lines Backdrop */}
                     <div className="absolute inset-0 bg-[radial-gradient(#141829_1.2px,transparent_1.2px)] [background-size:24px_24px] opacity-40 pointer-events-none" />
@@ -1195,7 +1195,7 @@ export function MindMap({ goal, onOptimisticGemUpdate }: MindMapProps) {
                 </div>
             ) : (
                 /* Timeline Fallback View for Native Feel */
-                <div className="w-full h-[62dvh] overflow-y-auto pr-1 no-scrollbar flex flex-col gap-6 bg-[#070912] border border-white/5 rounded-3xl p-6 relative shadow-[inset_0_0_50px_rgba(0,0,0,0.8)]">
+                <div className="w-full flex-1 min-h-0 overflow-y-auto pr-1 no-scrollbar flex flex-col gap-6 bg-[#070912] border border-white/5 rounded-3xl p-6 relative shadow-[inset_0_0_50px_rgba(0,0,0,0.8)]">
                     {/* Visual Grid Lines Backdrop */}
                     <div className="absolute inset-0 bg-[radial-gradient(#141829_1.2px,transparent_1.2px)] [background-size:24px_24px] opacity-20 pointer-events-none rounded-3xl" />
 
@@ -1511,8 +1511,8 @@ export function MindMap({ goal, onOptimisticGemUpdate }: MindMapProps) {
                     task={focusTask}
                     goalTitle={goal.title}
                     onClose={() => setFocusTask(null)}
-                    onOptimisticGemUpdate={(delta) => {
-                        if (onOptimisticGemUpdate) onOptimisticGemUpdate(delta)
+                    onOptimisticTokenUpdate={(delta) => {
+                        if (onOptimisticTokenUpdate) onOptimisticTokenUpdate(delta)
                     }}
                     onTaskUpdate={(updatedTask) => {
                         setLocalTasks(prev => prev.map(t => t.id === updatedTask.id ? updatedTask : t))

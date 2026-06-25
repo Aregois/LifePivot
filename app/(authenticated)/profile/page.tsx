@@ -119,6 +119,7 @@ export default async function ProfilePage() {
             focusToday={focusToday}
             signOutAction={signOut}
             completedDates={completedDates}
+            isSubscribed={!!profile?.is_subscribed}
         />
     )
 }

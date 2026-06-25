@@ -67,15 +67,26 @@ export async function createGoalBase(formData: FormData) {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return { error: 'Not authenticated' }
 
-    // Check if the user already has an active plan
-    const { data: existingGoals } = await supabase
-        .from('learning_goals')
-        .select('id')
-        .eq('user_id', user.id)
-        .limit(1)
+    // Fetch user profile to check subscription status
+    const { data: profile } = await supabase
+        .from('profiles')
+        .select('is_subscribed')
+        .eq('id', user.id)
+        .single()
 
-    if (existingGoals && existingGoals.length > 0) {
-        return { error: 'You already have an active learning plan.' }
+    const isSubscribed = !!profile?.is_subscribed
+
+    if (!isSubscribed) {
+        // Check if the user already has an active plan
+        const { data: existingGoals } = await supabase
+            .from('learning_goals')
+            .select('id')
+            .eq('user_id', user.id)
+            .limit(1)
+
+        if (existingGoals && existingGoals.length > 0) {
+            return { error: 'SUBSCRIBE_REQUIRED' }
+        }
     }
 
     const { data: goal, error: insertError } = await supabase
@@ -132,18 +143,60 @@ export async function generateTasksChunk(goalId: string, startDay: number, endDa
     };
     const categoryInstructions = categoryPrompts[category] || categoryPrompts['Custom'];
 
-    const prompt = `
+    // --- Stage 3: Fetch uploaded document context for AI grounding ---
+    let documentContextBlock = ''
+    try {
+        // Fetch workspaces the user belongs to
+        const { data: memberWorkspaces } = await supabase
+            .from('workspace_members')
+            .select('workspace_id')
+            .eq('user_id', goal.user_id)
+
+        const workspaceIds = memberWorkspaces?.map((w: any) => w.workspace_id) || []
+
+        let query = supabase
+            .from('document_metadata')
+            .select('file_name, text_content')
+            .not('text_content', 'is', null)
+
+        if (workspaceIds.length > 0) {
+            query = query.or(`plan_id.eq.${goalId},workspace_id.in.(${workspaceIds.join(',')})`)
+        } else {
+            query = query.eq('plan_id', goalId)
+        }
+
+        const { data: docRows } = await query
+            .order('created_at', { ascending: false })
+            .limit(3)
+
+        if (docRows && docRows.length > 0) {
+            const docSnippets = docRows
+                .map((d: any) => `[${d.file_name}]\n${String(d.text_content).slice(0, 1500)}`)
+                .join('\n\n---\n\n')
+            documentContextBlock = `
+[CONTEXT DOCUMENTS — USER UPLOADED TABLE OF CONTENTS]
+The student has uploaded the following syllabus/contents pages from their study material.
+Use ONLY these topics and chapter headings to generate hyper-relevant tasks that directly match this curriculum.
+Do NOT generate generic tasks if specific chapters are visible below:
+
+${docSnippets}
+
+[END CONTEXT DOCUMENTS]
+`
+        }
+    } catch {
+        // Non-fatal: proceed without document context if query fails
+    }
+    // --- End Stage 3 context injection ---
+
+    const prompt = `${documentContextBlock}
         The user goal topic: "${goal.title}"
         Subject Category: "${category}"
         Category Specific Guidelines:
         ${categoryInstructions}
 
         MULTILINGUAL TRANSLATION CONSTRAINT:
-        CRITICAL: You must generate translations for the goal title, each task title, and each subtask title in ALL 7 supported languages: "en", "ru", "fr", "es", "hy", "ja", "zh".
-        - At the root of the JSON object, return a "goal_title_translations" key containing translations for the goal topic: "${goal.title}".
-        - For each task, return "title" (translated to the active app language "${language}") AND "title_translations" containing translations of the task title in all 7 languages.
-        - For each subtask, return "title" (translated to the active app language "${language}") AND "title_translations" containing translations of the subtask title in all 7 languages.
-        Ensure the translations are natural, contextually accurate, and grammatically correct for each respective language.
+        CRITICAL: To optimize performance and reduce response time, only generate task titles and subtask titles directly in the user's active language: "${language}". Do NOT output any translation arrays, dictionaries, or "title_translations" fields.
 
         Mission Intent: ${goal.goal_intent}
         Total Duration: ${goal.duration_days} days.
@@ -175,36 +228,18 @@ export async function generateTasksChunk(goalId: string, startDay: number, endDa
         1. Distribute workload based on commitment: 3 to 5 tasks per day (unless P0).
         2. Priority system: Each task MUST have a Priority tier from 0 to 5.
         3. P5 Limit: Never more than ONE P5 task per day.
-        4. Void Days: On a P0 day, create exactly ONE task with title "VOID DAY" (and corresponding translations in all languages) and priority 0.
+        4. Void Days: On a P0 day, create exactly ONE task with title "VOID DAY" (in language "${language}") and priority 0.
         5. HARD CONSTRAINT: NEVER place a P0 (Void Day) on the FINAL DAY of the plan (${goal.duration_days}) or on any date listed as a "Phase Boundary".
         6. EXAM FINALE: If Mission Intent is "Exam", the last 3 days of the plan MUST be strictly P1 (Exercises) and P2 (Overview) for final review. No P5 or P4 tasks allowed in the final 72 hours.
         7. TOPIC SPECIFICITY: All task titles MUST be directly related to the goal topic "${goal.title}". Do not use generic names like "Module Overview". Use specific terms (e.g., "Refraction Index Calculation" instead of "Practice Exercises").
-        8. SUBTASKS: For tasks with priority 4, include "subtasks": an array of exactly 3-4 objects. For tasks with priority 5, include "subtasks": an array of exactly 4-5 objects. For all other priorities, set "subtasks": []. Each subtask must be a concrete, specific action step directly related to the task title (e.g., "Solve integration problems 12-18", not "Practice exercises"). Each subtask must have a unique string "id" (use a short random string like "st_1"), "title" (in language "${language}"), "title_translations" in all 7 languages, and "completed": false.
+        8. SUBTASKS: For tasks with priority 4, include "subtasks": an array of exactly 3-4 objects. For tasks with priority 5, include "subtasks": an array of exactly 4-5 objects. For all other priorities, set "subtasks": []. Each subtask must be a concrete, specific action step directly related to the task title (e.g., "Solve integration problems 12-18", not "Practice exercises"). Each subtask must have a unique string "id" (use a short random string like "st_1") and "title" in language "${language}".
         
-        Return ONLY a JSON object with three keys:
+        Return ONLY a JSON object matching this schema:
         {
-            "goal_title_translations": {
-                "en": "translated goal title",
-                "ru": "...",
-                "fr": "...",
-                "es": "...",
-                "hy": "...",
-                "ja": "...",
-                "zh": "..."
-            },
             "tasks": [
                 {
                     "day_number": number,
-                    "title": "task title in active language",
-                    "title_translations": {
-                        "en": "task title in English",
-                        "ru": "task title in Russian",
-                        "fr": "task title in French",
-                        "es": "task title in Spanish",
-                        "hy": "task title in Armenian",
-                        "ja": "task title in Japanese",
-                        "zh": "task title in Chinese"
-                    },
+                    "title": "task title in language ${language}",
                     "subject": "MATH|HISTORY|SCIENCE|TECH|ARTS|GENERAL",
                     "duration_mins": number,
                     "priority": 0|1|2|3|4|5,
@@ -212,17 +247,7 @@ export async function generateTasksChunk(goalId: string, startDay: number, endDa
                     "subtasks": [
                         {
                             "id": string,
-                            "title": "subtask title in active language",
-                            "title_translations": {
-                                "en": "subtask title in English",
-                                "ru": "subtask title in Russian",
-                                "fr": "subtask title in French",
-                                "es": "subtask title in Spanish",
-                                "hy": "subtask title in Armenian",
-                                "ja": "subtask title in Japanese",
-                                "zh": "subtask title in Chinese"
-                            },
-                            "completed": false
+                            "title": "subtask title in language ${language}"
                         }
                     ]
                 }
@@ -238,10 +263,10 @@ export async function generateTasksChunk(goalId: string, startDay: number, endDa
     try {
         const result = await model.generateContent(prompt);
         const responseText = result.response.text();
-        const payload = cleanAndParseJSON(responseText, { tasks: [] as any[], plan_metadata: {} as any, goal_title_translations: {} as any });
+        const payload = cleanAndParseJSON(responseText, { tasks: [] as any[], plan_metadata: {} as any }) as any;
         const generatedTasks = payload.tasks || [];
         const planMetadata = payload.plan_metadata || {};
-        const goalTitleTranslations = payload.goal_title_translations || {};
+        const goalTitleTranslations = payload.goal_title_translations || { [language]: goal.title };
 
         // Merge translated titles into plan_metadata
         const mergedMetadata = {
@@ -264,22 +289,23 @@ export async function generateTasksChunk(goalId: string, startDay: number, endDa
             targetDate.setDate(targetDate.getDate() + (task.day_number - 1));
 
             // Select active language translation for title and subtasks
-            const activeTitle = task.title_translations?.[language] || task.title || '';
+            const activeTitle = task.title || '';
             const activeSubtasks = (task.subtasks ?? []).map((st: any) => ({
-                id: st.id,
-                title: st.title_translations?.[language] || st.title || '',
+                id: st.id || `st_${Math.random().toString(36).substring(2, 11)}`,
+                title: st.title || '',
                 completed: false
             }));
 
-            // Prepare the special translations subtask
+            // Prepare the special translations subtask programmatically
             const translationsSubtask = {
                 id: "translations",
                 title: "",
                 completed: false,
                 translations: {
-                    title: task.title_translations || { [language]: task.title || '' },
+                    title: task.title_translations || { [language]: activeTitle },
                     subtasks: (task.subtasks ?? []).reduce((acc: any, st: any) => {
-                        acc[st.id] = st.title_translations || { [language]: st.title || '' };
+                        const subId = st.id || `st_${Math.random().toString(36).substring(2, 11)}`;
+                        acc[subId] = st.title_translations || { [language]: st.title || '' };
                         return acc;
                     }, {})
                 }
@@ -482,8 +508,8 @@ export async function addTask(goalId: string, formData: FormData) {
     revalidatePath('/', 'layout')
 }
 
-// Priority-to-Gem reward mapping
-const GEM_REWARD: Record<number, number> = {
+// Priority-to-Token reward mapping
+const TOKEN_REWARD: Record<number, number> = {
     0: 0, // Void Day — no reward
     1: 1, // Exercises
     2: 1, // Theory Overview
@@ -497,7 +523,7 @@ export async function toggleTask(taskId: string, currentStatus: string) {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return
 
-    // Fetch the task's priority so we can scale the gem reward correctly
+    // Fetch the task's priority so we can scale the token reward correctly
     const { data: task } = await supabase
         .from('tasks')
         .select('priority')
@@ -505,7 +531,7 @@ export async function toggleTask(taskId: string, currentStatus: string) {
         .single()
 
     const newStatus = currentStatus === 'completed' ? 'pending' : 'completed'
-    const gemDelta = GEM_REWARD[task?.priority ?? 3] ?? 1
+    const tokenDelta = TOKEN_REWARD[task?.priority ?? 3] ?? 1
     const baseXp = task?.priority && task.priority > 0 ? (task.priority * 10 + 10) : 0
 
     await supabase
@@ -514,20 +540,20 @@ export async function toggleTask(taskId: string, currentStatus: string) {
         .eq('id', taskId)
         .eq('user_id', user.id)
 
-    // Award or revoke gems/XP based on priority
+    // Award or revoke tokens/XP based on priority
     const { data: profile } = await supabase
         .from('profiles')
-        .select('gems, xp, level')
+        .select('tokens_balance, xp, level')
         .eq('id', user.id)
         .single()
 
     if (profile) {
-        let newGems = profile.gems
+        let newTokens = profile.tokens_balance ?? 0
         let newXp = profile.xp ?? 0
         let newLevel = profile.level ?? 1
 
         if (newStatus === 'completed') {
-            newGems += gemDelta
+            newTokens += tokenDelta
             newXp += baseXp
             let xpNeeded = newLevel * 100
             while (newXp >= xpNeeded) {
@@ -536,13 +562,13 @@ export async function toggleTask(taskId: string, currentStatus: string) {
                 xpNeeded = newLevel * 100
             }
         } else {
-            newGems = Math.max(0, profile.gems - gemDelta)
+            newTokens = Math.max(0, (profile.tokens_balance ?? 0) - tokenDelta)
             newXp = Math.max(0, (profile.xp ?? 0) - baseXp)
         }
 
         await supabase
             .from('profiles')
-            .update({ gems: newGems, xp: newXp, level: newLevel })
+            .update({ tokens_balance: newTokens, xp: newXp, level: newLevel })
             .eq('id', user.id)
     }
 
@@ -600,10 +626,10 @@ export async function completeTaskFocusMode(taskId: string, isFullFocus: boolean
 
     if (!task) return { error: 'Task not found' }
 
-    const baseReward = GEM_REWARD[task.priority] ?? 1
-    let gemReward = isFullFocus ? baseReward * 2 : baseReward
+    const baseReward = TOKEN_REWARD[task.priority] ?? 1
+    let tokenReward = isFullFocus ? baseReward * 2 : baseReward
     if (isCatalystActive) {
-        gemReward = gemReward * 2
+        tokenReward = tokenReward * 2
     }
 
     await supabase
@@ -614,11 +640,11 @@ export async function completeTaskFocusMode(taskId: string, isFullFocus: boolean
 
     const { data: profile } = await supabase
         .from('profiles')
-        .select('gems, xp, level, multiplier_active')
+        .select('tokens_balance, xp, level, multiplier_active')
         .eq('id', user.id)
         .single()
 
-    let newGems = profile?.gems ?? 0
+    let newTokens = profile?.tokens_balance ?? 0
     let newXp = profile?.xp ?? 0
     let newLevel = profile?.level ?? 1
     let leveledUp = false
@@ -626,9 +652,9 @@ export async function completeTaskFocusMode(taskId: string, isFullFocus: boolean
     if (profile) {
         // Apply focus multiplier if active
         if (profile.multiplier_active) {
-            gemReward = gemReward * 2
+            tokenReward = tokenReward * 2
         }
-        newGems += gemReward
+        newTokens += tokenReward
 
         // Calculate XP reward
         const baseXp = task.priority > 0 ? (task.priority * 10 + 10) : 0
@@ -649,7 +675,7 @@ export async function completeTaskFocusMode(taskId: string, isFullFocus: boolean
         await supabase
             .from('profiles')
             .update({ 
-                gems: newGems, 
+                tokens_balance: newTokens, 
                 xp: newXp, 
                 level: newLevel,
                 multiplier_active: false // Reset multiplier once used
@@ -660,7 +686,7 @@ export async function completeTaskFocusMode(taskId: string, isFullFocus: boolean
     revalidatePath('/', 'layout')
     return { 
         success: true, 
-        gemsAwarded: gemReward, 
+        tokensAwarded: tokenReward, 
         xpAwarded: isFullFocus ? (task.priority * 10 + 10) * (isCatalystActive ? 4 : 2) : (task.priority * 10 + 10) * (isCatalystActive ? 2 : 1),
         leveledUp,
         newLevel
@@ -908,7 +934,7 @@ export async function checkRescheduleTier(goalId: string) {
         if (hasVoid) return { tier: 1 }
     }
 
-    if (profile.lives > 0) return { tier: 2 }
+    if ((profile.tokens_balance ?? 0) > 0) return { tier: 2 }
     return { tier: 3 }
 }
 
@@ -951,8 +977,8 @@ export async function processPivot(goalId: string) {
         return { success: true, tier: 1 };
     }
 
-    // Tier 2: AI Crunch if Slide failed but Lives exist
-    if (profile.lives > 0) {
+    // Tier 2: AI Crunch if Slide failed but Tokens exist
+    if ((profile.tokens_balance ?? 0) > 0) {
         PIVOT_TRACE.log('CORE', 'Tier 1 Failed. Falling back to Tier 2: AI Crunch');
         const crunchResult = await executeAICrunch(goalId, user.id);
         if (crunchResult?.success) {
@@ -972,11 +998,11 @@ async function executeAICrunch(goalId: string, userId: string) {
     const supabase = await createClient()
     const todayStr = getLocalDateString();
 
-    // 1. Deduct Life
-    const { data: profile } = await supabase.from('profiles').select('lives').eq('id', userId).single();
-    if (!profile || profile.lives <= 0) return { success: false };
+    // 1. Deduct Token
+    const { data: profile } = await supabase.from('profiles').select('tokens_balance').eq('id', userId).single();
+    if (!profile || (profile.tokens_balance ?? 0) <= 0) return { success: false };
 
-    await supabase.from('profiles').update({ lives: profile.lives - 1 }).eq('id', userId);
+    await supabase.from('profiles').update({ tokens_balance: Math.max(0, profile.tokens_balance - 1) }).eq('id', userId);
 
     // 2. Extract context for AI: Overdue + Future Tasks in current sprint
     const { data: allTasks } = await supabase
@@ -1248,12 +1274,12 @@ export async function submitActiveRecallAnswer(taskId: string, answer: string, p
         if (evaluation.rating === 'Pass') {
             const { data: profile } = await supabase
                 .from('profiles')
-                .select('gems, xp, level')
+                .select('tokens_balance, xp, level')
                 .eq('id', user.id)
                 .single()
 
             if (profile) {
-                const bonusGems = 2
+                const bonusTokens = 2
                 const bonusXp = 30
 
                 let newXp = (profile.xp ?? 0) + bonusXp
@@ -1271,7 +1297,7 @@ export async function submitActiveRecallAnswer(taskId: string, answer: string, p
                 await supabase
                     .from('profiles')
                     .update({
-                        gems: profile.gems + bonusGems,
+                        tokens_balance: (profile.tokens_balance ?? 0) + bonusTokens,
                         xp: newXp,
                         level: newLevel
                     })
@@ -1321,7 +1347,7 @@ export async function submitActiveRecallAnswer(taskId: string, answer: string, p
                 return { 
                     feedback: evaluation.feedback, 
                     rating: 'Pass', 
-                    gemsAwarded: bonusGems, 
+                    tokensAwarded: bonusTokens, 
                     xpAwarded: bonusXp,
                     leveledUp,
                     newLevel
@@ -1337,11 +1363,11 @@ export async function submitActiveRecallAnswer(taskId: string, answer: string, p
         if (hasPassed) {
             const { data: profile } = await supabase
                 .from('profiles')
-                .select('gems, xp, level')
+                .select('tokens_balance, xp, level')
                 .eq('id', user.id)
                 .single()
             if (profile) {
-                const bonusGems = 2
+                const bonusTokens = 2
                 const bonusXp = 30
                 let newXp = (profile.xp ?? 0) + bonusXp
                 let newLevel = profile.level ?? 1
@@ -1356,7 +1382,7 @@ export async function submitActiveRecallAnswer(taskId: string, answer: string, p
                 await supabase
                     .from('profiles')
                     .update({
-                        gems: profile.gems + bonusGems,
+                        tokens_balance: (profile.tokens_balance ?? 0) + bonusTokens,
                         xp: newXp,
                         level: newLevel
                     })
@@ -1366,7 +1392,7 @@ export async function submitActiveRecallAnswer(taskId: string, answer: string, p
                         en: `Explain the core mechanism or takeaway of "${task.title}".`,
                         ru: `Объясните основной механизм или суть темы "${task.title}".`,
                         fr: `Expliquez le mécanisme central ou l'essentiel de "${task.title}".`,
-                        es: `Explica el mecanismo central o el concepto clave de "${task.title}".`,
+                        es: `Explica el mecanismo central o el concepto clave of "${task.title}".`,
                         hy: `Բացատրեք "${task.title}" թեմայի հիմնական մեխանիզմը կամ էությունը:`,
                         ja: `「${task.title}」の核心的な仕組みやポイントを説明してください。`,
                         zh: `解释“${task.title}”的核心机制或要点。`
@@ -1401,7 +1427,7 @@ export async function submitActiveRecallAnswer(taskId: string, answer: string, p
                 return {
                     feedback: fallbackPassFeedbacks[language] || fallbackPassFeedbacks['en'],
                     rating: 'Pass',
-                    gemsAwarded: bonusGems,
+                    tokensAwarded: bonusTokens,
                     xpAwarded: bonusXp,
                     leveledUp,
                     newLevel
@@ -1436,28 +1462,16 @@ export async function verifyShopPurchase(
 
     const { data: profile } = await supabase
         .from('profiles')
-        .select('gems, lives, multiplier_active, streak_shields_count, current_streak, high_streak')
+        .select('tokens_balance, multiplier_active, streak_shields_count, current_streak, high_streak')
         .eq('id', user.id)
         .single()
 
     if (!profile) return { error: 'Profile not found' }
 
-    if (itemType === 'heart') {
-        if (profile.gems < 5) return { error: 'NOT_ENOUGH_GEMS' }
-        if (profile.lives >= 5) return { error: 'LIVES_FULL' }
-
-        const { error } = await supabase
-            .from('profiles')
-            .update({ gems: profile.gems - 5, lives: profile.lives + 1 })
-            .eq('id', user.id)
-
-        if (error) return { error: error.message }
-        revalidatePath('/', 'layout')
-        return { success: true, message: 'Purchased 1 Life!' }
-    }
+    const userTokens = profile.tokens_balance ?? 0
 
     if (itemType === 'void') {
-        if (profile.gems < 10) return { error: 'NOT_ENOUGH_GEMS' }
+        if (userTokens < 10) return { error: 'NOT_ENOUGH_TOKENS' }
 
         const { data: goal } = await supabase
             .from('learning_goals')
@@ -1526,7 +1540,7 @@ export async function verifyShopPurchase(
 
         await supabase
             .from('profiles')
-            .update({ gems: profile.gems - 10 })
+            .update({ tokens_balance: userTokens - 10 })
             .eq('id', user.id)
 
         revalidatePath('/', 'layout')
@@ -1539,12 +1553,12 @@ export async function verifyShopPurchase(
     }
 
     if (itemType === 'multiplier') {
-        if (profile.gems < 15) return { error: 'NOT_ENOUGH_GEMS' }
+        if (userTokens < 15) return { error: 'NOT_ENOUGH_TOKENS' }
         if (profile.multiplier_active) return { error: 'MULTIPLIER_ALREADY_ACTIVE' }
 
         const { error } = await supabase
             .from('profiles')
-            .update({ gems: profile.gems - 15, multiplier_active: true })
+            .update({ tokens_balance: userTokens - 15, multiplier_active: true })
             .eq('id', user.id)
 
         if (error) return { error: error.message }
@@ -1553,13 +1567,13 @@ export async function verifyShopPurchase(
     }
 
     if (itemType === 'shield') {
-        if (profile.gems < 15) return { error: 'NOT_ENOUGH_GEMS' }
+        if (userTokens < 15) return { error: 'NOT_ENOUGH_TOKENS' }
         if ((profile.streak_shields_count ?? 0) >= 2) return { error: 'SHIELDS_FULL' }
 
         const { error } = await supabase
             .from('profiles')
             .update({ 
-                gems: profile.gems - 15, 
+                tokens_balance: userTokens - 15, 
                 streak_shields_count: (profile.streak_shields_count ?? 0) + 1 
             })
             .eq('id', user.id)
@@ -1570,14 +1584,14 @@ export async function verifyShopPurchase(
     }
 
     if (itemType === 'repair') {
-        if (profile.gems < 30) return { error: 'NOT_ENOUGH_GEMS' }
+        if (userTokens < 30) return { error: 'NOT_ENOUGH_TOKENS' }
         if ((profile.current_streak ?? 0) > 0) return { error: 'STREAK_NOT_BROKEN' }
         if ((profile.high_streak ?? 0) === 0) return { error: 'NO_STREAK_TO_REPAIR' }
 
         const { error } = await supabase
             .from('profiles')
             .update({ 
-                gems: profile.gems - 30, 
+                tokens_balance: userTokens - 30, 
                 current_streak: profile.high_streak 
             })
             .eq('id', user.id)
@@ -1597,16 +1611,16 @@ export async function purchaseCustomization(cost: number, itemName: string) {
 
     const { data: profile } = await supabase
         .from('profiles')
-        .select('gems')
+        .select('tokens_balance')
         .eq('id', user.id)
         .single()
 
     if (!profile) return { error: 'Profile not found' }
-    if (profile.gems < cost) return { error: 'NOT_ENOUGH_GEMS' }
+    if ((profile.tokens_balance ?? 0) < cost) return { error: 'NOT_ENOUGH_TOKENS' }
 
     const { error } = await supabase
         .from('profiles')
-        .update({ gems: profile.gems - cost })
+        .update({ tokens_balance: (profile.tokens_balance ?? 0) - cost })
         .eq('id', user.id)
 
     if (error) return { error: error.message }
@@ -1614,21 +1628,21 @@ export async function purchaseCustomization(cost: number, itemName: string) {
     return { success: true, message: `Successfully unlocked ${itemName}!` }
 }
 
-export async function claimAchievementReward(xpReward: number, gemReward: number, achievementTitle: string) {
+export async function claimAchievementReward(xpReward: number, tokenReward: number, achievementTitle: string) {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return { error: 'Not authenticated' }
 
     const { data: profile } = await supabase
         .from('profiles')
-        .select('gems, xp, level')
+        .select('tokens_balance, xp, level')
         .eq('id', user.id)
         .single()
 
     if (!profile) return { error: 'Profile not found' }
 
-    let newXp = profile.xp + xpReward
-    let newLevel = profile.level
+    let newXp = (profile.xp ?? 0) + xpReward
+    let newLevel = profile.level ?? 1
     let xpNeeded = newLevel * 100
     while (newXp >= xpNeeded) {
         newXp -= xpNeeded
@@ -1639,7 +1653,7 @@ export async function claimAchievementReward(xpReward: number, gemReward: number
     const { error } = await supabase
         .from('profiles')
         .update({ 
-            gems: profile.gems + gemReward,
+            tokens_balance: (profile.tokens_balance ?? 0) + tokenReward,
             xp: newXp,
             level: newLevel
         })
@@ -1647,7 +1661,7 @@ export async function claimAchievementReward(xpReward: number, gemReward: number
 
     if (error) return { error: error.message }
     revalidatePath('/', 'layout')
-    return { success: true, newGems: profile.gems + gemReward, newXp, newLevel, message: `Claimed reward for: ${achievementTitle}!` }
+    return { success: true, newTokens: (profile.tokens_balance ?? 0) + tokenReward, newXp, newLevel, message: `Claimed reward for: ${achievementTitle}!` }
 }
 
 export async function fetchFlashcards() {
@@ -1704,14 +1718,14 @@ export async function reviewFlashcard(cardId: string, rating: 'easy' | 'hard') {
 
     if (updateError) return { error: updateError.message }
 
-    // Award XP/Gems for review!
+    // Award XP/Tokens for review!
     const { data: profile } = await supabase
         .from('profiles')
-        .select('gems, xp, level')
+        .select('tokens_balance, xp, level')
         .eq('id', user.id)
         .single()
 
-    let awardGems = 1
+    let awardTokens = 1
     let awardXp = 10
     let leveledUp = false
     let newLevel = profile?.level ?? 1
@@ -1729,7 +1743,7 @@ export async function reviewFlashcard(cardId: string, rating: 'easy' | 'hard') {
         await supabase
             .from('profiles')
             .update({
-                gems: profile.gems + awardGems,
+                tokens_balance: (profile.tokens_balance ?? 0) + awardTokens,
                 xp: newXp,
                 level: newLevel
             })
@@ -1737,7 +1751,7 @@ export async function reviewFlashcard(cardId: string, rating: 'easy' | 'hard') {
     }
 
     revalidatePath('/', 'layout')
-    return { success: true, nextBox, nextReview: nextReviewDate.toISOString(), gemsAwarded: awardGems, xpAwarded: awardXp, leveledUp, newLevel }
+    return { success: true, nextBox, nextReview: nextReviewDate.toISOString(), tokensAwarded: awardTokens, xpAwarded: awardXp, leveledUp, newLevel }
 }
 
 export async function placeWagerServer(cost: number) {
@@ -1747,31 +1761,31 @@ export async function placeWagerServer(cost: number) {
 
     const { data: profile } = await supabase
         .from('profiles')
-        .select('gems')
+        .select('tokens_balance')
         .eq('id', user.id)
         .single()
 
     if (!profile) return { error: 'Profile not found' }
-    if (profile.gems < cost) return { error: 'NOT_ENOUGH_GEMS' }
+    if ((profile.tokens_balance ?? 0) < cost) return { error: 'NOT_ENOUGH_TOKENS' }
 
     const { error } = await supabase
         .from('profiles')
-        .update({ gems: profile.gems - cost })
+        .update({ tokens_balance: (profile.tokens_balance ?? 0) - cost })
         .eq('id', user.id)
 
     if (error) return { error: error.message }
     revalidatePath('/', 'layout')
-    return { success: true, newGems: profile.gems - cost }
+    return { success: true, newTokens: (profile.tokens_balance ?? 0) - cost }
 }
 
-export async function rewardWagerServer(gemReward: number) {
+export async function rewardWagerServer(tokenReward: number) {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return { error: 'Not authenticated' }
 
     const { data: profile } = await supabase
         .from('profiles')
-        .select('gems')
+        .select('tokens_balance')
         .eq('id', user.id)
         .single()
 
@@ -1779,12 +1793,12 @@ export async function rewardWagerServer(gemReward: number) {
 
     const { error } = await supabase
         .from('profiles')
-        .update({ gems: profile.gems + gemReward })
+        .update({ tokens_balance: (profile.tokens_balance ?? 0) + tokenReward })
         .eq('id', user.id)
 
     if (error) return { error: error.message }
     revalidatePath('/', 'layout')
-    return { success: true, newGems: profile.gems + gemReward }
+    return { success: true, newTokens: (profile.tokens_balance ?? 0) + tokenReward }
 }
 
 export async function fetchRecallPitItems() {
@@ -1814,28 +1828,28 @@ export async function fetchRecallPitItems() {
     }
 }
 
-export async function recoverLifeFromRecallPit() {
+export async function recoverTokensFromRecallPit() {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return { error: 'Not authenticated' }
 
     const { data: profile } = await supabase
         .from('profiles')
-        .select('lives')
+        .select('tokens_balance')
         .eq('id', user.id)
         .single()
 
     if (!profile) return { error: 'Profile not found' }
-    if (profile.lives >= 5) return { error: 'LIVES_FULL' }
 
+    const newTokens = (profile.tokens_balance || 0) + 2
     const { error } = await supabase
         .from('profiles')
-        .update({ lives: profile.lives + 1 })
+        .update({ tokens_balance: newTokens })
         .eq('id', user.id)
 
     if (error) return { error: error.message }
     revalidatePath('/', 'layout')
-    return { success: true, newLives: profile.lives + 1 }
+    return { success: true, newTokens }
 }
 
 export async function awardStreakShieldServer() {
@@ -1853,7 +1867,18 @@ export async function awardStreakShieldServer() {
     
     // Max 2 shields
     if ((profile.streak_shields_count ?? 0) >= 2) {
-        return { error: 'SHIELDS_FULL', message: 'Shields are already full! Awarded 5 Gems instead.' }
+        const { data: prof } = await supabase
+            .from('profiles')
+            .select('tokens_balance')
+            .eq('id', user.id)
+            .single()
+        if (prof) {
+            await supabase
+                .from('profiles')
+                .update({ tokens_balance: (prof.tokens_balance ?? 0) + 5 })
+                .eq('id', user.id)
+        }
+        return { error: 'SHIELDS_FULL', message: 'Shields are already full! Awarded 5 Tokens instead.' }
     }
 
     const { error } = await supabase
@@ -2102,12 +2127,12 @@ export async function resolveCheckpointBattle(goalId: string, wallDate: string, 
 
         const { data: profile } = await supabase
             .from('profiles')
-            .select('gems, xp, level')
+            .select('tokens_balance, xp, level')
             .eq('id', user.id)
             .single()
 
         if (profile) {
-            const bonusGems = 15
+            const bonusTokens = 15
             const bonusXp = 100
             let newXp = (profile.xp ?? 0) + bonusXp
             let newLevel = profile.level ?? 1
@@ -2120,21 +2145,21 @@ export async function resolveCheckpointBattle(goalId: string, wallDate: string, 
 
             await supabase
                 .from('profiles')
-                .update({ gems: profile.gems + bonusGems, xp: newXp, level: newLevel })
+                .update({ tokens_balance: (profile.tokens_balance ?? 0) + bonusTokens, xp: newXp, level: newLevel })
                 .eq('id', user.id)
         }
     } else {
         const { data: profile } = await supabase
             .from('profiles')
-            .select('lives')
+            .select('tokens_balance')
             .eq('id', user.id)
             .single()
 
         if (profile) {
-            const newLives = Math.max(0, profile.lives - 1)
+            const newTokens = Math.max(0, (profile.tokens_balance || 0) - 2)
             await supabase
                 .from('profiles')
-                .update({ lives: newLives })
+                .update({ tokens_balance: newTokens })
                 .eq('id', user.id)
         }
     }
@@ -2523,7 +2548,8 @@ export async function updateActiveGoalsLanguage(newLanguage: string) {
 
     console.log('[updateActiveGoalsLanguage] Goals fetched:', goals ? goals.length : 0)
 
-    if (goals) {
+    if (goals && goals.length > 0) {
+        // 1. Update goals language metadata
         for (const goal of goals) {
             const currentMetadata = (goal.plan_metadata as any) || {}
             const updatedMetadata = { ...currentMetadata, language: newLanguage }
@@ -2535,6 +2561,89 @@ export async function updateActiveGoalsLanguage(newLanguage: string) {
             if (updateError) {
                 console.error(`[updateActiveGoalsLanguage] Failed to update Goal ID ${goal.id}:`, updateError.message)
             }
+        }
+
+        // 2. Fetch and translate tasks associated with these goals in the background (0-tokens)
+        const goalIds = goals.map(g => g.id)
+        const { data: tasks } = await supabase
+            .from('tasks')
+            .select('*')
+            .in('goal_id', goalIds)
+
+        if (tasks && tasks.length > 0) {
+            const updatePromises = tasks.map(async (task) => {
+                const subtasksArray = task.subtasks ?? []
+                let translationsSubtask = subtasksArray.find((s: any) => s.id === 'translations') as any
+
+                if (!translationsSubtask) {
+                    translationsSubtask = {
+                        id: "translations",
+                        title: "",
+                        completed: false,
+                        translations: {
+                            title: {},
+                            subtasks: {}
+                        }
+                    }
+                }
+
+                if (!translationsSubtask.translations) {
+                    translationsSubtask.translations = { title: {}, subtasks: {} }
+                }
+                if (!translationsSubtask.translations.title) {
+                    translationsSubtask.translations.title = {}
+                }
+                if (!translationsSubtask.translations.subtasks) {
+                    translationsSubtask.translations.subtasks = {}
+                }
+
+                const titleTranslations = translationsSubtask.translations.title
+                const subtaskTranslations = translationsSubtask.translations.subtasks
+                let needsUpdate = false
+
+                // Translate task title if needed
+                if (!titleTranslations[newLanguage]) {
+                    const translatedTitle = await translateTextFree(task.title, newLanguage)
+                    if (translatedTitle) {
+                        titleTranslations[newLanguage] = translatedTitle
+                        needsUpdate = true
+                    }
+                }
+
+                // Translate subtasks if needed
+                const realSubtasks = subtasksArray.filter((s: any) => s.id !== 'translations')
+                for (const sub of realSubtasks) {
+                    if (!subtaskTranslations[sub.id]) {
+                        subtaskTranslations[sub.id] = {}
+                    }
+                    if (!subtaskTranslations[sub.id][newLanguage]) {
+                        const translatedSub = await translateTextFree(sub.title, newLanguage)
+                        if (translatedSub) {
+                            subtaskTranslations[sub.id][newLanguage] = translatedSub
+                            needsUpdate = true
+                        }
+                    }
+                }
+
+                if (needsUpdate) {
+                    const newSubtasksArray = [
+                        ...realSubtasks,
+                        {
+                            ...translationsSubtask,
+                            translations: {
+                                title: titleTranslations,
+                                subtasks: subtaskTranslations
+                            }
+                        }
+                    ]
+                    await supabase
+                        .from('tasks')
+                        .update({ subtasks: newSubtasksArray })
+                        .eq('id', task.id)
+                }
+            })
+
+            await Promise.all(updatePromises)
         }
     }
     
@@ -2572,4 +2681,149 @@ async function translateTextFree(text: string, targetLang: string): Promise<stri
         console.error(`[translateTextFree] Failed for text: "${text}"`, e)
         return text
     }
+}
+
+export async function importExternalPlan(formData: FormData) {
+    const supabase = await createClient()
+    const title = formData.get('title') as string
+    const durationDays = parseInt(formData.get('duration_days') as string) || 30
+    const level = formData.get('level') as string || 'Beginner'
+    const goalIntent = formData.get('goal_intent') as string || 'Level Up'
+    const category = formData.get('category') as string || 'Custom'
+    const language = formData.get('language') as string || 'en'
+    const dailyHours = parseInt(formData.get('daily_hours') as string) || 2
+    const tasksJson = formData.get('tasks_json') as string || ''
+
+    if (!title) return { error: 'No title provided' }
+
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return { error: 'Not authenticated' }
+
+    // Check if the user already has an active plan
+    const { data: existingGoals } = await supabase
+        .from('learning_goals')
+        .select('id')
+        .eq('user_id', user.id)
+        .limit(1)
+
+    if (existingGoals && existingGoals.length > 0) {
+        return { error: 'You already have an active learning plan.' }
+    }
+
+    // Clean and parse JSON
+    function cleanPastedJson(raw: string): string {
+        let cleaned = raw.trim()
+        if (cleaned.startsWith('```')) {
+            const lines = cleaned.split('\n')
+            if (lines[0].startsWith('```')) {
+                lines.shift()
+            }
+            if (lines[lines.length - 1].startsWith('```')) {
+                lines.pop()
+            }
+            cleaned = lines.join('\n').trim()
+        }
+        return cleaned
+    }
+
+    let parsedTasks: any[] = []
+    try {
+        const cleaned = cleanPastedJson(tasksJson)
+        parsedTasks = JSON.parse(cleaned)
+        if (!Array.isArray(parsedTasks)) {
+            return { error: 'Pasted content is not a JSON array.' }
+        }
+    } catch (e: any) {
+        return { error: 'Failed to parse JSON. Please ensure the LLM output is valid JSON. Error: ' + e.message }
+    }
+
+    // Calculate sprint walls
+    const baseDate = new Date()
+    const sprintWalls = []
+    for (let day = 6; day < durationDays; day += 6) {
+        const wallDate = new Date(baseDate)
+        wallDate.setDate(wallDate.getDate() + (day - 1))
+        sprintWalls.push({
+            date: getLocalDateString(wallDate),
+            label: `Checkpoint ${day / 6}`
+        })
+    }
+
+    // Insert Goal
+    const { data: goal, error: insertError } = await supabase
+        .from('learning_goals')
+        .insert({
+            title,
+            user_id: user.id,
+            duration_days: durationDays,
+            level: level,
+            goal_intent: goalIntent,
+            sprint_walls: sprintWalls,
+            commitment_hours_per_week: dailyHours * 7,
+            plan_metadata: {
+                category,
+                language,
+                translated_titles: {
+                    [language]: title
+                }
+            }
+        })
+        .select()
+        .single()
+
+    if (insertError) return { error: insertError.message }
+
+    // Map tasks
+    const tasksToInsert = parsedTasks.map((task: any) => {
+        const dayNum = task.day || task.day_number || 1
+        const targetDate = new Date(baseDate)
+        targetDate.setDate(targetDate.getDate() + (dayNum - 1))
+
+        const priority = typeof task.priority === 'number' ? task.priority : 3
+        const taskType = (task.task_type === 'void' || priority === 0 || task.title === 'VOID DAY') ? 'void' : 'task'
+
+        const activeSubtasks = (task.subtasks ?? []).map((st: any, idx: number) => {
+            const stTitle = typeof st === 'string' ? st : (st.title || '')
+            const stId = (typeof st === 'object' && st.id) ? st.id : `st_${dayNum}_${idx}`
+            return {
+                id: stId,
+                title: stTitle,
+                completed: false
+            }
+        })
+
+        const translationsSubtask = {
+            id: 'translations',
+            title: '',
+            completed: false,
+            translations: {
+                title: { [language]: task.title || 'Study Task' },
+                subtasks: activeSubtasks.reduce((acc: any, st: any) => {
+                    acc[st.id] = { [language]: st.title }
+                    return acc
+                }, {})
+            }
+        }
+
+        return {
+            goal_id: goal.id,
+            user_id: user.id,
+            title: task.title || 'Study Task',
+            subject: task.subject || category,
+            duration_mins: task.duration_mins || 45,
+            priority: priority,
+            task_type: taskType,
+            due_date: getLocalDateString(targetDate),
+            subtasks: [...activeSubtasks, translationsSubtask]
+        }
+    })
+
+    const { error: tasksErr } = await supabase.from('tasks').insert(tasksToInsert)
+    if (tasksErr) {
+        await supabase.from('learning_goals').delete().eq('id', goal.id)
+        return { error: 'Failed to insert imported tasks: ' + tasksErr.message }
+    }
+
+    revalidatePath('/', 'layout')
+    return { success: true }
 }

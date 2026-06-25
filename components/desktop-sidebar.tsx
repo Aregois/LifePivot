@@ -1,6 +1,6 @@
 'use client'
 
-import { Home, Calendar, Map, ShoppingBag, User, Sparkles, Award } from 'lucide-react'
+import { Home, Calendar, Map, ShoppingBag, User, Sparkles, Award, Users, Compass } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useEconomy } from './economy-provider'
@@ -16,6 +16,8 @@ export function DesktopSidebar() {
     const navItems = [
         { name: t('nav.home'), href: '/', icon: Home },
         { name: t('nav.plan'), href: '/plan', icon: Map },
+        { name: t('nav.cohorts') || 'Cohorts', href: '/workspaces', icon: Users },
+        { name: t('nav.marketplace') || 'Marketplace', href: '/marketplace', icon: Compass },
         { name: t('nav.shop'), href: '/shop', icon: ShoppingBag },
         { name: t('nav.profile'), href: '/profile', icon: User },
         { name: t('nav.calendar'), href: '/calendar', icon: Calendar },

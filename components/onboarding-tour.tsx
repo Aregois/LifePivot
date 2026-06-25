@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { 
-    Sparkles, Heart, Trophy, Zap, 
+    Sparkles, Coins, Trophy, Zap, 
     BookOpen, ArrowRight, CheckCircle2, ShieldAlert 
 } from 'lucide-react'
 import { haptics } from '@/utils/haptics'
@@ -34,12 +34,12 @@ export function OnboardingTour() {
             badge: t('onboarding.badge_mission')
         },
         {
-            title: t('onboarding.title_hud'),
-            description: t('onboarding.desc_hud'),
-            icon: Heart,
-            color: "from-rose-500 to-red-600 text-rose-500",
-            glow: "rgba(244,63,94,0.2)",
-            badge: t('onboarding.badge_loop')
+            title: "Token Economy",
+            description: "Manage your study budget. Completing study goals awards Tokens. Tokens are used to purchase shop power-ups, customizations, and recover from missed days.",
+            icon: Coins,
+            color: "from-yellow-400 to-amber-500 text-yellow-400",
+            glow: "rgba(234,179,8,0.2)",
+            badge: "Tokens"
         },
         {
             title: t('onboarding.title_priority'),

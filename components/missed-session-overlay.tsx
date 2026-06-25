@@ -1,7 +1,7 @@
 'use client'
 
 import { motion, AnimatePresence } from 'framer-motion'
-import { AlertTriangle, Zap, Calendar, Heart } from 'lucide-react'
+import { AlertTriangle, Zap, Calendar, Coins } from 'lucide-react'
 import { processPivot, checkRescheduleTier } from '@/app/actions'
 import { haptics } from '@/utils/haptics'
 import { useState, useTransition, useEffect } from 'react'
@@ -119,13 +119,13 @@ export function MissedSessionOverlay({ goalId, onClose }: MissedSessionOverlayPr
 
                             {!resultTier && showTier3Confirmation && (
                                 <div className="space-y-2">
-                                    <p className="text-[9px] font-bold text-red-400 uppercase tracking-widest mb-1">{t('missed_session.zero_lives')}</p>
+                                    <p className="text-[9px] font-bold text-red-400 uppercase tracking-widest mb-1">0 Tokens remaining!</p>
                                     <button
                                         onClick={() => router.push('/shop')}
                                         className="w-full rounded-xl bg-white text-black py-4 px-6 font-black uppercase italic tracking-tighter hover:bg-gray-200 transition-all flex items-center justify-between"
                                     >
-                                        <span className="text-base">{t('missed_session.buy_lives')}</span>
-                                        <Heart className="h-5 w-5 fill-red-500 text-red-500" />
+                                        <span className="text-base">Buy Tokens</span>
+                                        <Coins className="h-5 w-5 fill-yellow-500/20 text-yellow-500" />
                                     </button>
                                     <button
                                         onClick={executePivot}

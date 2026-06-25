@@ -9,12 +9,15 @@ import { LearningPlanCreator } from '@/components/learning-plan-creator'
 import { ResetPlanButton } from '@/components/reset-plan-button'
 import { PlanProgressCard } from '@/components/plan-progress-card'
 import { getLocalDateString } from '@/utils/date-utils'
-import { List, Network } from 'lucide-react'
+import { List, Network, Users, Compass, Paperclip, ArrowRight } from 'lucide-react'
+import Link from 'next/link'
 import { MindMap } from '@/components/mind-map'
 import { haptics } from '@/utils/haptics'
 import { useEconomy } from '@/components/economy-provider'
 import { useLanguage } from '@/components/language-provider'
 import { translateGoalsArray } from '@/utils/translations'
+import { FileUploader } from '@/components/file-uploader'
+import { motion, AnimatePresence } from 'framer-motion'
 
 interface PlanClientProps {
     user: any
@@ -29,8 +32,17 @@ export function PlanClient({ user, goals, goalsError }: PlanClientProps) {
 
     const [selectedDate, setSelectedDate] = useState(urlDate || getLocalDateString())
     const [viewMode, setViewMode] = useState<'list' | 'map'>('list')
-    const { setGems } = useEconomy()
+    const { setTokens } = useEconomy()
     const { t, locale } = useLanguage()
+    const [materialsOpen, setMaterialsOpen] = useState<Record<string, boolean>>({})
+
+    const toggleMaterials = (goalId: string) => {
+        setViewMode('list')
+        setMaterialsOpen(prev => ({
+            ...prev,
+            [goalId]: !prev[goalId]
+        }))
+    }
 
     const translatedGoals = useMemo(() => {
         return translateGoalsArray(goals, locale)
@@ -55,6 +67,35 @@ export function PlanClient({ user, goals, goalsError }: PlanClientProps) {
 
     return (
         <div className="flex flex-col gap-6 pb-48 w-full max-w-7xl mx-auto pt-4">
+            {/* Mobile-only Portal Subnav */}
+            <div className="flex justify-center gap-3 px-6 pt-2 mb-2 md:hidden">
+                <Link 
+                    href="/workspaces" 
+                    onClick={() => haptics.light()}
+                    className="group w-[144px] py-2.5 px-3 rounded-2xl bg-gradient-to-b from-white/[0.04] to-white/[0.01] backdrop-blur-xl border border-white/[0.06] flex items-center justify-between hover:border-electric-blue/30 transition-all shadow-[0_4px_20px_rgba(0,0,0,0.25)] hover:shadow-[0_4px_25px_rgba(0,240,255,0.08)] active:scale-[0.98]"
+                >
+                    <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 rounded-xl bg-electric-blue/10 border border-electric-blue/20 flex items-center justify-center shadow-[0_0_15px_rgba(0,240,255,0.1)] group-hover:bg-electric-blue/25 transition-all">
+                            <Users className="w-4 h-4 text-electric-blue" />
+                        </div>
+                        <span className="text-[10px] font-black text-white uppercase tracking-wider group-hover:text-electric-blue transition-colors">{t('nav.cohorts') || 'Cohorts'}</span>
+                    </div>
+                    <ArrowRight className="w-3.5 h-3.5 text-gray-500 group-hover:text-electric-blue group-hover:translate-x-0.5 transition-all" />
+                </Link>
+                <Link 
+                    href="/marketplace" 
+                    onClick={() => haptics.light()}
+                    className="group w-[144px] py-2.5 px-3 rounded-2xl bg-gradient-to-b from-white/[0.04] to-white/[0.01] backdrop-blur-xl border border-white/[0.06] flex items-center justify-between hover:border-electric-blue/30 transition-all shadow-[0_4px_20px_rgba(0,0,0,0.25)] hover:shadow-[0_4px_25px_rgba(0,240,255,0.08)] active:scale-[0.98]"
+                >
+                    <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 rounded-xl bg-electric-blue/10 border border-electric-blue/20 flex items-center justify-center shadow-[0_0_15px_rgba(0,240,255,0.1)] group-hover:bg-electric-blue/25 transition-all">
+                            <Compass className="w-4 h-4 text-electric-blue" />
+                        </div>
+                        <span className="text-[10px] font-black text-white uppercase tracking-wider group-hover:text-electric-blue transition-colors">{t('nav.marketplace') || 'Marketplace'}</span>
+                    </div>
+                    <ArrowRight className="w-3.5 h-3.5 text-gray-500 group-hover:text-electric-blue group-hover:translate-x-0.5 transition-all" />
+                </Link>
+            </div>
             {!goalsError && translatedGoals && translatedGoals.length > 0 && (
                 <div className="flex items-center justify-between px-6 pb-2">
                     <div className="flex flex-col">
@@ -137,12 +178,36 @@ export function PlanClient({ user, goals, goalsError }: PlanClientProps) {
                                             />
                                         </div>
                                         {/* Right Column: Goal Section / Tasks */}
-                                        <div className="w-full xl:w-[450px] shrink-0 xl:sticky xl:top-24">
+                                        <div className="w-full xl:w-[450px] shrink-0 xl:sticky xl:top-24 space-y-6">
                                             <div className="bg-[#141824]/60 border border-white/5 p-6 rounded-[2.5rem] glass-card">
                                                 <GoalSection
                                                     goal={goal as any}
                                                     selectedDate={selectedDate}
                                                 />
+                                            </div>
+
+                                            {/* Study Materials Section */}
+                                            <div className="bg-[#141824]/60 border border-white/5 p-6 rounded-[2.5rem] glass-card">
+                                                <button
+                                                    onClick={() => { haptics.light(); toggleMaterials(goal.id) }}
+                                                    className="flex items-center gap-2 w-full text-left"
+                                                >
+                                                    <Paperclip className="w-4 h-4 text-electric-blue" />
+                                                    <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Study Materials</span>
+                                                    <span className="ml-auto text-[10px] text-gray-500">{materialsOpen[goal.id] ? '▲' : '▼'}</span>
+                                                </button>
+                                                <AnimatePresence>
+                                                    {materialsOpen[goal.id] && (
+                                                        <motion.div
+                                                            initial={{ opacity: 0, height: 0, marginTop: 0 }}
+                                                            animate={{ opacity: 1, height: 'auto', marginTop: 16 }}
+                                                            exit={{ opacity: 0, height: 0, marginTop: 0 }}
+                                                            className="overflow-hidden"
+                                                        >
+                                                            <FileUploader planId={goal.id} maxFiles={5} />
+                                                        </motion.div>
+                                                    )}
+                                                </AnimatePresence>
                                             </div>
                                         </div>
                                     </div>
@@ -154,10 +219,10 @@ export function PlanClient({ user, goals, goalsError }: PlanClientProps) {
                                 </div>
                             </>
                         ) : (
-                            <div className="w-full h-[600px] lg:h-[800px] border border-white/5 rounded-[2.5rem] overflow-hidden bg-[#141824]/30">
+                            <div className="w-full h-[600px] lg:h-[800px] border border-white/5 rounded-[2.5rem] overflow-hidden bg-[#141824]/30 p-4 sm:p-6">
                                 <MindMap 
                                     goal={translatedGoals[0]} 
-                                    onOptimisticGemUpdate={(delta) => setGems(prev => Math.max(0, prev + delta))}
+                                    onOptimisticTokenUpdate={(delta) => setTokens(prev => Math.max(0, prev + delta))}
                                 />
                             </div>
                         )}

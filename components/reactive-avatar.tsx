@@ -18,7 +18,7 @@ interface Flashcard {
 }
 
 export function ReactiveAvatar() {
-    const { avatarId, lives, setGems } = useEconomy()
+    const { avatarId, tokens, setTokens } = useEconomy()
     const [mood, setMood] = useState<CompanionMood>('focused')
     const [overdueCount, setOverdueCount] = useState(0)
     const [mounted, setMounted] = useState(false)
@@ -38,7 +38,7 @@ export function ReactiveAvatar() {
     useEffect(() => {
         setMounted(true)
         checkMood()
-    }, [lives])
+    }, [tokens])
 
     const checkMood = async () => {
         const supabase = createClient()
@@ -55,7 +55,7 @@ export function ReactiveAvatar() {
         const count = overdue?.length ?? 0
         setOverdueCount(count)
 
-        if (lives === 0) {
+        if (tokens === 0 && count > 0) {
             setMood('fallen')
         } else if (count > 0) {
             setMood('nervous')
@@ -118,10 +118,10 @@ export function ReactiveAvatar() {
                     setChallengeResult('won')
                     setRewardMessage('1 Streak Shield Equipped! 🛡️')
                 } else if (res.error === 'SHIELDS_FULL') {
-                    // Award 5 gems fallback if shields are full
-                    setGems(prev => prev + 5)
+                    // Award 5 tokens fallback if shields are full
+                    setTokens(prev => prev + 5)
                     setChallengeResult('won')
-                    setRewardMessage('Shields full! Awarded 5 Gems instead. 💎')
+                    setRewardMessage('Shields full! Awarded 5 Tokens instead. 🪙')
                 } else {
                     setChallengeError(res.error ?? 'Failed to award shield')
                 }
