@@ -1,13 +1,17 @@
 import React, { useEffect, useState } from 'react'
 import { View, Text, ScrollView, Alert, ActivityIndicator, Modal } from 'react-native'
+import { useRouter } from 'expo-router'
 import * as Haptics from 'expo-haptics'
-import Constants from 'expo-constants'
 import { supabase } from '../../utils/supabase'
+import { apiRequest } from '../../utils/api'
 import { C, Gradients, Shadows } from '../../constants/theme'
-import { FadeInView, GlassCard, PremiumButton, GlowBadge } from '../../components/ui'
+import { FadeInView, GlassCard, PremiumButton, GlowBadge, EmptyStateCTA, AnimatedProgressBar } from '../../components/ui'
 
 export default function Shop() {
+    const router = useRouter()
     const [tokens, setTokens] = useState(0)
+    const [level, setLevel] = useState(2)
+    const [xp, setXp] = useState(0)
     const [loading, setLoading] = useState(false)
     const [adPlaying, setAdPlaying] = useState(false)
     const [adCountdown, setAdCountdown] = useState(15)
@@ -22,11 +26,13 @@ export default function Shop() {
         if (user) {
             const { data } = await supabase
                 .from('profiles')
-                .select('tokens_balance, last_ad_reward_at')
+                .select('tokens_balance, last_ad_reward_at, level, xp')
                 .eq('id', user.id)
                 .single()
             if (data) {
                 setTokens(data.tokens_balance)
+                setLevel(data.level ?? 1)
+                setXp(data.xp ?? 0)
                 if (data.last_ad_reward_at) {
                     const lastReward = new Date(data.last_ad_reward_at).getTime()
                     const elapsed = Date.now() - lastReward
@@ -101,55 +107,32 @@ export default function Shop() {
         setEarnError(null)
 
         try {
-            const { data: { session } } = await supabase.auth.getSession()
-            const token = session?.access_token || ''
-            if (!token) {
-                setLoadingSession(false)
-                setEarnError('Not signed in')
-                return
-            }
-
-            const getApiBase = () => {
-                if (Constants.expoConfig?.extra?.apiUrl) {
-                    return Constants.expoConfig.extra.apiUrl
-                }
-                const hostUri = Constants.expoConfig?.hostUri
-                if (hostUri) {
-                    const ip = hostUri.split(':')[0]
-                    return `http://${ip}:3000`
-                }
-                return 'http://localhost:3000'
-            }
-            const apiBase = getApiBase()
-
             // 1. Get signed ad session token
-            const sessionRes = await fetch(`${apiBase}/api/tokens/ad-session`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
+            let sessionToken: string
+            try {
+                const sessionJson = await apiRequest<{ sessionToken: string }>(
+                    '/api/tokens/ad-session',
+                    { method: 'POST' }
+                )
+                sessionToken = sessionJson.sessionToken
+            } catch (err: any) {
+                // apiRequest throws with the server's error message;
+                // the backend embeds cooldownRemaining in the error payload
+                // when returning 429, so surface it to the user.
+                if (err.message?.includes('cooldown') || err.message?.includes('429')) {
+                    setCooldownSecs(3600)
+                } else {
+                    throw err
                 }
-            })
-            const sessionJson = await sessionRes.json()
-
-            if (sessionRes.status === 429) {
-                setCooldownSecs(sessionJson.cooldownRemaining || 3600)
                 setLoadingSession(false)
                 return
             }
 
-            if (!sessionRes.ok) {
-                throw new Error(sessionJson.error || 'Failed to start ad session')
-            }
-
-            const { sessionToken } = sessionJson
-
-            // 2. Play ad (15s countdown)
+            // 2. Play ad (15 s countdown)
             setLoadingSession(false)
             setAdPlaying(true)
             setAdCountdown(15)
 
-            // Start countdown loop
             let remaining = 15
             const intervalId = setInterval(async () => {
                 remaining -= 1
@@ -157,35 +140,26 @@ export default function Shop() {
 
                 if (remaining <= 0) {
                     clearInterval(intervalId)
-                    
+
                     // 3. Redeem reward
                     try {
-                        const rewardRes = await fetch(`${apiBase}/api/tokens/reward`, {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'Authorization': `Bearer ${token}`
-                            },
-                            body: JSON.stringify({ sessionToken })
-                        })
-                        const rewardJson = await rewardRes.json()
+                        const rewardJson = await apiRequest<{ newTokensBalance: number }>(
+                            '/api/tokens/reward',
+                            {
+                                method: 'POST',
+                                body: JSON.stringify({ sessionToken }),
+                            }
+                        )
                         setAdPlaying(false)
-
-                        if (rewardRes.ok) {
-                            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
-                            setEarnSuccess(true)
-                            setTokens(rewardJson.newTokensBalance ?? tokens + 5)
-                            setCooldownSecs(3600) // Trigger 60 min cooldown
-                            setTimeout(() => setEarnSuccess(false), 3000)
-                        } else {
-                            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error)
-                            setEarnError(rewardJson.error || 'Failed to collect reward')
-                            setTimeout(() => setEarnError(null), 3000)
-                        }
-                    } catch {
+                        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
+                        setEarnSuccess(true)
+                        setTokens(rewardJson.newTokensBalance ?? tokens + 5)
+                        setCooldownSecs(3600)
+                        setTimeout(() => setEarnSuccess(false), 3000)
+                    } catch (err: any) {
                         setAdPlaying(false)
                         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error)
-                        setEarnError('Network error redeeming reward')
+                        setEarnError(err.message || 'Failed to collect reward')
                         setTimeout(() => setEarnError(null), 3000)
                     }
                 }
@@ -206,35 +180,87 @@ export default function Shop() {
         return m > 0 ? `${m}m ${s}s` : `${s}s`
     }
 
+    if (!loading && level < 2) {
+        return (
+            <View style={{ flex: 1, backgroundColor: '#050508', justifyContent: 'center', padding: 20 }}>
+                <EmptyStateCTA
+                    iconName="lock"
+                    title="Exchange Store Locked"
+                    description="Reach Level 2 to unlock the Exchange Store and purchase items with your study tokens."
+                    buttonText="BACK TO DASHBOARD"
+                    onPress={() => router.replace('/(tabs)')}
+                />
+                <View style={{ marginTop: 24, backgroundColor: 'rgba(255,255,255,0.02)', padding: 16, borderRadius: 16, borderWidth: 1, borderColor: 'rgba(255,255,255,0.05)' }}>
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 8 }}>
+                        <Text style={{ fontSize: 10, fontWeight: '800', color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: 1 }}>Progress to Level 2</Text>
+                        <Text style={{ fontSize: 11, fontWeight: '900', color: C.electricBlue }}>{xp} / 1000 XP</Text>
+                    </View>
+                    <AnimatedProgressBar
+                        progress={Math.min(1, Math.max(0, xp / 1000))}
+                        colors={Gradients.xpBar}
+                    />
+                </View>
+            </View>
+        )
+    }
+
     return (
-        <>
-        <ScrollView className="flex-1 bg-[#050508] px-5 pt-5">
-            {/* Wallet HUD Display */}
-            <FadeInView delay={0} style={{ marginBottom: 24 }}>
-                <GlassCard
-                    style={{
-                        padding: 20,
-                        flexDirection: 'row',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                    }}
-                >
-                    <View>
-                        <Text
-                            style={{
-                                fontSize: 10,
-                                color: C.textDim,
-                                fontWeight: '700',
-                                letterSpacing: 1.5,
-                                textTransform: 'uppercase',
-                            }}
-                        >
-                            YOUR EXCHANGE WALLET
-                        </Text>
+        <View style={{ flex: 1, backgroundColor: '#050508' }}>
+            {/* Background Ambient Glows */}
+            <View
+              pointerEvents="none"
+              style={{
+                position: 'absolute',
+                top: -100,
+                right: -100,
+                width: 320,
+                height: 320,
+                borderRadius: 160,
+                backgroundColor: '#00F0FF',
+                opacity: 0.05,
+              }}
+            />
+            <View
+              pointerEvents="none"
+              style={{
+                position: 'absolute',
+                bottom: 120,
+                left: -100,
+                width: 320,
+                height: 320,
+                borderRadius: 160,
+                backgroundColor: '#BD00FF',
+                opacity: 0.05,
+              }}
+            />
+
+            <ScrollView className="flex-1 px-5 pt-5">
+                {/* Wallet HUD Display */}
+                <FadeInView delay={0} style={{ marginBottom: 24 }}>
+                    <GlassCard
+                        style={{
+                            padding: 20,
+                            flexDirection: 'row',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                        }}
+                    >
+                        <View>
+                            <Text
+                                style={{
+                                    fontSize: 10,
+                                    color: C.electricBlue,
+                                    fontWeight: '900',
+                                    letterSpacing: 3.5, // tracking-widest
+                                    textTransform: 'uppercase',
+                                }}
+                            >
+                                YOUR EXCHANGE WALLET
+                            </Text>
                         <Text
                             style={{
                                 fontSize: 11,
-                                color: C.textMuted,
+                                color: C.textSecondary,
                                 marginTop: 4,
                                 textTransform: 'uppercase',
                                 letterSpacing: 0.5,
@@ -258,8 +284,8 @@ export default function Shop() {
                     <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10, gap: 10 }}>
                         <Text style={{ fontSize: 22 }}>🎬</Text>
                         <View style={{ flex: 1 }}>
-                            <Text style={{ fontSize: 12, fontWeight: '900', color: '#FFFFFF', letterSpacing: 1, textTransform: 'uppercase' }}>EARN FREE TOKENS</Text>
-                            <Text style={{ fontSize: 9, color: C.textDim, textTransform: 'uppercase', letterSpacing: 0.5, marginTop: 2 }}>WATCH A SHORT AD · EARN 5 TOKENS</Text>
+                            <Text style={{ fontSize: 12, fontWeight: '900', color: C.electricBlue, letterSpacing: -0.5, textTransform: 'uppercase' }}>EARN FREE TOKENS</Text>
+                            <Text style={{ fontSize: 9, color: C.textSecondary, textTransform: 'uppercase', letterSpacing: 0.5, marginTop: 2 }}>WATCH A SHORT AD · EARN 5 TOKENS</Text>
                         </View>
                         <GlowBadge label="+5 🪙" colorScheme="amber" />
                     </View>
@@ -295,9 +321,9 @@ export default function Shop() {
                 <Text
                     style={{
                         fontSize: 10,
-                        color: C.textDim,
-                        fontWeight: '700',
-                        letterSpacing: 2,
+                        color: C.electricBlue,
+                        fontWeight: '900',
+                        letterSpacing: 3.5, // tracking-widest
                         textTransform: 'uppercase',
                     }}
                 >
@@ -310,10 +336,10 @@ export default function Shop() {
                     <GlassCard style={{ padding: 18 }}>
                         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
                             <View style={{ flex: 1, marginRight: 12 }}>
-                                <Text style={{ fontSize: 13, fontWeight: '900', color: '#FFFFFF', letterSpacing: 1, textTransform: 'uppercase' }}>
+                                <Text style={{ fontSize: 13, fontWeight: '900', color: '#FFFFFF', letterSpacing: -0.5, textTransform: 'uppercase' }}>
                                     STREAK SHIELD 🛡️
                                 </Text>
-                                <Text style={{ fontSize: 10, color: C.textMuted, marginTop: 4, textTransform: 'uppercase', letterSpacing: 0.5, lineHeight: 14 }}>
+                                <Text style={{ fontSize: 10, color: C.textSecondary, marginTop: 4, textTransform: 'uppercase', letterSpacing: 0.5, lineHeight: 14 }}>
                                     PROTECTS YOUR STUDY STREAK ON MISSED DAYS
                                 </Text>
                             </View>
@@ -335,7 +361,7 @@ export default function Shop() {
                                 <Text style={{ fontSize: 13, fontWeight: '900', color: '#FFFFFF', letterSpacing: 1, textTransform: 'uppercase' }}>
                                     COSMIC PROFILE BORDER ✨
                                 </Text>
-                                <Text style={{ fontSize: 10, color: C.textMuted, marginTop: 4, textTransform: 'uppercase', letterSpacing: 0.5, lineHeight: 14 }}>
+                                <Text style={{ fontSize: 10, color: C.textSecondary, marginTop: 4, textTransform: 'uppercase', letterSpacing: 0.5, lineHeight: 14 }}>
                                     EXCLUSIVE SPACE THEMED AVATAR RING
                                 </Text>
                             </View>
@@ -374,6 +400,6 @@ export default function Shop() {
                     </GlassCard>
                 </View>
             </Modal>
-        </>
+        </View>
     )
 }

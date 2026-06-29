@@ -11,8 +11,8 @@ import {
 import * as DocumentPicker from 'expo-document-picker'
 import * as ImagePicker from 'expo-image-picker'
 import * as Haptics from 'expo-haptics'
-import Constants from 'expo-constants'
 import { supabase } from '../utils/supabase'
+import { apiRequest } from '../utils/api'
 import { C, Shadows, BorderRadius } from '../constants/theme'
 import { GlassCard, GlowBadge, FadeInView } from './ui'
 
@@ -30,26 +30,6 @@ interface DocItem {
   user_id?: string
 }
 
-const getApiBase = () => {
-  if (Constants.expoConfig?.extra?.apiUrl) {
-    return Constants.expoConfig.extra.apiUrl
-  }
-  const hostUri = Constants.expoConfig?.hostUri
-  if (hostUri) {
-    const ip = hostUri.split(':')[0]
-    return `http://${ip}:3000`
-  }
-  return 'http://localhost:3000'
-}
-
-const API_BASE = getApiBase()
-
-const getToken = async () => {
-  const {
-    data: { session },
-  } = await supabase.auth.getSession()
-  return session?.access_token || ''
-}
 
 export function FileUploadSheet({ workspaceId, planId }: FileUploadSheetProps) {
   const [docs, setDocs] = useState<DocItem[]>([])
@@ -67,15 +47,11 @@ export function FileUploadSheet({ workspaceId, planId }: FileUploadSheetProps) {
           setCurrentUserId(user.id)
         }
 
-        const token = await getToken()
         const param = workspaceId ? `workspaceId=${workspaceId}` : `planId=${planId}`
-        const res = await fetch(`${API_BASE}/api/documents/list?${param}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        })
-        if (res.ok) {
-          const json = await res.json()
-          setDocs(json.documents || [])
-        }
+        const json = await apiRequest<{ documents: DocItem[] }>(
+          `/api/documents/list?${param}`
+        )
+        setDocs(json.documents || [])
       } catch (_) {
         // Silently fail on initial fetch — user can still upload
       }
@@ -136,34 +112,29 @@ export function FileUploadSheet({ workspaceId, planId }: FileUploadSheetProps) {
     setUploading(true)
     setError(null)
     try {
-      const token = await getToken()
       const formData = new FormData()
       formData.append('file', { uri, name, type: mimeType } as any)
       if (workspaceId) formData.append('workspaceId', workspaceId)
       if (planId) formData.append('planId', planId)
 
-      const res = await fetch(`${API_BASE}/api/documents/upload`, {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${token}` },
-        body: formData,
-      })
-      const json = await res.json()
-      if (!res.ok) {
-        setError(json.error || 'Upload failed')
-      } else {
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
-        setDocs(prev => [
-          ...prev,
-          {
-            id: json.id,
-            file_name: json.fileName,
-            file_size: json.fileSize,
-            mime_type: mimeType,
-            created_at: new Date().toISOString(),
-            user_id: currentUserId || undefined,
-          },
-        ])
-      }
+      // apiRequest detects FormData and skips Content-Type so the runtime
+      // can set the correct multipart boundary automatically.
+      const json = await apiRequest<{ id: string; fileName: string; fileSize: number }>(
+        '/api/documents/upload',
+        { method: 'POST', body: formData }
+      )
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
+      setDocs(prev => [
+        ...prev,
+        {
+          id: json.id,
+          file_name: json.fileName,
+          file_size: json.fileSize,
+          mime_type: mimeType,
+          created_at: new Date().toISOString(),
+          user_id: currentUserId || undefined,
+        },
+      ])
     } catch (e: any) {
       setError(e.message || 'Upload failed')
     } finally {
@@ -173,13 +144,11 @@ export function FileUploadSheet({ workspaceId, planId }: FileUploadSheetProps) {
 
   const handleDelete = async (docId: string) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
-    const token = await getToken()
-    const res = await fetch(`${API_BASE}/api/documents/${docId}`, {
-      method: 'DELETE',
-      headers: { Authorization: `Bearer ${token}` },
-    })
-    if (res.ok) {
+    try {
+      await apiRequest(`/api/documents/${docId}`, { method: 'DELETE' })
       setDocs(prev => prev.filter(d => d.id !== docId))
+    } catch (_) {
+      // Silently fail — stale UI entry is harmless
     }
   }
 

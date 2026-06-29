@@ -6,7 +6,8 @@ import {
     ActivityIndicator,
     Alert,
     TouchableOpacity,
-    Platform
+    Platform,
+    Animated
 } from 'react-native'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import { LinearGradient } from 'expo-linear-gradient'
@@ -16,6 +17,60 @@ import { supabase } from '../../utils/supabase'
 import { C, Gradients, Shadows, BorderRadius } from '../../constants/theme'
 import { FadeInView, GlassCard, PremiumButton, GradientText, GlowBadge } from '../../components/ui'
 import { FileUploadSheet } from '../../components/FileUploadSheet'
+import { TaskInteractionSheet } from '../../components/TaskInteractionSheet'
+
+function FloatingXp({ value }: { value: number }) {
+  const animValue = React.useRef(new Animated.Value(0)).current;
+
+  React.useEffect(() => {
+    Animated.timing(animValue, {
+      toValue: 1,
+      duration: 800,
+      useNativeDriver: true,
+    }).start();
+  }, [animValue]);
+
+  const translateY = animValue.interpolate({
+    inputRange: [0, 1],
+    outputRange: [10, -45],
+  });
+
+  const opacity = animValue.interpolate({
+    inputRange: [0, 0.2, 0.8, 1],
+    outputRange: [0, 1, 1, 0],
+  });
+
+  const scale = animValue.interpolate({
+    inputRange: [0, 0.2, 1],
+    outputRange: [0.8, 1.2, 0.9],
+  });
+
+  return (
+    <Animated.View
+      style={{
+        position: 'absolute',
+        top: 10,
+        left: '45%',
+        zIndex: 99,
+        transform: [{ translateY }, { scale }],
+        opacity,
+      }}
+    >
+      <Text
+        style={{
+          color: '#00F0FF',
+          fontWeight: '900',
+          fontSize: 16,
+          textShadowColor: 'rgba(0, 240, 255, 0.8)',
+          textShadowOffset: { width: 0, height: 0 },
+          textShadowRadius: 8,
+        }}
+      >
+        +{value} XP
+      </Text>
+    </Animated.View>
+  );
+}
 
 interface Task {
     id: string
@@ -45,6 +100,10 @@ export default function PlanDetail() {
     const [loading, setLoading] = useState(true)
     const [materialsOpen, setMaterialsOpen] = useState(false)
     const [userId, setUserId] = useState<string | null>(null)
+    const [selectedTask, setSelectedTask] = useState<any>(null)
+    const [sheetVisible, setSheetVisible] = useState(false)
+    const [animatingTaskId, setAnimatingTaskId] = useState<string | null>(null)
+    const [animatingXpValue, setAnimatingXpValue] = useState<number>(0)
 
     const fetchPlanData = async () => {
         try {
@@ -61,7 +120,6 @@ export default function PlanDetail() {
 
             if (goalError || !goalData) {
                 Alert.alert('ERROR', 'Failed to retrieve plan details')
-                router.replace('/(tabs)/plan')
                 return
             }
             setGoal(goalData)
@@ -69,7 +127,7 @@ export default function PlanDetail() {
             // Fetch tasks
             const { data: tasksData } = await supabase
                 .from('tasks')
-                .select('id, title, status, priority, duration_mins, subject, notes')
+                .select('*')
                 .eq('goal_id', id)
                 .order('due_date', { ascending: true })
 
@@ -87,7 +145,18 @@ export default function PlanDetail() {
 
     const handleToggleTask = async (taskId: string, currentStatus: 'pending' | 'completed', priority: number) => {
         if (!userId) return
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
+
+        if (currentStatus === 'pending') {
+            const baseXp = priority && priority > 0 ? (priority * 10 + 10) : 0
+            setAnimatingTaskId(taskId)
+            setAnimatingXpValue(baseXp)
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
+            setTimeout(() => {
+                setAnimatingTaskId(null)
+            }, 900)
+        } else {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+        }
 
         const nextStatus = currentStatus === 'completed' ? 'pending' : 'completed'
         
@@ -127,7 +196,7 @@ export default function PlanDetail() {
                 if (nextStatus === 'completed') {
                     newTokens += tokenDelta
                     newXp += baseXp
-                    const xpNeeded = newLevel * 100
+                    const xpNeeded = newLevel * 1000
                     if (newXp >= xpNeeded) {
                         newXp -= xpNeeded
                         newLevel += 1
@@ -167,6 +236,34 @@ export default function PlanDetail() {
 
     return (
         <View style={{ flex: 1, backgroundColor: '#050508' }}>
+            {/* Background Ambient Glows */}
+            <View
+              pointerEvents="none"
+              style={{
+                position: 'absolute',
+                top: -100,
+                right: -100,
+                width: 320,
+                height: 320,
+                borderRadius: 160,
+                backgroundColor: '#00F0FF',
+                opacity: 0.05,
+              }}
+            />
+            <View
+              pointerEvents="none"
+              style={{
+                position: 'absolute',
+                bottom: 120,
+                left: -100,
+                width: 320,
+                height: 320,
+                borderRadius: 160,
+                backgroundColor: '#BD00FF',
+                opacity: 0.05,
+              }}
+            />
+
             <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 80 }} style={{ flex: 1 }}>
                 
                 {/* 1. HUD / Progress Card */}
@@ -179,7 +276,7 @@ export default function PlanDetail() {
                             style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
                         />
                         <View style={{ position: 'absolute', top: 0, right: 0, width: 120, height: 120, borderRadius: 60, backgroundColor: 'rgba(0, 240, 255, 0.03)', transform: [{ scale: 1.5 }] }} />
-                        <Text style={{ fontSize: 10, fontWeight: '900', letterSpacing: 2, color: C.electricBlue, textTransform: 'uppercase' }}>
+                        <Text style={{ fontSize: 10, fontWeight: '900', letterSpacing: 3.5, color: C.electricBlue, textTransform: 'uppercase' }}>
                             SOLO CURRICULUM SHIELD
                         </Text>
                         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline', marginTop: 8 }}>
@@ -190,13 +287,13 @@ export default function PlanDetail() {
                         
                         <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 16, borderTopWidth: 1, borderTopColor: 'rgba(255, 255, 255, 0.05)', paddingTop: 16 }}>
                             <View>
-                                <Text style={{ fontSize: 9, color: C.textDim, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1 }}>PLAN NODES</Text>
+                                <Text style={{ fontSize: 9, color: C.textSecondary, fontWeight: '900', textTransform: 'uppercase', letterSpacing: 2.5 }}>PLAN NODES</Text>
                                 <Text style={{ fontSize: 14, fontWeight: '900', color: '#FFFFFF', marginTop: 2 }}>
                                     {completedCount}/{totalCount} DONE
                                 </Text>
                             </View>
                             <View style={{ alignItems: 'flex-end' }}>
-                                <Text style={{ fontSize: 9, color: C.textDim, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1 }}>COMPLETION RATE</Text>
+                                <Text style={{ fontSize: 9, color: C.textSecondary, fontWeight: '900', textTransform: 'uppercase', letterSpacing: 2.5 }}>COMPLETION RATE</Text>
                                 <Text style={{ fontSize: 14, fontWeight: '900', color: C.electricBlue, marginTop: 2 }}>
                                     {completionRate}%
                                 </Text>
@@ -217,7 +314,7 @@ export default function PlanDetail() {
                         >
                             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                                 <Ionicons name="attach" size={16} color={C.electricBlue} />
-                                <Text style={{ fontSize: 11, fontWeight: '900', color: '#FFFFFF', letterSpacing: 1, textTransform: 'uppercase' }}>
+                                <Text style={{ fontSize: 11, fontWeight: '900', color: '#FFFFFF', letterSpacing: -0.5, textTransform: 'uppercase' }}>
                                     STUDY MATERIALS SNIPPETS
                                 </Text>
                             </View>
@@ -233,7 +330,7 @@ export default function PlanDetail() {
                 </FadeInView>
 
                 {/* 3. Task Checklist list */}
-                <Text style={{ fontSize: 10, color: C.textDim, fontWeight: '700', letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 12, paddingLeft: 4 }}>
+                <Text style={{ fontSize: 10, color: C.electricBlue, fontWeight: '900', letterSpacing: 3.5, textTransform: 'uppercase', marginBottom: 12, paddingLeft: 4 }}>
                     CURRICULUM CHECKLIST
                 </Text>
 
@@ -274,7 +371,14 @@ export default function PlanDetail() {
                                     )}
                                 </TouchableOpacity>
 
-                                <View style={{ flex: 1 }}>
+                                <TouchableOpacity
+                                    style={{ flex: 1 }}
+                                    onPress={() => {
+                                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+                                        setSelectedTask(task)
+                                        setSheetVisible(true)
+                                    }}
+                                >
                                     <Text
                                         style={{
                                             fontSize: 12,
@@ -290,22 +394,30 @@ export default function PlanDetail() {
                                             <GlowBadge label={task.subject} colorScheme="violet" />
                                         )}
                                         {task.duration_mins && (
-                                            <Text style={{ fontSize: 9, color: C.textDim, fontWeight: '700' }}>
+                                            <Text style={{ fontSize: 9, color: C.textSecondary, fontWeight: '700' }}>
                                                 ⏳ {task.duration_mins} MINS
                                             </Text>
                                         )}
                                     </View>
-                                    {task.notes && !task.status && (
-                                        <Text style={{ fontSize: 10, color: C.textDim, marginTop: 4, lineHeight: 14 }}>
+                                    {task.notes && task.status !== 'completed' && (
+                                        <Text style={{ fontSize: 10, color: C.textSecondary, marginTop: 4, lineHeight: 14 }}>
                                             {task.notes}
                                         </Text>
                                     )}
-                                </View>
+                                </TouchableOpacity>
+                                {animatingTaskId === task.id && (
+                                    <FloatingXp value={animatingXpValue} />
+                                )}
                             </GlassCard>
                         ))
                     )}
                 </View>
             </ScrollView>
+            <TaskInteractionSheet
+                task={selectedTask}
+                visible={sheetVisible}
+                onClose={() => setSheetVisible(false)}
+            />
         </View>
     )
 }

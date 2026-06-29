@@ -4,6 +4,7 @@ import { useRouter } from 'expo-router'
 import * as Haptics from 'expo-haptics'
 import { LinearGradient } from 'expo-linear-gradient'
 import { supabase } from '../../utils/supabase'
+import { apiRequest } from '../../utils/api'
 import { C, Gradients, Shadows } from '../../constants/theme'
 import { FadeInView, GlassCard, PremiumButton, GlowBadge, AvatarMonogram } from '../../components/ui'
 
@@ -41,27 +42,17 @@ export default function Profile() {
     const handleRoleToggle = async () => {
         if (!profile) return
         const nextRole = profile.role === 'student' ? 'tutor' : 'student'
-        
+
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
         setUpdating(true)
         try {
-            const { data: { session } } = await supabase.auth.getSession()
-            const token = session?.access_token
-
-            const res = await fetch('http://localhost:3000/api/profile/role', {
+            const json = await apiRequest('/api/profile/role', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
                 body: JSON.stringify({
                     role: nextRole,
-                    linkedinUrl: nextRole === 'tutor' ? linkedinUrl : ''
-                })
+                    linkedinUrl: nextRole === 'tutor' ? linkedinUrl : '',
+                }),
             })
-
-            const json = await res.json()
-            if (!res.ok) throw new Error(json.error || 'Failed to update role')
 
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
             Alert.alert('SUCCESS', `Your role has been updated to ${nextRole.toUpperCase()}`)
@@ -91,7 +82,36 @@ export default function Profile() {
     const initials = profile?.username ? profile.username : email.split('@')[0] || 'LP'
 
     return (
-        <ScrollView className="flex-1 bg-[#050508] px-5 pt-5">
+        <View style={{ flex: 1, backgroundColor: '#050508' }}>
+            {/* Background Ambient Glows */}
+            <View
+              pointerEvents="none"
+              style={{
+                position: 'absolute',
+                top: -100,
+                right: -100,
+                width: 320,
+                height: 320,
+                borderRadius: 160,
+                backgroundColor: '#00F0FF',
+                opacity: 0.05,
+              }}
+            />
+            <View
+              pointerEvents="none"
+              style={{
+                position: 'absolute',
+                bottom: 120,
+                left: -100,
+                width: 320,
+                height: 320,
+                borderRadius: 160,
+                backgroundColor: '#BD00FF',
+                opacity: 0.05,
+              }}
+            />
+
+            <ScrollView className="flex-1 px-5 pt-5">
             {/* Avatar Header */}
             <FadeInView delay={0} style={{ alignItems: 'center', marginBottom: 28 }}>
                 <AvatarMonogram
@@ -110,7 +130,7 @@ export default function Profile() {
 
             {/* Subscription status */}
             <FadeInView delay={100} style={{ marginBottom: 24 }}>
-                <Text style={{ fontSize: 10, color: C.textDim, fontWeight: '700', letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 8 }}>
+                <Text style={{ fontSize: 10, color: C.neonViolet, fontWeight: '900', letterSpacing: 3.5, textTransform: 'uppercase', marginBottom: 8 }}>
                     TIER STATE
                 </Text>
                 {profile?.is_subscribed ? (
@@ -153,16 +173,16 @@ export default function Profile() {
 
             {/* Profile specifications */}
             <FadeInView delay={200} style={{ marginBottom: 24 }}>
-                <Text style={{ fontSize: 10, color: C.textDim, fontWeight: '700', letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 8 }}>
+                <Text style={{ fontSize: 10, color: C.electricBlue, fontWeight: '900', letterSpacing: 3.5, textTransform: 'uppercase', marginBottom: 8 }}>
                     IDENTITY
                 </Text>
                 <GlassCard style={{ padding: 18 }}>
                     <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
-                        <Text style={{ fontSize: 10, color: C.textMuted, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1.5 }}>EMAIL</Text>
+                        <Text style={{ fontSize: 10, color: C.textSecondary, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1.5 }}>EMAIL</Text>
                         <Text style={{ fontSize: 12, color: '#FFFFFF', fontWeight: '800' }}>{email}</Text>
                     </View>
                     <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.03)', paddingTop: 14 }}>
-                        <Text style={{ fontSize: 10, color: C.textMuted, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1.5 }}>CURRENT ROLE</Text>
+                        <Text style={{ fontSize: 10, color: C.textSecondary, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1.5 }}>CURRENT ROLE</Text>
                         <GlowBadge label={profile?.role || 'student'} colorScheme={profile?.role === 'tutor' ? 'violet' : 'blue'} />
                     </View>
                 </GlassCard>
@@ -170,13 +190,13 @@ export default function Profile() {
 
             {/* Role Manager */}
             <FadeInView delay={300} style={{ marginBottom: 24 }}>
-                <Text style={{ fontSize: 10, color: C.textDim, fontWeight: '700', letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 8 }}>
+                <Text style={{ fontSize: 10, color: C.neonViolet, fontWeight: '900', letterSpacing: 3.5, textTransform: 'uppercase', marginBottom: 8 }}>
                     TUTOR SETTINGS
                 </Text>
                 <GlassCard style={{ padding: 20 }}>
                     {profile?.role === 'student' ? (
                         <View>
-                            <Text style={{ fontSize: 10, color: C.textMuted, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1, lineHeight: 14, marginBottom: 12 }}>
+                            <Text style={{ fontSize: 10, color: C.textSecondary, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1, lineHeight: 14, marginBottom: 12 }}>
                                 INPUT LINKEDIN TO REQUEST VERIFIED TUTOR STATUS
                             </Text>
                             <TextInput
@@ -209,7 +229,7 @@ export default function Profile() {
                         </View>
                     ) : (
                         <View>
-                            <Text style={{ fontSize: 10, color: C.textMuted, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1, lineHeight: 14, marginBottom: 16 }}>
+                            <Text style={{ fontSize: 10, color: C.textSecondary, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1, lineHeight: 14, marginBottom: 16 }}>
                                 YOU ARE RUNNING IN TUTOR MODE. YOU CAN NOW CREATE WORKSPACES & INJECT STUDY PLANS.
                             </Text>
                             <PremiumButton
@@ -232,6 +252,7 @@ export default function Profile() {
                     variant="destructive"
                 />
             </FadeInView>
-        </ScrollView>
+            </ScrollView>
+        </View>
     )
 }
