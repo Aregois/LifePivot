@@ -6,6 +6,9 @@ const getApiUrl = () => {
     if (process.env.EXPO_PUBLIC_API_URL) {
         return process.env.EXPO_PUBLIC_API_URL
     }
+    if (Platform.OS === 'web') {
+        return 'http://localhost:3000'
+    }
     // Default to the host computer's local IP so physical devices on the same Wi-Fi can connect
     return 'http://192.168.11.57:3000'
 }
