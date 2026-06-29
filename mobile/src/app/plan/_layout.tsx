@@ -22,6 +22,12 @@ export default function PlanLayout() {
                     title: 'PERSONAL PLAN'
                 }} 
             />
+            <Stack.Screen 
+                name="create" 
+                options={{ 
+                    title: 'CREATE PLAN'
+                }} 
+            />
         </Stack>
     )
 }

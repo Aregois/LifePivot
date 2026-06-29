@@ -1,8 +1,20 @@
 import { createServerClient } from '@supabase/ssr'
-import { cookies } from 'next/headers'
+import { cookies, headers } from 'next/headers'
 
 export async function createClient() {
     const cookieStore = await cookies()
+    
+    // Fallback to Authorization header if present (for mobile requests)
+    let globalHeaders: Record<string, string> = {}
+    try {
+        const headerStore = await headers()
+        const authHeader = headerStore.get('Authorization')
+        if (authHeader && authHeader.startsWith('Bearer ')) {
+            globalHeaders['Authorization'] = authHeader
+        }
+    } catch (_) {
+        // Safe to ignore if called in a context where headers() is unavailable
+    }
 
     return createServerClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -23,6 +35,9 @@ export async function createClient() {
                         // user sessions.
                     }
                 },
+            },
+            global: {
+                headers: globalHeaders,
             },
         }
     )
