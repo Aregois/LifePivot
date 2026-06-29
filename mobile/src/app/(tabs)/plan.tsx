@@ -109,31 +109,12 @@ export default function PlanPortal() {
                 </FadeInView>
 
             {/* CREATE PLAN CTA — ALWAYS VISIBLE */}
-            <FadeInView delay={50} style={{ marginBottom: 16 }}>
-                <GlassCard
+            <FadeInView delay={50} style={{ marginBottom: 24 }}>
+                <PremiumButton
+                    title="CREATE NEW PLAN +"
                     onPress={() => router.push('/plan/create')}
-                    style={{
-                        padding: 24,
-                        flexDirection: 'row',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        backgroundColor: 'rgba(0, 240, 255, 0.03)',
-                        borderColor: 'rgba(0, 240, 255, 0.2)'
-                    }}
-                >
-                    <View style={{ marginRight: 16, backgroundColor: 'rgba(0, 240, 255, 0.1)', padding: 12, borderRadius: 12, borderWidth: 1, borderColor: 'rgba(0, 240, 255, 0.3)' }}>
-                        <Ionicons name="sparkles" size={26} color="#00F0FF" />
-                    </View>
-                    <View style={{ flex: 1, marginRight: 12 }}>
-                        <Text style={{ fontSize: 14, fontWeight: '900', color: '#FFFFFF', letterSpacing: 1, textTransform: 'uppercase' }}>
-                            CREATE CUSTOM PLAN
-                        </Text>
-                        <Text style={{ fontSize: 10, color: C.textMuted, marginTop: 4, textTransform: 'uppercase', letterSpacing: 0.5, lineHeight: 14 }}>
-                            FORGE AN AI-DRIVEN INDIVIDUAL STUDY SYLLABUS DIRECTLY FOR YOUR GOAL
-                        </Text>
-                    </View>
-                    <Ionicons name="chevron-forward" size={18} color="#00F0FF" />
-                </GlassCard>
+                    variant="primary"
+                />
             </FadeInView>
 
             {/* Link cards — LOCKED FOR NEW USERS (progressive reveal) */}

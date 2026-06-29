@@ -17,8 +17,9 @@ import { C, Shadows, BorderRadius, Spacing, Typography } from '../../constants/t
 import { FadeInView, GlassCard, PremiumButton, GradientText, GlowBadge, SegmentedControl } from '../../components/ui'
 import { apiRequest } from '../../utils/api'
 import { PlanGeneratorLoader } from '../../components/plan/PlanGeneratorLoader'
-import { scheduleDailyStudyReminder } from '../../utils/notifications'
+import { scheduleDailyStudyReminder, requestNotificationPermissions } from '../../utils/notifications'
 import { supabase } from '../../utils/supabase'
+import { track } from '../../utils/analytics'
 
 const CATEGORIES = [
     { id: 'Coding', label: 'Coding & CS', icon: 'code-slash' },
@@ -41,7 +42,7 @@ const INTENTS = [
     { id: 'Intro', label: 'Curiosity', desc: 'Interest building with low-pressure progress' }
 ]
 
-const DURATIONS = [7, 14, 30, 60, 90]
+const DURATIONS = [7, 14, 30, 60]
 
 export default function CreatePlan() {
     const router = useRouter()
@@ -105,18 +106,27 @@ export default function CreatePlan() {
                 })
             }
 
-            // 3. Register daily study reminder notification if permitted
-            try {
-                // Fetch the count of tasks due today for this plan
-                const todayStr = new Date().toISOString().split('T')[0]
-                const { count } = await supabase
-                    .from('tasks')
-                    .select('*', { count: 'exact', head: true })
-                    .eq('goal_id', goalId)
-                    .eq('due_date', todayStr)
+            // 3. Track analytics event
+            track('plan_created', {
+                duration: selectedDuration,
+                difficulty: level
+            })
 
-                const taskCount = count || 0
-                await scheduleDailyStudyReminder(trimmedTitle, 1, taskCount, 8, 0)
+            // 4. Request notification permissions & schedule daily study reminder
+            try {
+                const granted = await requestNotificationPermissions()
+                if (granted) {
+                    // Fetch the count of tasks due today for this plan
+                    const todayStr = new Date().toISOString().split('T')[0]
+                    const { count } = await supabase
+                        .from('tasks')
+                        .select('*', { count: 'exact', head: true })
+                        .eq('goal_id', goalId)
+                        .eq('due_date', todayStr)
+
+                    const taskCount = count || 0
+                    await scheduleDailyStudyReminder(trimmedTitle, 1, taskCount, 8, 0)
+                }
             } catch (notiErr) {
                 console.warn('Failed to register notifications:', notiErr)
             }
@@ -269,30 +279,28 @@ export default function CreatePlan() {
                 {/* ── Commitment Budget ── */}
                 <FadeInView delay={300} style={styles.section}>
                     <Text style={styles.sectionLabel}>DAILY STUDY BUDGET</Text>
-                    <GlassCard style={styles.hoursCard}>
-                        <Text style={styles.hoursLabel}>HOURS PER DAY</Text>
-                        <View style={styles.stepperRow}>
-                            <TouchableOpacity
-                                onPress={() => {
-                                    triggerSelectionHaptic()
-                                    setDailyHours(prev => Math.max(1, prev - 1))
-                                }}
-                                style={styles.stepperButton}
-                            >
-                                <Ionicons name="remove" size={20} color="#FFFFFF" />
-                            </TouchableOpacity>
-                            <Text style={styles.hoursValue}>{dailyHours} HRS</Text>
-                            <TouchableOpacity
-                                onPress={() => {
-                                    triggerSelectionHaptic()
-                                    setDailyHours(prev => Math.min(8, prev + 1))
-                                }}
-                                style={styles.stepperButton}
-                            >
-                                <Ionicons name="add" size={20} color="#FFFFFF" />
-                            </TouchableOpacity>
-                        </View>
-                    </GlassCard>
+                    <View style={styles.hoursRow}>
+                        {[1, 2, 3, 4, 5, 6].map((hour) => {
+                            const isSelected = hour === dailyHours
+                            return (
+                                <TouchableOpacity
+                                    key={hour}
+                                    onPress={() => {
+                                        triggerSelectionHaptic()
+                                        setDailyHours(hour)
+                                    }}
+                                    style={[
+                                        styles.hourChip,
+                                        isSelected && styles.hourChipSelected
+                                    ]}
+                                >
+                                    <Text style={[styles.hourChipText, isSelected && styles.hourChipTextActive]}>
+                                        {hour}H
+                                    </Text>
+                                </TouchableOpacity>
+                            )
+                        })}
+                    </View>
                 </FadeInView>
 
                 {/* ── Generate Action Button ── */}
@@ -456,35 +464,31 @@ const styles = StyleSheet.create({
         textTransform: 'uppercase',
         letterSpacing: 0.5
     },
-    hoursCard: {
-        padding: 16,
+    hoursRow: {
         flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center'
+        gap: 8
     },
-    hoursLabel: {
-        fontSize: 10,
-        fontWeight: '900',
-        color: '#FFFFFF',
-        letterSpacing: 1
-    },
-    stepperRow: {
-        flexDirection: 'row',
+    hourChip: {
+        flex: 1,
         alignItems: 'center',
-        gap: 16
+        justifyContent: 'center',
+        paddingVertical: 12,
+        backgroundColor: 'rgba(255, 255, 255, 0.02)',
+        borderWidth: 1,
+        borderColor: 'rgba(255, 255, 255, 0.06)',
+        borderRadius: BorderRadius.xl
     },
-    stepperButton: {
-        width: 32,
-        height: 32,
-        borderRadius: 16,
-        backgroundColor: 'rgba(255, 255, 255, 0.06)',
-        alignItems: 'center',
-        justifyContent: 'center'
+    hourChipSelected: {
+        backgroundColor: 'rgba(0, 240, 255, 0.05)',
+        borderColor: 'rgba(0, 240, 255, 0.25)'
     },
-    hoursValue: {
-        fontSize: 13,
+    hourChipText: {
+        fontSize: 12,
         fontWeight: '900',
-        color: '#00F0FF',
+        color: C.textDim,
         letterSpacing: 0.5
+    },
+    hourChipTextActive: {
+        color: '#00F0FF'
     }
 })
