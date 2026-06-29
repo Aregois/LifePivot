@@ -16,61 +16,8 @@ import * as Haptics from 'expo-haptics';
 import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '../../utils/supabase';
 import { C, Gradients, Shadows } from '../../constants/theme';
-import { FadeInView, GlassCard, GradientText, GlowBadge, PremiumButton } from '../../components/ui';
+import { FadeInView, GlassCard, GradientText, GlowBadge, PremiumButton, FloatingXp } from '../../components/ui';
 import { TaskInteractionSheet } from '../../components/TaskInteractionSheet';
-
-function FloatingXp({ value }: { value: number }) {
-  const animValue = React.useRef(new Animated.Value(0)).current;
-
-  React.useEffect(() => {
-    Animated.timing(animValue, {
-      toValue: 1,
-      duration: 800,
-      useNativeDriver: true,
-    }).start();
-  }, [animValue]);
-
-  const translateY = animValue.interpolate({
-    inputRange: [0, 1],
-    outputRange: [10, -45],
-  });
-
-  const opacity = animValue.interpolate({
-    inputRange: [0, 0.2, 0.8, 1],
-    outputRange: [0, 1, 1, 0],
-  });
-
-  const scale = animValue.interpolate({
-    inputRange: [0, 0.2, 1],
-    outputRange: [0.8, 1.2, 0.9],
-  });
-
-  return (
-    <Animated.View
-      style={{
-        position: 'absolute',
-        top: 10,
-        left: '45%',
-        zIndex: 99,
-        transform: [{ translateY }, { scale }],
-        opacity,
-      }}
-    >
-      <Text
-        style={{
-          color: '#00F0FF',
-          fontWeight: '900',
-          fontSize: 16,
-          textShadowColor: 'rgba(0, 240, 255, 0.8)',
-          textShadowOffset: { width: 0, height: 0 },
-          textShadowRadius: 8,
-        }}
-      >
-        +{value} XP
-      </Text>
-    </Animated.View>
-  );
-}
 
 interface Subtask {
   id: string;
