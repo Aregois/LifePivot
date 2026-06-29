@@ -142,7 +142,24 @@ export default function CreatePlan() {
         } catch (err: any) {
             console.error('Error during AI plan generation:', err)
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error)
-            setGenerationError(err.message || 'System failed to compose learning schedule.')
+            setIsGenerating(false)
+            
+            if (err.message === 'SUBSCRIBE_REQUIRED') {
+                Alert.alert(
+                    'PLAN LIMIT REACHED',
+                    'Free tier accounts are limited to one active study plan at a time. Upgrade to premium to unlock unlimited AI plan creation!',
+                    [
+                        { text: 'CANCEL', style: 'cancel' },
+                        { 
+                            text: 'UPGRADE NOW', 
+                            style: 'default',
+                            onPress: () => router.push('/modal/subscribe')
+                        }
+                    ]
+                )
+            } else {
+                setGenerationError(err.message || 'System failed to compose learning schedule.')
+            }
         }
     }
 
