@@ -56,6 +56,7 @@ export function HUD() {
                         >
                             <AvatarIcon id={avatarId} className="w-full h-full" />
                         </Link>
+                        <img src="/logo.png" alt="Logo" className="w-6 h-6 object-contain filter drop-shadow-[0_0_6px_rgba(0,240,255,0.3)]" />
                         <h1 className="text-xl font-black tracking-tight text-white">
                             LifePivot
                         </h1>

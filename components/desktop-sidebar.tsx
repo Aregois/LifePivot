@@ -58,9 +58,7 @@ export function DesktopSidebar() {
         <aside className="hidden md:flex flex-col w-64 fixed left-0 top-0 h-screen py-8 px-4 bg-[#0E111F]/80 backdrop-blur-xl border-r border-white/5 z-50 select-none">
             {/* Logo */}
             <div className="mb-8 px-4 flex items-center gap-2.5">
-                <div className="h-8 w-8 rounded-xl bg-gradient-to-tr from-electric-blue to-neon-violet flex items-center justify-center border border-white/10 shadow-[0_0_15px_rgba(0,240,255,0.3)]">
-                    <Sparkles className="h-4 w-4 text-white" />
-                </div>
+                <img src="/logo.png" alt="LifePivot Logo" className="h-8 w-8 object-contain filter drop-shadow-[0_0_8px_rgba(0,240,255,0.3)]" />
                 <div>
                     <h1 className="text-xl font-black tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-electric-blue to-neon-violet title-glow">
                         LifePivot

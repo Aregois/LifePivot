@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { View, Text, TextInput, TouchableOpacity, Alert, KeyboardAvoidingView, Platform } from 'react-native'
+import { View, Text, TextInput, TouchableOpacity, Alert, KeyboardAvoidingView, Platform, Image } from 'react-native'
 import { useRouter } from 'expo-router'
 import { LinearGradient } from 'expo-linear-gradient'
 import { supabase } from '../../utils/supabase'
@@ -61,6 +61,11 @@ export default function Login() {
                             backgroundColor: 'rgba(0, 240, 255, 0.05)',
                         }}
                         className="blur-3xl"
+                    />
+                    <Image
+                        source={require('../../assets/images/logo.png')}
+                        style={{ width: 80, height: 60, marginBottom: 12 }}
+                        resizeMode="contain"
                     />
                     <GradientText
                         style={{
