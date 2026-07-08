@@ -180,6 +180,34 @@ export default function WorkspaceDetail() {
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
             style={{ flex: 1, backgroundColor: '#050508' }}
         >
+            {/* Background Ambient Glows */}
+            <View
+              pointerEvents="none"
+              style={{
+                position: 'absolute',
+                top: -100,
+                right: -100,
+                width: 320,
+                height: 320,
+                borderRadius: 160,
+                backgroundColor: '#00F0FF',
+                opacity: 0.05,
+              }}
+            />
+            <View
+              pointerEvents="none"
+              style={{
+                position: 'absolute',
+                bottom: 120,
+                left: -100,
+                width: 320,
+                height: 320,
+                borderRadius: 160,
+                backgroundColor: '#BD00FF',
+                opacity: 0.05,
+              }}
+            />
+
             <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 80 }} style={{ flex: 1 }}>
                 {/* 1. Shared HUD Card */}
                 <FadeInView delay={0} style={{ marginBottom: 20 }}>
@@ -191,7 +219,7 @@ export default function WorkspaceDetail() {
                             style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
                         />
                         <View style={{ position: 'absolute', top: 0, right: 0, width: 120, height: 120, borderRadius: 60, backgroundColor: 'rgba(0, 240, 255, 0.03)', transform: [{ scale: 1.5 }] }} />
-                        <Text style={{ fontSize: 10, fontWeight: '900', letterSpacing: 2, color: C.electricBlue, textTransform: 'uppercase' }}>
+                        <Text style={{ fontSize: 10, fontWeight: '900', letterSpacing: 3.5, color: C.electricBlue, textTransform: 'uppercase' }}>
                             COHORT PROGRESS SHIELD
                         </Text>
                         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline', marginTop: 8 }}>
@@ -204,13 +232,13 @@ export default function WorkspaceDetail() {
                         {/* Aggregated progress stats */}
                         <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 16, borderTopWidth: 1, borderTopColor: 'rgba(255, 255, 255, 0.05)', paddingTop: 16 }}>
                             <View>
-                                <Text style={{ fontSize: 9, color: C.textDim, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1 }}>AGGREGATE XP</Text>
+                                <Text style={{ fontSize: 9, color: C.textSecondary, fontWeight: '900', textTransform: 'uppercase', letterSpacing: 2.5 }}>AGGREGATE XP</Text>
                                 <Text style={{ fontSize: 15, fontWeight: '900', color: '#FFFFFF', marginTop: 2 }}>
                                     {totalXp} XP
                                 </Text>
                             </View>
                             <View style={{ alignItems: 'flex-end' }}>
-                                <Text style={{ fontSize: 9, color: C.textDim, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1 }}>COMPLETION RATE</Text>
+                                <Text style={{ fontSize: 9, color: C.textSecondary, fontWeight: '900', textTransform: 'uppercase', letterSpacing: 2.5 }}>COMPLETION RATE</Text>
                                 <Text style={{ fontSize: 15, fontWeight: '900', color: C.electricBlue, marginTop: 2 }}>
                                     {avgCompletion}% DONE
                                 </Text>
@@ -245,10 +273,10 @@ export default function WorkspaceDetail() {
                                             <AvatarMonogram name={item.username} size={32} />
                                             <View style={{ marginLeft: 12, flex: 1 }}>
                                                 <Text style={{ fontSize: 12, color: '#FFFFFF', fontWeight: '800' }}>{item.username}</Text>
-                                                <Text style={{ fontSize: 11, color: C.textDim, marginTop: 2 }}>{item.action}</Text>
+                                                <Text style={{ fontSize: 11, color: C.textSecondary, marginTop: 2 }}>{item.action}</Text>
                                             </View>
                                         </View>
-                                        <Text style={{ fontSize: 9, fontWeight: '900', color: C.textMuted, textTransform: 'uppercase', letterSpacing: 1 }}>{item.time}</Text>
+                                        <Text style={{ fontSize: 9, fontWeight: '900', color: C.textSecondary, textTransform: 'uppercase', letterSpacing: 1 }}>{item.time}</Text>
                                     </GlassCard>
                                 </FadeInView>
                             ))
@@ -266,7 +294,7 @@ export default function WorkspaceDetail() {
                                             <AvatarMonogram name={student.username} size={36} />
                                             <View style={{ marginLeft: 12 }}>
                                                 <Text style={{ fontSize: 13, fontWeight: '900', color: '#FFFFFF', letterSpacing: 0.5 }}>{student.username}</Text>
-                                                <Text style={{ fontSize: 9, color: C.textDim, marginTop: 4, textTransform: 'uppercase', letterSpacing: 1 }}>
+                                                <Text style={{ fontSize: 9, color: C.textSecondary, marginTop: 4, textTransform: 'uppercase', letterSpacing: 1 }}>
                                                     LVL {student.level} | {student.currentStreak} DAY STREAK
                                                 </Text>
                                             </View>
@@ -318,16 +346,16 @@ export default function WorkspaceDetail() {
                             <Text style={{ fontSize: 13, fontWeight: '900', color: '#FFFFFF', letterSpacing: 1, textTransform: 'uppercase' }}>
                                 INJECT TASK: {selectedStudent.username}
                             </Text>
-                            <TouchableOpacity onPress={() => {
+                             <TouchableOpacity onPress={() => {
                                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
                                 setSelectedStudent(null)
                             }}>
-                                <Text style={{ color: C.textDim, fontWeight: '800', fontSize: 12, letterSpacing: 1, textTransform: 'uppercase' }}>CANCEL</Text>
+                                <Text style={{ color: C.textSecondary, fontWeight: '800', fontSize: 12, letterSpacing: 1, textTransform: 'uppercase' }}>CANCEL</Text>
                             </TouchableOpacity>
                         </View>
 
                         <ScrollView showsVerticalScrollIndicator={false} style={{ maxHeight: Platform.OS === 'ios' ? 420 : 320 }}>
-                            <Text style={{ fontSize: 9, color: C.textDim, fontWeight: '700', letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 6 }}>TASK TITLE</Text>
+                            <Text style={{ fontSize: 9, color: C.electricBlue, fontWeight: '700', letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 6 }}>TASK TITLE</Text>
                             <TextInput
                                 value={taskTitle}
                                 onChangeText={setTaskTitle}
@@ -349,7 +377,7 @@ export default function WorkspaceDetail() {
                                 }}
                             />
 
-                            <Text style={{ fontSize: 9, color: C.textDim, fontWeight: '700', letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 6 }}>SUBJECT</Text>
+                            <Text style={{ fontSize: 9, color: C.electricBlue, fontWeight: '700', letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 6 }}>SUBJECT</Text>
                             <TextInput
                                 value={taskSubject}
                                 onChangeText={setTaskSubject}
@@ -371,7 +399,7 @@ export default function WorkspaceDetail() {
                                 }}
                             />
 
-                            <Text style={{ fontSize: 9, color: C.textDim, fontWeight: '700', letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 6 }}>DURATION (MINS)</Text>
+                            <Text style={{ fontSize: 9, color: C.electricBlue, fontWeight: '700', letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 6 }}>DURATION (MINS)</Text>
                             <TextInput
                                 value={taskDuration}
                                 onChangeText={setTaskDuration}
@@ -392,7 +420,7 @@ export default function WorkspaceDetail() {
                                 }}
                             />
 
-                            <Text style={{ fontSize: 9, color: C.textDim, fontWeight: '700', letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 6 }}>ADDITIONAL NOTES</Text>
+                            <Text style={{ fontSize: 9, color: C.electricBlue, fontWeight: '700', letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 6 }}>ADDITIONAL NOTES</Text>
                             <TextInput
                                 value={taskNotes}
                                 onChangeText={setTaskNotes}

@@ -1,20 +1,42 @@
 'use client'
 
-import { Home, Calendar, Map, ShoppingBag, User, Sparkles, Award, Users, Compass } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { Home, Calendar, Map, ShoppingBag, User, Sparkles, Award, Users, Compass, Library } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useEconomy } from './economy-provider'
 import { AvatarIcon } from './avatar-icons'
 import { haptics } from '@/utils/haptics'
 import { useLanguage } from './language-provider'
+import { createClient } from '@/utils/supabase/client'
 
 export function DesktopSidebar() {
     const pathname = usePathname()
     const { level, avatarId } = useEconomy()
     const { t } = useLanguage()
+    const [isSubscribed, setIsSubscribed] = useState(false)
+
+    useEffect(() => {
+        const supabase = createClient()
+        supabase.auth.getUser().then(({ data: { user } }) => {
+            if (user) {
+                supabase
+                    .from('profiles')
+                    .select('is_subscribed')
+                    .eq('id', user.id)
+                    .single()
+                    .then(({ data }) => {
+                        if (data) {
+                            setIsSubscribed(!!data.is_subscribed)
+                        }
+                    })
+            }
+        })
+    }, [])
 
     const navItems = [
         { name: t('nav.home'), href: '/', icon: Home },
+        { name: t('nav.plans') || 'My Plans', href: '/plans', icon: Library },
         { name: t('nav.plan'), href: '/plan', icon: Map },
         { name: t('nav.cohorts') || 'Cohorts', href: '/workspaces', icon: Users },
         { name: t('nav.marketplace') || 'Marketplace', href: '/marketplace', icon: Compass },
@@ -66,6 +88,24 @@ export function DesktopSidebar() {
                 {navItems.map((item) => {
                     const Icon = item.icon
                     const isActive = pathname === item.href
+                    const isLocked = level < 2 && (item.href === '/workspaces' || item.href === '/marketplace' || item.href === '/shop')
+
+                    if (isLocked) {
+                        return (
+                            <div
+                                key={item.name}
+                                className="flex items-center justify-between px-4 py-3 rounded-xl border border-transparent text-gray-600 select-none opacity-40 cursor-not-allowed"
+                            >
+                                <div className="flex items-center">
+                                    <Icon className="w-4 h-4 mr-3" />
+                                    <span className="text-[11px] font-black uppercase tracking-wider">{item.name}</span>
+                                </div>
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor" className="w-3.5 h-3.5 text-gray-600">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+                                </svg>
+                            </div>
+                        )
+                    }
 
                     return (
                         <Link
@@ -88,14 +128,16 @@ export function DesktopSidebar() {
             </nav>
 
             {/* CTA Pro Button */}
-            <div className="pt-4 mt-auto border-t border-white/5">
-                <button 
-                    onClick={() => haptics.medium()}
-                    className="w-full py-3.5 rounded-xl border border-neon-violet/30 text-neon-violet bg-neon-violet/5 font-black text-[10px] tracking-widest uppercase hover:bg-neon-violet hover:text-white transition-all duration-300 shadow-[0_0_15px_rgba(189,0,255,0.08)] active:scale-95"
-                >
-                    {t('sidebar.upgrade')}
-                </button>
-            </div>
+            {!isSubscribed && (
+                <div className="pt-4 mt-auto border-t border-white/5">
+                    <button 
+                        onClick={() => haptics.medium()}
+                        className="w-full py-3.5 rounded-xl border border-neon-violet/30 text-neon-violet bg-neon-violet/5 font-black text-[10px] tracking-widest uppercase hover:bg-neon-violet hover:text-white transition-all duration-300 shadow-[0_0_15px_rgba(189,0,255,0.08)] active:scale-95"
+                    >
+                        {t('sidebar.upgrade')}
+                    </button>
+                </div>
+            )}
         </aside>
     )
 }

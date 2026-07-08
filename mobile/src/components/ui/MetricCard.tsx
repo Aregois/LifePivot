@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, type ViewStyle } from 'react-native';
-import { C, Shadows } from '../../constants/theme';
+import { C, Shadows, Spacing, BorderRadius, Typography } from '../../constants/theme';
 
 interface MetricCardProps {
   label: string;
@@ -15,37 +15,40 @@ export function MetricCard({ label, value, icon, style, accentColor }: MetricCar
     <View
       style={[
         {
-          backgroundColor: C.card,
-          borderRadius: 16,
+          backgroundColor: C.background, // Obsidian Background
+          borderRadius: BorderRadius.xxl,
           borderWidth: 1,
           borderColor: C.glassBorderSubtle,
-          padding: 16,
+          padding: Spacing.three,
           flex: 1,
           ...Shadows.card,
         },
         style,
       ]}
     >
-      {icon && <View style={{ marginBottom: 8 }}>{icon}</View>}
+      {icon && (
+        <View style={{ marginBottom: Spacing.two }}>
+          {typeof icon === 'string' ? <Text style={{ fontSize: 20 }}>{icon}</Text> : icon}
+        </View>
+      )}
       <Text
-        style={{
-          color: C.textDim,
-          fontSize: 9,
-          fontWeight: '700',
-          letterSpacing: 1.5,
-          textTransform: 'uppercase',
-          marginBottom: 4,
-        }}
+        style={[
+          Typography.overline,
+          {
+            color: C.textDim,
+            marginBottom: Spacing.one,
+          }
+        ]}
       >
         {label}
       </Text>
       <Text
-        style={{
-          color: accentColor ?? '#FFFFFF',
-          fontSize: 18,
-          fontWeight: '900',
-          letterSpacing: 1,
-        }}
+        style={[
+          Typography.title,
+          {
+            color: accentColor ?? '#FFFFFF',
+          }
+        ]}
       >
         {value}
       </Text>
@@ -54,4 +57,3 @@ export function MetricCard({ label, value, icon, style, accentColor }: MetricCar
 }
 
 export default MetricCard;
-

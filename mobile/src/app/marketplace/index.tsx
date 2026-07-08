@@ -1,17 +1,42 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { View, Text, FlatList, ActivityIndicator, RefreshControl } from 'react-native'
 import { useRouter } from 'expo-router'
 import * as Haptics from 'expo-haptics'
 import { Ionicons } from '@expo/vector-icons'
 import { useDiscoverPlans, PublicPlan } from '../../hooks/useMarketplace'
 import { C, Gradients } from '../../constants/theme'
-import { FadeInView, GlassCard, SegmentedControl, GlowBadge } from '../../components/ui'
+import { FadeInView, GlassCard, SegmentedControl, GlowBadge, EmptyStateCTA, AnimatedProgressBar, PremiumButton } from '../../components/ui'
+import { supabase } from '../../utils/supabase'
 
 export default function MarketplaceIndex() {
     const router = useRouter()
     const [activeSortIndex, setActiveSortIndex] = useState(0) // 0: created_at, 1: rating
     const sortBy = activeSortIndex === 0 ? 'created_at' : 'rating'
     const { data, isLoading, refetch } = useDiscoverPlans(sortBy, 'desc')
+    const [level, setLevel] = useState(2)
+    const [xp, setXp] = useState(0)
+    const [loadingLevel, setLoadingLevel] = useState(true)
+
+    useEffect(() => {
+        supabase.auth.getUser().then(({ data: { user } }) => {
+            if (user) {
+                supabase
+                    .from('profiles')
+                    .select('level, xp')
+                    .eq('id', user.id)
+                    .single()
+                    .then(({ data }) => {
+                        if (data) {
+                            setLevel(data.level ?? 1)
+                            setXp(data.xp ?? 0)
+                        }
+                        setLoadingLevel(false)
+                    })
+            } else {
+                setLoadingLevel(false)
+            }
+        })
+    }, [])
 
     const plans = data?.plans || []
 
@@ -66,8 +91,60 @@ export default function MarketplaceIndex() {
         )
     }
 
+    if (!loadingLevel && level < 2) {
+        return (
+            <View style={{ flex: 1, backgroundColor: '#050508', justifyContent: 'center', padding: 20 }}>
+                <EmptyStateCTA
+                    iconName="lock"
+                    title="Marketplace Locked"
+                    description="Reach Level 2 to browse and import community learning plans. Complete your current personal tasks to earn XP!"
+                    buttonText="BACK TO DASHBOARD"
+                    onPress={() => router.replace('/(tabs)')}
+                />
+                <View style={{ marginTop: 24, backgroundColor: 'rgba(255,255,255,0.02)', padding: 16, borderRadius: 16, borderWidth: 1, borderColor: 'rgba(255,255,255,0.05)' }}>
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 8 }}>
+                        <Text style={{ fontSize: 10, fontWeight: '800', color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: 1 }}>Progress to Level 2</Text>
+                        <Text style={{ fontSize: 11, fontWeight: '900', color: C.electricBlue }}>{xp} / 1000 XP</Text>
+                    </View>
+                    <AnimatedProgressBar
+                        progress={Math.min(1, Math.max(0, xp / 1000))}
+                        colors={Gradients.xpBar}
+                    />
+                </View>
+            </View>
+        )
+    }
+
     return (
         <View style={{ flex: 1, backgroundColor: '#050508' }}>
+            {/* Background Ambient Glows */}
+            <View
+              pointerEvents="none"
+              style={{
+                position: 'absolute',
+                top: -100,
+                right: -100,
+                width: 320,
+                height: 320,
+                borderRadius: 160,
+                backgroundColor: '#00F0FF',
+                opacity: 0.05,
+              }}
+            />
+            <View
+              pointerEvents="none"
+              style={{
+                position: 'absolute',
+                bottom: 120,
+                left: -100,
+                width: 320,
+                height: 320,
+                borderRadius: 160,
+                backgroundColor: '#BD00FF',
+                opacity: 0.05,
+              }}
+            />
+
             <View style={{ flex: 1, paddingHorizontal: 16, paddingTop: 16 }}>
                 {/* Segment Controls */}
                 <FadeInView delay={0} style={{ marginBottom: 18 }}>
@@ -97,10 +174,13 @@ export default function MarketplaceIndex() {
                         }
                         contentContainerStyle={{ paddingBottom: 80 }}
                         ListEmptyComponent={
-                            <FadeInView delay={100} style={{ flex: 1, justifyContent: 'center', alignItems: 'center', paddingTop: 60 }}>
-                                <Ionicons name="grid-outline" size={48} color={C.inactive} />
-                                <Text style={{ color: C.textDim, fontSize: 11, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1.5, marginTop: 12 }}>
-                                    NO PLANS IN DISCOVERY
+                            <FadeInView delay={100} style={{ flex: 1, justifyContent: 'center', alignItems: 'center', paddingTop: 40, paddingHorizontal: 20 }}>
+                                <Ionicons name="grid-outline" size={40} color={C.inactive} style={{ marginBottom: 12 }} />
+                                <Text style={{ color: '#FFFFFF', fontSize: 14, fontWeight: '900', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 6, textAlign: 'center' }}>
+                                    No Syllabuses Found
+                                </Text>
+                                <Text style={{ color: C.textSecondary, fontSize: 11, textAlign: 'center', lineHeight: 16 }}>
+                                    Marketplace is temporarily offline or empty. Check back soon!
                                 </Text>
                             </FadeInView>
                         }

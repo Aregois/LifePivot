@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { View, Text, FlatList, TouchableOpacity, ActivityIndicator, RefreshControl, Platform } from 'react-native'
+import { View, Text, FlatList, TouchableOpacity, RefreshControl, Platform } from 'react-native'
 import { useRouter } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
 import { LinearGradient } from 'expo-linear-gradient'
@@ -7,7 +7,7 @@ import * as Haptics from 'expo-haptics'
 import { useWorkspaces, useJoinWorkspace, Workspace } from '../../hooks/useWorkspaces'
 import { supabase } from '../../utils/supabase'
 import { C, Gradients, Shadows } from '../../constants/theme'
-import { FadeInView, GlassCard, SegmentedControl, AvatarMonogram, GlowBadge, PremiumButton } from '../../components/ui'
+import { FadeInView, GlassCard, SegmentedControl, AvatarMonogram, GlowBadge, PremiumButton, EmptyStateCTA, WorkspaceSkeletonList, AnimatedProgressBar } from '../../components/ui'
 
 export default function WorkspacesIndex() {
     const router = useRouter()
@@ -15,19 +15,29 @@ export default function WorkspacesIndex() {
     const { mutate: joinWorkspace, isPending: isJoining } = useJoinWorkspace()
     const [activeTabIndex, setActiveTabIndex] = useState(0) // 0: joined, 1: discover
     const [userRole, setUserRole] = useState<'student' | 'tutor'>('student')
+    const [userLevel, setUserLevel] = useState(2)
+    const [xp, setXp] = useState(0)
+    const [loadingLevel, setLoadingLevel] = useState(true)
 
-    // Fetch user profile role on mount
+    // Fetch user profile details on mount
     React.useEffect(() => {
         supabase.auth.getUser().then(({ data: { user } }) => {
             if (user) {
                 supabase
                     .from('profiles')
-                    .select('role')
+                    .select('role, level, xp')
                     .eq('id', user.id)
                     .single()
                     .then(({ data: profile }) => {
-                        if (profile) setUserRole(profile.role as any)
+                        if (profile) {
+                            setUserRole(profile.role as 'student' | 'tutor')
+                            setUserLevel(profile.level ?? 1)
+                            setXp(profile.xp ?? 0)
+                        }
+                        setLoadingLevel(false)
                     })
+            } else {
+                setLoadingLevel(false)
             }
         })
     }, [])
@@ -105,8 +115,60 @@ export default function WorkspacesIndex() {
         )
     }
 
+    if (!loadingLevel && userLevel < 2) {
+        return (
+            <View style={{ flex: 1, backgroundColor: '#050508', justifyContent: 'center', padding: 20 }}>
+                <EmptyStateCTA
+                    iconName="lock"
+                    title="Cohorts Locked"
+                    description="Reach Level 2 to join student cohorts, view leaderboards, and coordinate with study peers."
+                    buttonText="BACK TO DASHBOARD"
+                    onPress={() => router.replace('/(tabs)')}
+                />
+                <View style={{ marginTop: 24, backgroundColor: 'rgba(255,255,255,0.02)', padding: 16, borderRadius: 16, borderWidth: 1, borderColor: 'rgba(255,255,255,0.05)' }}>
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 8 }}>
+                        <Text style={{ fontSize: 10, fontWeight: '800', color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: 1 }}>Progress to Level 2</Text>
+                        <Text style={{ fontSize: 11, fontWeight: '900', color: C.electricBlue }}>{xp} / 1000 XP</Text>
+                    </View>
+                    <AnimatedProgressBar
+                        progress={Math.min(1, Math.max(0, xp / 1000))}
+                        colors={Gradients.xpBar}
+                    />
+                </View>
+            </View>
+        )
+    }
+
     return (
         <View style={{ flex: 1, backgroundColor: '#050508' }}>
+            {/* Background Ambient Glows */}
+            <View
+              pointerEvents="none"
+              style={{
+                position: 'absolute',
+                top: -100,
+                right: -100,
+                width: 320,
+                height: 320,
+                borderRadius: 160,
+                backgroundColor: '#00F0FF',
+                opacity: 0.05,
+              }}
+            />
+            <View
+              pointerEvents="none"
+              style={{
+                position: 'absolute',
+                bottom: 120,
+                left: -100,
+                width: 320,
+                height: 320,
+                borderRadius: 160,
+                backgroundColor: '#BD00FF',
+                opacity: 0.05,
+              }}
+            />
+
             <View style={{ flex: 1, paddingHorizontal: 16, paddingTop: 16 }}>
                 {/* Segmented Tab Toggle */}
                 <FadeInView delay={0} style={{ marginBottom: 18 }}>
@@ -118,14 +180,16 @@ export default function WorkspacesIndex() {
                 </FadeInView>
 
                 {isLoading ? (
-                    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-                        <ActivityIndicator size="large" color="#00F0FF" />
-                    </View>
+                    <WorkspaceSkeletonList />
                 ) : (
                     <FlatList
                         data={filteredWorkspaces}
                         keyExtractor={item => item.id}
                         renderItem={renderWorkspaceItem}
+                        removeClippedSubviews={true}
+                        initialNumToRender={10}
+                        windowSize={5}
+                        maxToRenderPerBatch={10}
                         refreshControl={
                             <RefreshControl
                                 refreshing={isLoading}
@@ -136,12 +200,22 @@ export default function WorkspacesIndex() {
                         }
                         contentContainerStyle={{ paddingBottom: 110 }}
                         ListEmptyComponent={
-                            <FadeInView delay={100} style={{ flex: 1, justifyContent: 'center', alignItems: 'center', paddingTop: 60 }}>
-                                <Ionicons name="people-outline" size={48} color={C.inactive} />
-                                <Text style={{ color: C.textDim, fontSize: 11, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1.5, marginTop: 12 }}>
-                                    NO COHORTS FOUND
-                                </Text>
-                            </FadeInView>
+                            <EmptyStateCTA
+                                iconName={activeTabIndex === 0 ? "users" : "compass"}
+                                title={activeTabIndex === 0 ? "No Cohorts Joined" : "No Cohorts Found"}
+                                description={activeTabIndex === 0 
+                                    ? "Join a study group to sync XP, view progress charts, and solve assigned tutor tasks."
+                                    : "There are no public cohorts available to join right now."
+                                }
+                                buttonText={activeTabIndex === 0 
+                                    ? "DISCOVER COHORTS" 
+                                    : (userRole === 'tutor' ? "CREATE COHORT" : undefined)
+                                }
+                                onPress={activeTabIndex === 0 
+                                    ? () => setActiveTabIndex(1) 
+                                    : (userRole === 'tutor' ? () => router.push('/workspaces/create') : undefined)
+                                }
+                            />
                         }
                     />
                 )}

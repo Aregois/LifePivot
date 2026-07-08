@@ -110,6 +110,10 @@ export async function createGoalBase(formData: FormData) {
     return { success: true, goalId: goal.id }
 }
 
+/**
+ * @deprecated Use streaming API route /api/plans/generate instead.
+ * This is retained temporarily for compatibility but should not be called by new code.
+ */
 export async function generateTasksChunk(goalId: string, startDay: number, endDay: number) {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()

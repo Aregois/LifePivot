@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useTransition, ComponentType } from 'react'
-import { Coins, Zap, Sparkles, ShieldCheck, Loader2, Crown, Palette, Music, RotateCcw, Flame } from 'lucide-react'
+import { Coins, Zap, Sparkles, ShieldCheck, Loader2, Crown, Palette, Music, RotateCcw, Flame, ShoppingCart, Rocket, ExternalLink } from 'lucide-react'
 import { useLanguage } from './language-provider'
 import { useEconomy } from './economy-provider'
 import { verifyShopPurchase, purchaseCustomization, placeWagerServer, rewardWagerServer } from '@/app/actions'
@@ -40,6 +40,76 @@ export function ShopClient() {
     const [wagerAmount, setWagerAmount] = useState(20)
     const [confirmingWager, setConfirmingWager] = useState(false)
     const [wagerError, setWagerError] = useState<string | null>(null)
+
+    // Token pack purchase state
+    const [tokenPackPending, setTokenPackPending] = useState<string | null>(null)
+    const [tokenPackError, setTokenPackError] = useState<string | null>(null)
+
+    const TOKEN_PACKS = [
+        {
+            id: 'tokens_100',
+            label: 'Starter Pack',
+            tokens: 100,
+            price: '$1.99',
+            priceId: process.env.NEXT_PUBLIC_STRIPE_TOKENS_100_PRICE_ID,
+            icon: Coins,
+            color: 'from-yellow-500/20 to-amber-600/20 border-yellow-500/20',
+            glow: 'shadow-[0_0_20px_rgba(234,179,8,0.1)]',
+            badge: null,
+        },
+        {
+            id: 'tokens_500',
+            label: 'Explorer Pack',
+            tokens: 500,
+            price: '$7.99',
+            priceId: process.env.NEXT_PUBLIC_STRIPE_TOKENS_500_PRICE_ID,
+            icon: Sparkles,
+            color: 'from-electric-blue/20 to-cyan-600/20 border-electric-blue/20',
+            glow: 'shadow-[0_0_20px_rgba(0,240,255,0.1)]',
+            badge: 'Best Value',
+        },
+        {
+            id: 'tokens_1500',
+            label: 'Pioneer Pack',
+            tokens: 1500,
+            price: '$19.99',
+            priceId: process.env.NEXT_PUBLIC_STRIPE_TOKENS_1500_PRICE_ID,
+            icon: Rocket,
+            color: 'from-neon-violet/20 to-purple-600/20 border-neon-violet/20',
+            glow: 'shadow-[0_0_20px_rgba(189,0,255,0.1)]',
+            badge: 'Most Tokens',
+        },
+    ]
+
+    const handleBuyTokenPack = async (priceId: string | undefined, packId: string) => {
+        if (!priceId) {
+            setTokenPackError('Token packs are not configured yet. Check your Stripe price IDs.')
+            setTimeout(() => setTokenPackError(null), 4000)
+            return
+        }
+        haptics.medium()
+        setTokenPackPending(packId)
+        setTokenPackError(null)
+        try {
+            const res = await fetch('/api/stripe/create-checkout', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ priceId, mode: 'payment' }),
+            })
+            const data = await res.json()
+            if (!res.ok || !data.url) {
+                setTokenPackError(data.error || 'Could not start checkout.')
+                setTimeout(() => setTokenPackError(null), 4000)
+                setTokenPackPending(null)
+                return
+            }
+            window.location.href = data.url
+        } catch {
+            setTokenPackError('Network error. Please try again.')
+            setTimeout(() => setTokenPackError(null), 4000)
+            setTokenPackPending(null)
+        }
+    }
 
     useEffect(() => {
         const titles = JSON.parse(localStorage.getItem('lifepivot_unlocked_titles') || '["title_scholar"]')
@@ -407,6 +477,75 @@ export function ShopClient() {
 
             {/* Secured Ad Integration */}
             <EarnTokensCard tokens={tokens} setTokens={setTokens} />
+
+            {/* ── Buy Tokens with Real Money ─────────────────────────────────── */}
+            <div className="bg-[#141824] border border-white/5 rounded-[2.2rem] p-6 shadow-xl relative overflow-hidden flex flex-col gap-5">
+                <div className="absolute top-0 right-0 w-40 h-40 bg-yellow-500/5 rounded-full blur-[60px] pointer-events-none" />
+
+                <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-2xl bg-yellow-500/10 border border-yellow-500/20 flex items-center justify-center">
+                        <ShoppingCart className="w-4 h-4 text-yellow-400" />
+                    </div>
+                    <div>
+                        <p className="text-[10px] font-black text-yellow-500 uppercase tracking-widest">Token Store</p>
+                        <h3 className="text-white font-extrabold text-base leading-tight">Buy Tokens</h3>
+                    </div>
+                </div>
+
+                <p className="text-gray-400 text-xs leading-relaxed">
+                    Top up your token balance instantly. Tokens are used in the shop for power-ups, cosmetics, and more.
+                </p>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    {TOKEN_PACKS.map((pack) => {
+                        const PackIcon = pack.icon
+                        const isLoading = tokenPackPending === pack.id
+                        return (
+                            <div
+                                key={pack.id}
+                                className={`relative flex flex-col gap-3 p-5 rounded-[1.5rem] bg-gradient-to-br border ${pack.color} ${pack.glow} transition-all`}
+                            >
+                                {pack.badge && (
+                                    <span className="absolute -top-2.5 right-4 px-2.5 py-0.5 rounded-full bg-electric-blue text-[8px] font-black uppercase tracking-widest text-black">
+                                        {pack.badge}
+                                    </span>
+                                )}
+
+                                <div className="flex items-center gap-2">
+                                    <PackIcon className="w-5 h-5 text-white opacity-80" />
+                                    <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{pack.label}</span>
+                                </div>
+
+                                <div className="flex items-baseline gap-1">
+                                    <span className="text-2xl font-black text-white tabular-nums">{pack.tokens.toLocaleString()}</span>
+                                    <span className="text-xs text-gray-400 font-bold">tokens</span>
+                                </div>
+
+                                <button
+                                    id={`buy-${pack.id}-btn`}
+                                    onClick={() => handleBuyTokenPack(pack.priceId, pack.id)}
+                                    disabled={isLoading || tokenPackPending !== null}
+                                    className="mt-auto flex items-center justify-center gap-1.5 w-full py-2.5 rounded-xl bg-white/10 border border-white/10 text-white font-black text-[10px] uppercase tracking-widest hover:bg-white/20 active:scale-95 transition-all disabled:opacity-50"
+                                >
+                                    {isLoading
+                                        ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                        : <><ExternalLink className="w-3 h-3" />{pack.price}</>}
+                                </button>
+                            </div>
+                        )
+                    })}
+                </div>
+
+                {tokenPackError && (
+                    <p className="text-[10px] text-red-400 font-bold bg-red-500/5 border border-red-500/10 rounded-xl py-2 text-center">
+                        {tokenPackError}
+                    </p>
+                )}
+
+                <p className="text-center text-[9px] text-gray-600 font-medium">
+                    Secure one-time payment via Stripe. No subscription required.
+                </p>
+            </div>
 
             {/* Wager consistency widget */}
             {mounted && (

@@ -1,4 +1,3 @@
-
 import { Platform } from 'react-native';
 
 /* ────────────────────────────────────────────────────────────────────────── */
@@ -53,6 +52,15 @@ export const C = Colors.dark;
 
 export type ThemeColor = keyof typeof Colors.light & keyof typeof Colors.dark;
 
+/* ─── Semantic Colors ───────────────────────────────────────────────────── */
+
+export const SemanticColors = {
+  success: '#10B981',
+  warning: '#F59E0B',
+  error: '#F43F5E',
+  info: '#00F0FF',
+} as const;
+
 /* ─── Gradients ────────────────────────────────────────────────────────── */
 
 export const Gradients = {
@@ -98,7 +106,7 @@ export const Shadows = {
   }),
 } as const;
 
-/* ─── Typography ───────────────────────────────────────────────────────── */
+/* ─── Typography Scale ─────────────────────────────────────────────────── */
 
 export const Fonts = Platform.select({
   ios: {
@@ -121,6 +129,49 @@ export const Fonts = Platform.select({
   },
 });
 
+export const Typography = {
+  display: {
+    fontSize: 32,
+    fontWeight: '900' as const,
+    letterSpacing: -1.0,
+    textTransform: 'uppercase' as const,
+  },
+  heading: {
+    fontSize: 24,
+    fontWeight: '900' as const,
+    letterSpacing: -0.5,
+    textTransform: 'uppercase' as const,
+  },
+  title: {
+    fontSize: 18,
+    fontWeight: '800' as const,
+    letterSpacing: 0.5,
+    textTransform: 'uppercase' as const,
+  },
+  body: {
+    fontSize: 14,
+    fontWeight: '400' as const,
+    lineHeight: 20,
+  },
+  caption: {
+    fontSize: 11,
+    fontWeight: '400' as const,
+    lineHeight: 16,
+  },
+  label: {
+    fontSize: 10,
+    fontWeight: '900' as const,
+    letterSpacing: 2,
+    textTransform: 'uppercase' as const,
+  },
+  overline: {
+    fontSize: 9,
+    fontWeight: '700' as const,
+    letterSpacing: 1.5,
+    textTransform: 'uppercase' as const,
+  },
+} as const;
+
 /* ─── Spacing & Layout ────────────────────────────────────────────────── */
 
 export const Spacing = {
@@ -131,6 +182,7 @@ export const Spacing = {
   four: 24,
   five: 32,
   six: 64,
+  eight: 128,
 } as const;
 
 export const BorderRadius = {
@@ -141,6 +193,23 @@ export const BorderRadius = {
   xxl: 24,
   xxxl: 32,
   full: 9999,
+} as const;
+
+/* ─── Icon Sizes & Component Heights ──────────────────────────────────── */
+
+export const IconSize = {
+  xs: 12,
+  sm: 16,
+  md: 24,
+  lg: 32,
+  xl: 48,
+} as const;
+
+export const ComponentHeight = {
+  button: 56,
+  input: 56,
+  badge: 28,
+  tab: 48,
 } as const;
 
 /* ─── Animation ───────────────────────────────────────────────────────── */

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { usePathname } from 'next/navigation'
+import Link from 'next/link'
 import { HUD } from '@/components/hud'
 import { BottomNav } from '@/components/bottom-nav'
 import { DesktopSidebar } from '@/components/desktop-sidebar'
@@ -19,10 +20,13 @@ export function AuthenticatedLayoutClient({
 }: {
     children: React.ReactNode
 }) {
-    const { showMobileChat, setShowMobileChat, activeChatTask, setActiveChatTask } = useEconomy()
+    const { level, xp, showMobileChat, setShowMobileChat, activeChatTask, setActiveChatTask } = useEconomy()
     const pathname = usePathname()
     const isCalendar = pathname === '/calendar'
     const [overdueGoalId, setOverdueGoalId] = useState<string | null>(null)
+
+    const isAdvancedRoute = pathname.startsWith('/marketplace') || pathname.startsWith('/shop') || pathname.startsWith('/workspaces')
+    const isRouteLocked = level < 2 && isAdvancedRoute
 
     // Check for overdue tasks client-side to trigger the MissedSessionOverlay
     useEffect(() => {
@@ -76,7 +80,48 @@ export function AuthenticatedLayoutClient({
 
             {/* Page content wrapper */}
             <main className="relative z-10 px-4 sm:px-6 py-4 flex-1 flex flex-col">
-                {children}
+                {isRouteLocked ? (
+                    <div className="flex-1 flex items-center justify-center py-12">
+                        <div className="w-full max-w-md p-8 rounded-3xl bg-[#141824]/80 border border-white/10 text-center shadow-2xl glass-card relative overflow-hidden">
+                            <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/5 rounded-full blur-[85px] -translate-y-1/2 translate-x-1/4 pointer-events-none" />
+                            <div className="w-16 h-16 rounded-2xl bg-indigo-500/10 flex items-center justify-center border border-indigo-500/20 mb-6 mx-auto shadow-[0_0_15px_rgba(99,102,241,0.1)]">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-8 h-8 text-indigo-400">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+                                </svg>
+                            </div>
+                            <h2 className="text-xl font-black text-white uppercase tracking-wider mb-3">Feature Locked</h2>
+                            <p className="text-gray-400 text-sm leading-relaxed mb-6">
+                                Reach Level 2 to unlock advanced features like cohorts, marketplace schemas, and the items store.
+                            </p>
+
+                            {/* Progress bar towards Level 2 (1000 XP) */}
+                            <div className="mb-8 bg-white/5 p-4 rounded-2xl border border-white/5">
+                                <div className="flex justify-between items-baseline mb-2">
+                                    <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Progress to Level 2</span>
+                                    <span className="text-xs font-black text-electric-blue">{xp} / 1000 XP</span>
+                                </div>
+                                <div className="w-full bg-[#0B0D17] h-2 rounded-full overflow-hidden border border-white/5 shadow-inner">
+                                    <div 
+                                        className="h-full bg-gradient-to-r from-electric-blue to-neon-violet transition-all duration-1000 ease-out shadow-[0_0_12px_rgba(0,240,255,0.4)]"
+                                        style={{ width: `${Math.min(100, Math.max(0, (xp / 1000) * 100))}%` }}
+                                    />
+                                </div>
+                                <p className="text-[10px] text-gray-500 mt-2 text-left font-medium">
+                                    Complete tasks to earn XP and level up.
+                                </p>
+                            </div>
+
+                            <Link
+                                href="/"
+                                className="inline-block w-full py-3.5 rounded-xl border border-electric-blue/30 text-electric-blue bg-electric-blue/5 font-black text-xs tracking-widest uppercase hover:bg-electric-blue hover:text-black transition-all duration-300 shadow-[0_0_15px_rgba(0,240,255,0.08)] active:scale-95"
+                            >
+                                Back to Dashboard
+                            </Link>
+                        </div>
+                    </div>
+                ) : (
+                    children
+                )}
             </main>
 
             {/* Bottom Nav Bar (Mobile only) */}

@@ -19,9 +19,10 @@ interface TaskCardProps {
     isLocked?: boolean
     isCrunch?: boolean
     planLanguage?: string
+    isEnriching?: boolean
 }
 
-export function TaskCard({ task, onCheck, onSubtaskCheck, onFocus, onReschedule, index: _index, isLocked, isCrunch, planLanguage }: TaskCardProps) {
+export function TaskCard({ task, onCheck, onSubtaskCheck, onFocus, onReschedule, index: _index, isLocked, isCrunch, planLanguage, isEnriching }: TaskCardProps) {
     const { t, locale } = useLanguage()
     const isCompleted = task.status === 'completed'
     const isVoid = task.priority === 0
@@ -118,6 +119,23 @@ export function TaskCard({ task, onCheck, onSubtaskCheck, onFocus, onReschedule,
         onSubtaskCheck?.(task.id, subtask.id, newCompleted)
     }
 
+    const [showXpFeedback, setShowXpFeedback] = useState(false)
+    const baseXp = task.priority && task.priority > 0 ? (task.priority * 10 + 10) : 0
+
+    const handleCheckTrigger = (e?: React.MouseEvent) => {
+        if (e) e.stopPropagation()
+        if (!isCompleted && !isVoid) {
+            haptics.medium()
+            setShowXpFeedback(true)
+            setTimeout(() => {
+                onCheck(task.id, task.status)
+            }, 800)
+        } else {
+            haptics.light()
+            onCheck(task.id, task.status)
+        }
+    }
+
     const cardBase = `rounded-2xl border-l-4 border border-white/5 transition-all duration-200 overflow-hidden ${priorityBorder[task.priority] ?? 'border-l-gray-600'}`
     const cardBg = isVoid
         ? 'bg-soft-cyan/5'
@@ -143,6 +161,18 @@ export function TaskCard({ task, onCheck, onSubtaskCheck, onFocus, onReschedule,
                     }}
                     className="relative overflow-hidden mb-3 select-none rounded-2xl"
                 >
+                    {/* Floating XP dopamine feedback */}
+                    {showXpFeedback && (
+                        <motion.div
+                            initial={{ opacity: 0, y: 15, scale: 0.8 }}
+                            animate={{ opacity: [0, 1, 1, 0], y: -45, scale: [0.8, 1.25, 1.25, 0.9] }}
+                            transition={{ duration: 0.8, ease: "easeOut" }}
+                            className="absolute left-1/2 -translate-x-1/2 top-4 z-50 text-electric-blue font-black text-xl drop-shadow-[0_0_12px_rgba(0,240,255,0.85)] pointer-events-none"
+                        >
+                            +{baseXp} XP
+                        </motion.div>
+                    )}
+
                     {/* ── ACTION BACKDROP LAYER ── */}
                     {canDrag && (
                         <div className="absolute inset-0 rounded-2xl flex items-center justify-between overflow-hidden pointer-events-none z-0">
@@ -220,6 +250,13 @@ export function TaskCard({ task, onCheck, onSubtaskCheck, onFocus, onReschedule,
                                 {task.title}
                             </p>
 
+                            {task.priority === 3 && isEnriching && (
+                                <p className="text-[10px] text-electric-blue font-bold uppercase tracking-wider mt-1 animate-pulse flex items-center gap-1.5">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-electric-blue animate-pulse" />
+                                    Enriching your plan...
+                                </p>
+                            )}
+
                             {task.pivoted_count > 0 && (
                                 <p className="text-[11px] text-red-400 font-bold uppercase tracking-wider mt-1">
                                     {t('task_card.pivoted_count').replace('{count}', String(task.pivoted_count))}
@@ -263,7 +300,7 @@ export function TaskCard({ task, onCheck, onSubtaskCheck, onFocus, onReschedule,
 
                                 {/* Mark done button (as a backup tap area) */}
                                 <button
-                                    onClick={(e) => { e.stopPropagation(); haptics.medium(); onCheck(task.id, task.status) }}
+                                    onClick={handleCheckTrigger}
                                     className="h-10 w-10 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center active:scale-95 transition-transform shrink-0 animate-fade-in"
                                     aria-label={t('task_card.btn_mark_completed')}
                                 >
@@ -276,7 +313,7 @@ export function TaskCard({ task, onCheck, onSubtaskCheck, onFocus, onReschedule,
                         {isCompleted && (
                             <div className="flex items-center justify-between px-4 pb-3 animate-fade-in">
                                 <span className="text-[11px] text-gray-600 font-medium uppercase tracking-wider">{t('task_card.status_completed')}</span>
-                                <button onClick={(e) => { e.stopPropagation(); haptics.light(); onCheck(task.id, task.status) }}
+                                <button onClick={handleCheckTrigger}
                                     className="active:scale-95 transition-transform">
                                     <CheckCircle2 className="h-5 w-5 text-electric-blue" />
                                 </button>

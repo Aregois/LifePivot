@@ -47,10 +47,35 @@ export default function CreateWorkspace() {
     }
 
     return (
-        <LinearGradient
-            colors={[...Gradients.loginBg]}
-            style={{ flex: 1 }}
-        >
+        <View style={{ flex: 1, backgroundColor: '#050508' }}>
+            {/* Background Ambient Glows */}
+            <View
+              pointerEvents="none"
+              style={{
+                position: 'absolute',
+                top: -100,
+                right: -100,
+                width: 320,
+                height: 320,
+                borderRadius: 160,
+                backgroundColor: '#00F0FF',
+                opacity: 0.05,
+              }}
+            />
+            <View
+              pointerEvents="none"
+              style={{
+                position: 'absolute',
+                bottom: 120,
+                left: -100,
+                width: 320,
+                height: 320,
+                borderRadius: 160,
+                backgroundColor: '#BD00FF',
+                opacity: 0.05,
+              }}
+            />
+
             <KeyboardAvoidingView
                 behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
                 style={{ flex: 1 }}
@@ -59,7 +84,7 @@ export default function CreateWorkspace() {
                     <FadeInView delay={0}>
                         <GlassCard style={{ padding: 20, marginBottom: 24 }}>
                             {/* Cohort Name */}
-                            <Text style={{ fontSize: 10, color: C.textDim, fontWeight: '700', letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 8 }}>
+                            <Text style={{ fontSize: 10, color: C.electricBlue, fontWeight: '900', letterSpacing: 3.5, textTransform: 'uppercase', marginBottom: 8 }}>
                                 COHORT TITLE
                             </Text>
                             <TextInput
@@ -86,7 +111,7 @@ export default function CreateWorkspace() {
                             {/* Switch Row */}
                             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                                 <View style={{ flex: 1, marginRight: 16 }}>
-                                    <Text style={{ fontSize: 10, color: C.textDim, fontWeight: '700', letterSpacing: 1.5, textTransform: 'uppercase' }}>
+                                    <Text style={{ fontSize: 10, color: C.electricBlue, fontWeight: '900', letterSpacing: 3.5, textTransform: 'uppercase' }}>
                                         PREMIUM ACCESS
                                     </Text>
                                     <Text style={{ fontSize: 9, color: C.textMuted, marginTop: 4, textTransform: 'uppercase', letterSpacing: 0.5, lineHeight: 13 }}>
@@ -110,7 +135,7 @@ export default function CreateWorkspace() {
                     {isPremium && (
                         <FadeInView delay={100}>
                             <GlassCard style={{ padding: 20, marginBottom: 24 }}>
-                                <Text style={{ fontSize: 10, color: C.textDim, fontWeight: '700', letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 8 }}>
+                                <Text style={{ fontSize: 10, color: C.electricBlue, fontWeight: '900', letterSpacing: 3.5, textTransform: 'uppercase', marginBottom: 8 }}>
                                     TOKEN COST TO JOIN
                                 </Text>
                                 <TextInput
@@ -156,6 +181,6 @@ export default function CreateWorkspace() {
                     </FadeInView>
                 </ScrollView>
             </KeyboardAvoidingView>
-        </LinearGradient>
+        </View>
     )
 }

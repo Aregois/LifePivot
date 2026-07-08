@@ -1,15 +1,15 @@
 import React from 'react'
 import { View, Text } from 'react-native'
-import { Shadows } from '../../constants/theme'
+import { C, Spacing, BorderRadius, SemanticColors } from '../../constants/theme'
 
 type BadgeColorScheme = 'amber' | 'emerald' | 'violet' | 'blue' | 'rose'
 
 const colorMap: Record<BadgeColorScheme, { bg: string; border: string; text: string }> = {
-    amber: { bg: 'rgba(245,158,11,0.10)', border: 'rgba(245,158,11,0.25)', text: '#F59E0B' },
-    emerald: { bg: 'rgba(16,185,129,0.10)', border: 'rgba(16,185,129,0.25)', text: '#10B981' },
-    violet: { bg: 'rgba(189,0,255,0.10)', border: 'rgba(189,0,255,0.25)', text: '#BD00FF' },
-    blue: { bg: 'rgba(0,240,255,0.10)', border: 'rgba(0,240,255,0.25)', text: '#00F0FF' },
-    rose: { bg: 'rgba(244,63,94,0.10)', border: 'rgba(244,63,94,0.25)', text: '#F43F5E' },
+    amber: { bg: 'rgba(245,158,11,0.10)', border: 'rgba(245,158,11,0.25)', text: SemanticColors.warning },
+    emerald: { bg: 'rgba(16,185,129,0.10)', border: 'rgba(16,185,129,0.25)', text: SemanticColors.success },
+    violet: { bg: 'rgba(189,0,255,0.10)', border: 'rgba(189,0,255,0.25)', text: C.neonViolet },
+    blue: { bg: 'rgba(0,240,255,0.10)', border: 'rgba(0,240,255,0.25)', text: C.electricBlue },
+    rose: { bg: 'rgba(244,63,94,0.10)', border: 'rgba(244,63,94,0.25)', text: SemanticColors.error },
 }
 
 interface GlowBadgeProps {
@@ -28,11 +28,17 @@ export function GlowBadge({ label, colorScheme = 'amber', glow = false }: GlowBa
                     backgroundColor: colors.bg,
                     borderWidth: 1,
                     borderColor: colors.border,
-                    borderRadius: 8,
-                    paddingHorizontal: 10,
-                    paddingVertical: 4,
+                    borderRadius: BorderRadius.xxl,
+                    paddingHorizontal: Spacing.three,
+                    paddingVertical: Spacing.two,
                 },
-                glow && Shadows.glowSmall(colors.text, 0.2),
+                glow && {
+                    shadowColor: colorScheme === 'violet' ? C.neonViolet : colorScheme === 'blue' ? C.electricBlue : colors.text,
+                    shadowOffset: { width: 0, height: 0 },
+                    shadowOpacity: 0.45,
+                    shadowRadius: 10,
+                    elevation: 5,
+                },
             ]}
         >
             <Text
@@ -51,4 +57,3 @@ export function GlowBadge({ label, colorScheme = 'amber', glow = false }: GlowBa
 }
 
 export default GlowBadge;
-

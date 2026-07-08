@@ -65,28 +65,23 @@ export default function Signup() {
                     />
                     <GradientText
                         style={{
-                            fontSize: 11,
+                            fontSize: 12,
                             fontWeight: '900',
                             letterSpacing: 8,
                             textTransform: 'uppercase',
-                            marginBottom: 6,
+                            marginBottom: 16,
                         }}
                     >
                         LIFEPIVOT
                     </GradientText>
-                    <Text className="text-3xl font-black text-white uppercase tracking-wider">
-                        CREATE ACCOUNT
+                    <Text style={{ fontSize: 24, fontWeight: '900', color: '#FFFFFF', letterSpacing: 0.5, textTransform: 'uppercase', textAlign: 'center' }}>
+                        Plan your goals.
                     </Text>
-                    <Text
-                        style={{
-                            fontSize: 10,
-                            color: C.textDim,
-                            letterSpacing: 3,
-                            textTransform: 'uppercase',
-                            marginTop: 8,
-                        }}
-                    >
-                        BEGIN YOUR TRANSFORMATION
+                    <Text style={{ fontSize: 24, fontWeight: '900', color: '#FFFFFF', letterSpacing: 0.5, textTransform: 'uppercase', textAlign: 'center' }}>
+                        Track your habits.
+                    </Text>
+                    <Text style={{ fontSize: 13, fontWeight: '800', color: C.electricBlue, letterSpacing: 1, textTransform: 'uppercase', marginTop: 12, textAlign: 'center' }}>
+                        Build your future one day at a time.
                     </Text>
                 </FadeInView>
 

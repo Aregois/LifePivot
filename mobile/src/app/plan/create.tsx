@@ -55,7 +55,7 @@ export default function CreatePlan() {
 
     // Generation states
     const [isGenerating, setIsGenerating] = useState(false)
-    const [generationError, setGenerationError] = useState<string | null>(null)
+    const [planParams, setPlanParams] = useState<any>(null)
 
     const handleCreate = async () => {
         const trimmedTitle = title.trim()
@@ -66,100 +66,28 @@ export default function CreatePlan() {
         }
 
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
-        setIsGenerating(true)
-        setGenerationError(null)
-
-        const levels = ['Beginner', 'Intermediate', 'Advanced']
-        const level = levels[levelIndex]
 
         try {
-            // 1. Initialize learning goal metadata
-            const initRes = await apiRequest<{ goalId: string }>('/api/plans/create', {
-                method: 'POST',
-                body: JSON.stringify({
-                    title: trimmedTitle,
-                    duration_days: selectedDuration,
-                    level,
-                    goal_intent: selectedIntent,
-                    sprint_walls: [], // Empty defaults for now, populated dynamically on backend
-                    daily_hours: dailyHours,
-                    category: selectedCategory,
-                    language: 'en'
-                })
-            })
-
-            const goalId = initRes.goalId
-            const totalMonths = Math.ceil(selectedDuration / 30)
-
-            // 2. Generate task schedules in chunks sequentially to update client progress bar
-            for (let i = 0; i < totalMonths; i++) {
-                const startDay = i * 30 + 1
-                const endDay = Math.min((i + 1) * 30, selectedDuration)
-
-                await apiRequest('/api/plans/generate-tasks', {
-                    method: 'POST',
-                    body: JSON.stringify({
-                        goalId,
-                        startDay,
-                        endDay
-                    })
-                })
+            const { data: { user } } = await supabase.auth.getUser()
+            if (!user) {
+                Alert.alert('ERROR', 'You must be logged in to create a plan.')
+                return
             }
 
-            // 3. Track analytics event
-            track('plan_created', {
-                duration: selectedDuration,
-                difficulty: level
+            const levels = ['Beginner', 'Intermediate', 'Advanced']
+            const level = levels[levelIndex]
+
+            setPlanParams({
+                goal: trimmedTitle,
+                level: level,
+                dailyTime: dailyHours.toString() + ' hours',
+                style: selectedCategory,
+                userId: user.id
             })
-
-            // 4. Request notification permissions & schedule daily study reminder
-            try {
-                const granted = await requestNotificationPermissions()
-                if (granted) {
-                    // Fetch the count of tasks due today for this plan
-                    const todayStr = new Date().toISOString().split('T')[0]
-                    const { count } = await supabase
-                        .from('tasks')
-                        .select('*', { count: 'exact', head: true })
-                        .eq('goal_id', goalId)
-                        .eq('due_date', todayStr)
-
-                    const taskCount = count || 0
-                    await scheduleDailyStudyReminder(trimmedTitle, 1, taskCount, 8, 0)
-                }
-            } catch (notiErr) {
-                console.warn('Failed to register notifications:', notiErr)
-            }
-
-            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
-            setIsGenerating(false)
-
-            // Redirect directly to the newly created plan Specification screen
-            router.replace({
-                pathname: '/plan/[id]',
-                params: { id: goalId }
-            })
+            setIsGenerating(true)
         } catch (err: any) {
-            console.error('Error during AI plan generation:', err)
-            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error)
-            setIsGenerating(false)
-            
-            if (err.message === 'SUBSCRIBE_REQUIRED') {
-                Alert.alert(
-                    'PLAN LIMIT REACHED',
-                    'Free tier accounts are limited to one active study plan at a time. Upgrade to premium to unlock unlimited AI plan creation!',
-                    [
-                        { text: 'CANCEL', style: 'cancel' },
-                        { 
-                            text: 'UPGRADE NOW', 
-                            style: 'default',
-                            onPress: () => router.push('/modal/subscribe')
-                        }
-                    ]
-                )
-            } else {
-                setGenerationError(err.message || 'System failed to compose learning schedule.')
-            }
+            console.error('Error initiating generation:', err)
+            Alert.alert('ERROR', 'Failed to initiate plan generation.')
         }
     }
 
@@ -332,10 +260,40 @@ export default function CreatePlan() {
 
             <PlanGeneratorLoader
                 visible={isGenerating}
-                error={generationError}
+                planParams={planParams}
                 onDismiss={() => {
                     setIsGenerating(false)
-                    setGenerationError(null)
+                }}
+                onSuccess={async (goalId) => {
+                    setIsGenerating(false)
+                    try {
+                        const granted = await requestNotificationPermissions()
+                        if (granted) {
+                            const todayStr = new Date().toISOString().split('T')[0]
+                            const { count } = await supabase
+                                .from('tasks')
+                                .select('*', { count: 'exact', head: true })
+                                .eq('goal_id', goalId)
+                                .eq('due_date', todayStr)
+
+                            const taskCount = count || 0
+                            await scheduleDailyStudyReminder(title.trim(), 1, taskCount, 8, 0)
+                        }
+                    } catch (notiErr) {
+                        console.warn('Failed to register notifications:', notiErr)
+                    }
+
+                    const levels = ['Beginner', 'Intermediate', 'Advanced']
+                    const level = levels[levelIndex]
+                    track('plan_created', {
+                        duration: selectedDuration,
+                        difficulty: level
+                    })
+
+                    router.replace({
+                        pathname: '/plan/[id]',
+                        params: { id: goalId }
+                    })
                 }}
             />
         </KeyboardAvoidingView>

@@ -28,7 +28,7 @@ interface GoalWithTasks {
     }
 }
 
-export function GoalSection({ goal, selectedDate }: { goal: GoalWithTasks, selectedDate: string }) {
+export function GoalSection({ goal, selectedDate, isEnriching }: { goal: GoalWithTasks, selectedDate: string, isEnriching?: boolean }) {
     const { setTokens, setXp, setLevel, level } = useEconomy()
     const { t, locale } = useLanguage()
     
@@ -123,6 +123,7 @@ export function GoalSection({ goal, selectedDate }: { goal: GoalWithTasks, selec
                         isLocked={hasUnfinishedPredecessors}
                         isCrunch={isCrunchMode}
                         planLanguage={planLanguage}
+                        isEnriching={isEnriching}
                     />
                 ))}
 

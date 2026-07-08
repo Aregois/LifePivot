@@ -18,6 +18,7 @@ import { C, Gradients, Shadows, BorderRadius } from '../../constants/theme'
 import { FadeInView, GlassCard, PremiumButton, GradientText, GlowBadge, FloatingXp } from '../../components/ui'
 import { FileUploadSheet } from '../../components/FileUploadSheet'
 import { TaskInteractionSheet } from '../../components/TaskInteractionSheet'
+import { API_BASE_URL } from '../../utils/api'
 
 interface Task {
     id: string
@@ -27,6 +28,7 @@ interface Task {
     duration_mins?: number
     subject?: string
     notes?: string
+    subtasks?: any[]
 }
 
 const TOKEN_REWARD: Record<number, number> = {
@@ -51,6 +53,47 @@ export default function PlanDetail() {
     const [sheetVisible, setSheetVisible] = useState(false)
     const [animatingTaskId, setAnimatingTaskId] = useState<string | null>(null)
     const [animatingXpValue, setAnimatingXpValue] = useState<number>(0)
+    const [isEnriching, setIsEnriching] = useState(false)
+
+    // Trigger background enrichment for P3 tasks
+    useEffect(() => {
+        if (!id || tasks.length === 0) return
+
+        const hasPlaceholderP3 = tasks.some((t: any) => 
+            t.priority === 3 && 
+            (t.subtasks || []).some((st: any) => 
+                st.id !== 'translations' && 
+                (st.title?.toLowerCase().includes('practice exercise') || st.title?.toLowerCase().includes('placeholder'))
+            )
+        )
+
+        if (!hasPlaceholderP3 || isEnriching) return
+
+        setIsEnriching(true)
+
+        const timeoutId = setTimeout(() => {
+            setIsEnriching(false)
+            console.error('Enrichment timeout: /api/plans/enrich-p3 took more than 30s')
+        }, 30000)
+
+        fetch(`${API_BASE_URL}/api/plans/enrich-p3`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ planId: id })
+        })
+        .then(res => {
+            if (res.ok) {
+                fetchPlanData()
+            }
+        })
+        .catch(err => {
+            console.error('Error enriching mobile plan tasks:', err)
+        })
+        .finally(() => {
+            clearTimeout(timeoutId)
+            setIsEnriching(false)
+        })
+    }, [id, tasks.length])
 
     const fetchPlanData = async () => {
         try {
@@ -336,6 +379,11 @@ export default function PlanDetail() {
                                     >
                                         {task.title}
                                     </Text>
+                                    {task.priority === 3 && isEnriching && (
+                                        <Text style={{ fontSize: 9, color: C.electricBlue, fontWeight: '900', marginTop: 4, letterSpacing: 1 }}>
+                                            ⚡ ENRICHING YOUR PLAN...
+                                        </Text>
+                                    )}
                                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 4 }}>
                                         {task.subject && (
                                             <GlowBadge label={task.subject} colorScheme="violet" />

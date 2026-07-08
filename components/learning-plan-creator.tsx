@@ -7,12 +7,36 @@ import {
     Briefcase, Music, Scroll, Users, Dumbbell, Sparkles, ChevronLeft, Copy
 } from 'lucide-react'
 import { haptics } from '@/utils/haptics'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useLanguage } from '@/components/language-provider'
 import { LANGUAGE_NAMES } from '@/utils/translations'
 import { SubscribeModal } from './subscribe-modal'
 import { FileUploader } from './file-uploader'
+
+function TextTicker() {
+    const messages = [
+        "Analyzing your goal...",
+        "Structuring your 30-day plan...",
+        "Balancing difficulty tiers...",
+        "Adding Void Days for recovery...",
+        "Almost ready..."
+    ]
+    const [index, setIndex] = useState(0)
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setIndex((prev) => (prev + 1) % messages.length)
+        }, 1800)
+        return () => clearInterval(interval)
+    }, [])
+
+    return (
+        <p className="text-sm font-semibold text-electric-blue tracking-wide uppercase animate-pulse mt-4">
+            {messages[index]}
+        </p>
+    )
+}
 
 type Step = 'CATEGORY' | 'GOAL' | 'COMMITMENT' | 'GENERATING' | 'SUCCESS'
 
@@ -366,6 +390,7 @@ CRITICAL CONSTRAINTS:
 
                 if (chunkResult.error) {
                     setError(`Failed to generate Month ${i + 1}: ${chunkResult.error}`)
+                    return
                 }
 
                 setProgress(Math.round(((i + 1) / totalMonths) * 100))
@@ -376,7 +401,6 @@ CRITICAL CONSTRAINTS:
             setStatusText(t('creator.success'))
         } catch (err) {
             setError('A critical systems failure occurred.')
-            setStep('GOAL')
         }
     }
 
@@ -384,20 +408,48 @@ CRITICAL CONSTRAINTS:
         return (
             <div className="mb-12 glass-card rounded-3xl p-8 border border-white/10 bg-[#0B0D17]/80 backdrop-blur-3xl overflow-hidden relative">
                 <div className="absolute inset-0 bg-gradient-to-br from-electric-blue/10 to-neon-violet/10 pointer-events-none" />
-                <div className="relative z-10 flex flex-col items-center justify-center py-12 text-center">
-                    <Loader2 className="h-16 w-16 text-electric-blue animate-spin mb-6" />
-                    <h2 className="text-3xl font-black text-white mb-2 tracking-tighter uppercase italic">
-                        {statusText}
-                    </h2>
-                    <div className="w-full max-w-md bg-white/5 h-2 rounded-full mt-8 overflow-hidden">
-                        <div
-                            className="h-full bg-gradient-to-r from-electric-blue to-neon-violet transition-all duration-1000 ease-out shadow-[0_0_20px_rgba(0,240,255,0.5)]"
-                            style={{ width: `${progress}%` }}
-                        />
-                    </div>
-                    <p className="text-gray-400 mt-4 font-mono text-xs tracking-widest uppercase">
-                        {progress}% Complete
-                    </p>
+                <div className="relative z-10 flex flex-col items-center justify-center py-12 text-center w-full">
+                    {error ? (
+                        <>
+                            <div className="w-16 h-16 rounded-2xl bg-red-500/10 flex items-center justify-center border border-red-500/20 mb-6 shadow-[0_0_15px_rgba(239,68,68,0.1)]">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-8 h-8 text-red-400">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+                                </svg>
+                            </div>
+                            <h2 className="text-2xl font-black text-white mb-2 tracking-tighter uppercase italic">
+                                Generation Failed
+                            </h2>
+                            <p className="text-gray-400 text-sm max-w-md mb-8 leading-relaxed">
+                                {error}
+                            </p>
+                            <button
+                                onClick={() => {
+                                    setError(null)
+                                    setStep('GOAL')
+                                }}
+                                className="px-6 py-3.5 rounded-xl border border-white/10 text-white bg-white/5 font-black text-xs tracking-widest uppercase hover:bg-white hover:text-black transition-all duration-300 active:scale-95"
+                            >
+                                Back to Setup
+                            </button>
+                        </>
+                    ) : (
+                        <>
+                            <Loader2 className="h-16 w-16 text-electric-blue animate-spin mb-6" />
+                            <h2 className="text-3xl font-black text-white mb-2 tracking-tighter uppercase italic">
+                                {statusText}
+                            </h2>
+                            <TextTicker />
+                            <div className="w-full max-w-md bg-white/5 h-2 rounded-full mt-8 overflow-hidden">
+                                <div
+                                    className="h-full bg-gradient-to-r from-electric-blue to-neon-violet transition-all duration-1000 ease-out shadow-[0_0_20px_rgba(0,240,255,0.5)]"
+                                    style={{ width: `${progress}%` }}
+                                />
+                            </div>
+                            <p className="text-gray-400 mt-4 font-mono text-xs tracking-widest uppercase">
+                                {progress}% Complete
+                            </p>
+                        </>
+                    )}
                 </div>
             </div>
         )

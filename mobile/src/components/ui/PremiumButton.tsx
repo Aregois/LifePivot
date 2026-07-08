@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/immutability */
 import React, { useCallback, type ReactNode } from 'react';
 import {
   View,
@@ -13,8 +14,8 @@ import Animated, {
   withSpring,
 } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
-import * as Haptics from 'expo-haptics';
-import { C, Gradients, AnimationConfig, BorderRadius, Shadows } from '../../constants/theme';
+import { triggerHaptic } from '../../utils/haptics';
+import { C, AnimationConfig, BorderRadius, Shadows, Spacing, ComponentHeight, Typography } from '../../constants/theme';
 
 /* ────────────────────────────────────────────────────────────────────────── */
 /*  PremiumButton                                                            */
@@ -60,7 +61,7 @@ export function PremiumButton({
 
   const handlePress = useCallback(() => {
     if (disabled || loading) return;
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    triggerHaptic.medium();
     onPress();
   }, [disabled, loading, onPress]);
 
@@ -72,25 +73,25 @@ export function PremiumButton({
     primary: {},
     destructive: {
       borderWidth: 1,
-      borderColor: 'rgba(244, 63, 94, 0.2)',
-      backgroundColor: 'rgba(244, 63, 94, 0.05)',
+      borderColor: 'rgba(189, 0, 255, 0.2)', // Neon Violet
+      backgroundColor: 'rgba(189, 0, 255, 0.05)',
     },
     ghost: {
       borderWidth: 1,
-      borderColor: 'rgba(0, 240, 255, 0.2)',
+      borderColor: 'rgba(0, 240, 255, 0.2)', // Electric Blue
       backgroundColor: 'rgba(0, 240, 255, 0.10)',
     },
   };
 
   const textColors: Record<ButtonVariant, string> = {
-    primary: '#050508',
-    destructive: C.rose,
-    ghost: C.electricBlue,
+    primary: '#050508', // Obsidian
+    destructive: C.neonViolet, // Neon Violet
+    ghost: C.electricBlue, // Electric Blue
   };
 
   const spinnerColors: Record<ButtonVariant, string> = {
     primary: '#050508',
-    destructive: C.rose,
+    destructive: C.neonViolet,
     ghost: C.electricBlue,
   };
 
@@ -140,10 +141,10 @@ export function PremiumButton({
     >
       {variant === 'primary' ? (
         <LinearGradient
-          colors={[...Gradients.primaryButton]}
+          colors={[C.electricBlue, '#00D0FF']} // Custom premium Electric Blue gradient
           start={{ x: 0, y: 0.5 }}
           end={{ x: 1, y: 0.5 }}
-          style={[StyleSheet.absoluteFill, { borderRadius: BorderRadius.lg }]}
+          style={[StyleSheet.absoluteFill, { borderRadius: BorderRadius.xxl }]}
         />
       ) : null}
       {content}
@@ -153,9 +154,9 @@ export function PremiumButton({
 
 const styles = StyleSheet.create({
   container: {
-    borderRadius: BorderRadius.lg,
+    borderRadius: BorderRadius.xxl,
     overflow: 'hidden',
-    minHeight: 52,
+    minHeight: ComponentHeight.button,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -163,20 +164,20 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 24,
-    paddingVertical: 14,
+    paddingHorizontal: Spacing.four,
+    paddingVertical: Spacing.three,
   },
   label: {
+    ...Typography.body,
     fontWeight: '900',
-    fontSize: 14,
     letterSpacing: 2.5,
     textTransform: 'uppercase',
   },
   iconWrapper: {
-    marginRight: 8,
+    marginRight: Spacing.two,
   },
   spinner: {
-    marginVertical: 2,
+    marginVertical: Spacing.half,
   },
   disabled: {
     opacity: 0.45,
@@ -184,4 +185,3 @@ const styles = StyleSheet.create({
 });
 
 export default PremiumButton;
-

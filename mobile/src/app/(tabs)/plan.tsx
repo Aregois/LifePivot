@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { View, Text, ScrollView, ActivityIndicator } from 'react-native'
+import { View, Text, ScrollView, ActivityIndicator, Alert } from 'react-native'
 import { useRouter, useFocusEffect } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
 import { C, Shadows } from '../../constants/theme'
@@ -12,6 +12,7 @@ export default function PlanPortal() {
     const [activePlans, setActivePlans] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
     const [userLevel, setUserLevel] = useState<number>(1)
+    const [isSubscribed, setIsSubscribed] = useState(false)
     const [isGenerating, setIsGenerating] = useState(false)
     const [generationError, setGenerationError] = useState<string | null>(null)
 
@@ -28,14 +29,15 @@ export default function PlanPortal() {
                     setActivePlans(data)
                 }
 
-                // Fetch level to handle progressive lock checks
+                // Fetch level and subscription status to handle progressive lock checks
                 const { data: profile } = await supabase
                     .from('profiles')
-                    .select('level')
+                    .select('level, is_subscribed')
                     .eq('id', user.id)
                     .single()
                 if (profile) {
                     setUserLevel(profile.level)
+                    setIsSubscribed(!!profile.is_subscribed)
                 }
             }
         } catch (e) {
@@ -199,31 +201,61 @@ export default function PlanPortal() {
                     />
                 ) : (
                     <View style={{ gap: 12 }}>
-                        {activePlans.map((plan) => (
-                            <GlassCard
-                                key={plan.id}
-                                onPress={() => router.push({ pathname: '/plan/[id]', params: { id: plan.id } })}
-                                style={{
-                                    padding: 20,
-                                    flexDirection: 'row',
-                                    alignItems: 'center',
-                                    justifyContent: 'space-between',
-                                }}
-                            >
-                                <View style={{ flex: 1, marginRight: 12 }}>
-                                    <Text style={{ fontSize: 13, fontWeight: '900', color: '#FFFFFF', letterSpacing: 0.5, textTransform: 'uppercase' }} numberOfLines={1}>
-                                        {plan.title}
-                                    </Text>
-                                    <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 6 }}>
-                                        <GlowBadge label={`${plan.duration_days} DAYS`} colorScheme="blue" />
-                                        <Text style={{ fontSize: 9, color: C.textDim, marginLeft: 8 }}>
-                                            STARTED {new Date(plan.created_at).toLocaleDateString()}
+                        {activePlans.map((plan, index) => {
+                            const isPlanLocked = !isSubscribed && index > 0;
+                            return (
+                                <GlassCard
+                                    key={plan.id}
+                                    onPress={() => {
+                                        if (isPlanLocked) {
+                                            Alert.alert(
+                                                "Unlock Unlimited Plans",
+                                                "Upgrade to Solo Power to unlock all learning plans.",
+                                                [
+                                                    { text: "View Upgrades", onPress: () => router.push('/profile') },
+                                                    { text: "Cancel", style: "cancel" }
+                                                ]
+                                            );
+                                            return;
+                                        }
+                                        router.push({ pathname: '/plan/[id]', params: { id: plan.id } });
+                                    }}
+                                    style={{
+                                        padding: 20,
+                                        flexDirection: 'row',
+                                        alignItems: 'center',
+                                        justifyContent: 'space-between',
+                                        opacity: isPlanLocked ? 0.55 : 1,
+                                    }}
+                                >
+                                    <View style={{ flex: 1, marginRight: 12 }}>
+                                        <Text style={{ fontSize: 13, fontWeight: '900', color: '#FFFFFF', letterSpacing: 0.5, textTransform: 'uppercase' }} numberOfLines={1}>
+                                            {plan.title}
                                         </Text>
+                                        <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 6 }}>
+                                            <GlowBadge label={`${plan.duration_days} DAYS`} colorScheme="blue" />
+                                            {isPlanLocked ? (
+                                                <View style={{ flexDirection: 'row', alignItems: 'center', marginLeft: 8 }}>
+                                                    <Ionicons name="lock-closed" size={10} color="#BD00FF" />
+                                                    <Text style={{ fontSize: 9, color: '#BD00FF', marginLeft: 4, fontWeight: 'bold' }}>
+                                                        PRO REQUIRED
+                                                    </Text>
+                                                </View>
+                                            ) : (
+                                                <Text style={{ fontSize: 9, color: C.textDim, marginLeft: 8 }}>
+                                                    STARTED {new Date(plan.created_at).toLocaleDateString()}
+                                                </Text>
+                                            )}
+                                        </View>
                                     </View>
-                                </View>
-                                <Ionicons name="chevron-forward" size={18} color={C.electricBlue} />
-                            </GlassCard>
-                        ))}
+                                    <Ionicons 
+                                        name={isPlanLocked ? "lock-closed" : "chevron-forward"} 
+                                        size={18} 
+                                        color={isPlanLocked ? "#BD00FF" : C.electricBlue} 
+                                    />
+                                </GlassCard>
+                            );
+                        })}
                     </View>
                 )}
             </FadeInView>

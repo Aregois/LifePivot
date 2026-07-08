@@ -1,6 +1,9 @@
+import React, { useState, useEffect } from 'react';
 import { Tabs } from 'expo-router';
-import { Platform } from 'react-native';
+import { Platform, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import * as Haptics from 'expo-haptics';
+import { supabase } from '../../utils/supabase';
 
 /* ────────────────────────────────────────────────────────────────────────── */
 /*  Tab icon map                                                              */
@@ -12,6 +15,7 @@ const TAB_ICONS: Record<
 > = {
   index: { active: 'home', inactive: 'home-outline' },
   plan: { active: 'book', inactive: 'book-outline' },
+  calendar: { active: 'calendar', inactive: 'calendar-outline' },
   shop: { active: 'storefront', inactive: 'storefront-outline' },
   profile: { active: 'person', inactive: 'person-outline' },
 };
@@ -21,6 +25,23 @@ const TAB_ICONS: Record<
 /* ────────────────────────────────────────────────────────────────────────── */
 
 export default function TabsLayout() {
+  const [level, setLevel] = useState<number>(2);
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user) {
+        supabase
+          .from('profiles')
+          .select('level')
+          .eq('id', user.id)
+          .single()
+          .then(({ data }) => {
+            if (data) setLevel(data.level);
+          });
+      }
+    });
+  }, []);
+
   return (
     <Tabs
       screenOptions={({ route }) => ({
@@ -92,9 +113,24 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
+        name="calendar"
+        options={{
+          title: 'CALENDAR',
+        }}
+      />
+      <Tabs.Screen
         name="shop"
         options={{
           title: 'EXCHANGE',
+        }}
+        listeners={{
+          tabPress: (e) => {
+            if (level < 2) {
+              e.preventDefault();
+              Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+              Alert.alert('FEATURE LOCKED', 'Reach Level 2 to unlock the Exchange Store.');
+            }
+          },
         }}
       />
       <Tabs.Screen

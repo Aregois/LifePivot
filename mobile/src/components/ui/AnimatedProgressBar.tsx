@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, type DimensionValue } from 'react-native';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -7,7 +7,7 @@ import Animated, {
   withSpring,
 } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
-import { C, Gradients, AnimationConfig, BorderRadius, Shadows } from '../../constants/theme';
+import { C, Gradients, AnimationConfig, Shadows } from '../../constants/theme';
 
 /* ────────────────────────────────────────────────────────────────────────── */
 /*  AnimatedProgressBar                                                      */
@@ -21,12 +21,9 @@ interface AnimatedProgressBarProps {
   height?: number;
   /** Gradient colors for the fill */
   colors?: readonly string[];
-
   /** Delay before animation starts (ms) */
   delay?: number;
 }
-
-const AnimatedLinearGradient = Animated.createAnimatedComponent(LinearGradient);
 
 export function AnimatedProgressBar({
   progress,
@@ -45,7 +42,7 @@ export function AnimatedProgressBar({
   }, [clampedProgress, delay, widthPercent]);
 
   const fillStyle = useAnimatedStyle(() => ({
-    width: `${widthPercent.value * 100}%` as any,
+    width: `${widthPercent.value * 100}%` as DimensionValue,
   }));
 
   return (
@@ -59,7 +56,7 @@ export function AnimatedProgressBar({
         ]}
       >
         <LinearGradient
-          colors={colors as any}
+          colors={colors as readonly [string, string, ...string[]]}
           start={{ x: 0, y: 0.5 }}
           end={{ x: 1, y: 0.5 }}
           style={[StyleSheet.absoluteFill, { borderRadius: height / 2 }]}
@@ -71,10 +68,9 @@ export function AnimatedProgressBar({
 
 export default AnimatedProgressBar;
 
-
 const styles = StyleSheet.create({
   track: {
-    backgroundColor: C.surface,
+    backgroundColor: C.background,
     overflow: 'hidden',
     borderWidth: 1,
     borderColor: C.glassBorderSubtle,

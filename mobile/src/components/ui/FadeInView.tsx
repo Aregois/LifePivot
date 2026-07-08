@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/immutability */
 import React, { useEffect } from 'react';
 import Animated, {
   useSharedValue,
@@ -35,7 +36,7 @@ export function FadeInView({
       delay,
       withTiming(0, { duration, easing: Easing.out(Easing.cubic) }),
     );
-  }, []);
+  }, [delay, duration, opacity, translateY]);
 
   const animatedStyle = useAnimatedStyle(() => ({
     opacity: opacity.value,

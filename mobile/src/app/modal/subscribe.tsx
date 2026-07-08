@@ -40,8 +40,37 @@ export default function SubscribeModal() {
     }
 
     return (
-        <ScrollView contentContainerStyle={{ padding: 24, paddingBottom: 48, justifyContent: 'space-between', minHeight: '100%' }} style={{ flex: 1, backgroundColor: '#050508' }}>
-            <View>
+        <View style={{ flex: 1, backgroundColor: '#050508' }}>
+            {/* Background Ambient Glows */}
+            <View
+              pointerEvents="none"
+              style={{
+                position: 'absolute',
+                top: -100,
+                right: -100,
+                width: 320,
+                height: 320,
+                borderRadius: 160,
+                backgroundColor: '#00F0FF',
+                opacity: 0.05,
+              }}
+            />
+            <View
+              pointerEvents="none"
+              style={{
+                position: 'absolute',
+                bottom: 120,
+                left: -100,
+                width: 320,
+                height: 320,
+                borderRadius: 160,
+                backgroundColor: '#BD00FF',
+                opacity: 0.05,
+              }}
+            />
+
+            <ScrollView contentContainerStyle={{ padding: 24, paddingBottom: 48, justifyContent: 'space-between', minHeight: '100%' }} style={{ flex: 1 }}>
+                <View>
                 {/* Header title */}
                 <FadeInView delay={0} style={{ alignItems: 'center', marginBottom: 24 }}>
                     <View style={{ backgroundColor: 'rgba(189, 0, 255, 0.05)', padding: 14, borderRadius: 20, borderWidth: 1, borderColor: 'rgba(189, 0, 255, 0.15)', marginBottom: 12 }}>
@@ -75,7 +104,7 @@ export default function SubscribeModal() {
                                 <Text style={{ fontSize: 11, fontWeight: '900', color: '#FFFFFF', letterSpacing: 0.5, textTransform: 'uppercase' }}>
                                     UNLIMITED ACTIVE PLANS
                                 </Text>
-                                <Text style={{ fontSize: 9, color: C.textMuted, marginTop: 2, textTransform: 'uppercase', letterSpacing: 0.5, lineHeight: 13 }}>
+                                <Text style={{ fontSize: 9, color: C.textSecondary, marginTop: 2, textTransform: 'uppercase', letterSpacing: 0.5, lineHeight: 13 }}>
                                     TRACK MULTIPLE CURRICULUMS CONCURRENTLY (STANDARD LIMIT: 1 ACTIVE PLAN)
                                 </Text>
                             </View>
@@ -87,7 +116,7 @@ export default function SubscribeModal() {
                                 <Text style={{ fontSize: 11, fontWeight: '900', color: '#FFFFFF', letterSpacing: 0.5, textTransform: 'uppercase' }}>
                                     NEON GLOW CUSTOMIZATIONS
                                 </Text>
-                                <Text style={{ fontSize: 9, color: C.textMuted, marginTop: 2, textTransform: 'uppercase', letterSpacing: 0.5, lineHeight: 13 }}>
+                                <Text style={{ fontSize: 9, color: C.textSecondary, marginTop: 2, textTransform: 'uppercase', letterSpacing: 0.5, lineHeight: 13 }}>
                                     IRIDESCENT PROFILE BORDERS FOR YOUR REACTIVE AVATAR MONOGRAM
                                 </Text>
                             </View>
@@ -99,7 +128,7 @@ export default function SubscribeModal() {
                                 <Text style={{ fontSize: 11, fontWeight: '900', color: '#FFFFFF', letterSpacing: 0.5, textTransform: 'uppercase' }}>
                                     EXCLUSIVE SYNTH SOUNDSCAPES
                                 </Text>
-                                <Text style={{ fontSize: 9, color: C.textMuted, marginTop: 2, textTransform: 'uppercase', letterSpacing: 0.5, lineHeight: 13 }}>
+                                <Text style={{ fontSize: 9, color: C.textSecondary, marginTop: 2, textTransform: 'uppercase', letterSpacing: 0.5, lineHeight: 13 }}>
                                     UNLOCK ADVANCED WEB AUDIO OSCILLATORS (Zen Rain, Pink Noise)
                                 </Text>
                             </View>
@@ -128,7 +157,7 @@ export default function SubscribeModal() {
                             <Text style={{ fontSize: 12, fontWeight: '900', color: '#FFFFFF', letterSpacing: 0.5, textTransform: 'uppercase' }}>
                                 MONTHLY SUB
                             </Text>
-                            <Text style={{ fontSize: 9, color: C.textMuted, marginTop: 2, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                            <Text style={{ fontSize: 9, color: C.textSecondary, marginTop: 2, textTransform: 'uppercase', letterSpacing: 0.5 }}>
                                 CANCEL ANYTIME
                             </Text>
                         </View>
@@ -183,5 +212,6 @@ export default function SubscribeModal() {
                 />
             </FadeInView>
         </ScrollView>
+      </View>
     )
 }
