@@ -2,11 +2,6 @@ import Stripe from 'stripe'
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient as createSupabaseAdmin } from '@supabase/supabase-js'
 
-// IMPORTANT: Stripe signature verification requires the raw, unparsed request body.
-// Disabling Next.js body parsing here is mandatory — do NOT remove this export.
-export const config = {
-    api: { bodyParser: false },
-}
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
     apiVersion: '2026-06-24.dahlia',
