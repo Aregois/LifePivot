@@ -2,7 +2,7 @@
 
 import { useMemo, useLayoutEffect, useEffect, useRef, useState, useCallback } from 'react'
 import Link from 'next/link'
-import { Calendar } from 'lucide-react'
+import { Calendar, ChevronLeft, ChevronRight } from 'lucide-react'
 import { getLocalDateString, getSunday } from '@/utils/date-utils'
 import { haptics } from '@/utils/haptics'
 import { useLanguage } from './language-provider'
@@ -128,6 +128,26 @@ export function DateSelector({ selectedDate, onSelectDate }: DateSelectorProps) 
         }, 120)
     }, [])
 
+    const prevWeek = useCallback(() => {
+        haptics.light()
+        isAdjusting.current = true
+        setBaseDate(prev => {
+            const next = new Date(prev)
+            next.setDate(prev.getDate() - 7)
+            return next
+        })
+    }, [])
+
+    const nextWeek = useCallback(() => {
+        haptics.light()
+        isAdjusting.current = true
+        setBaseDate(prev => {
+            const next = new Date(prev)
+            next.setDate(prev.getDate() + 7)
+            return next
+        })
+    }, [])
+
     return (
         <div className="w-full py-4 flex flex-col gap-4 select-none overflow-hidden bg-transparent">
             {/* Header: Month & View All */}
@@ -149,76 +169,99 @@ export function DateSelector({ selectedDate, onSelectDate }: DateSelectorProps) 
                 </Link>
             </div>
 
-            {/* Week strip with snap scrolling */}
-            <div
-                ref={scrollRef}
-                onScroll={handleScroll}
-                className="w-full overflow-x-auto no-scrollbar snap-x snap-mandatory overscroll-x-contain"
-                style={{ WebkitOverflowScrolling: 'touch', touchAction: 'pan-x' }}
-            >
-                <div className="flex">
-                    {weeks.map((week, wIdx) => (
-                        <div
-                            key={wIdx}
-                            className="w-full shrink-0 snap-start px-4 box-border"
-                        >
-                            <div className="grid grid-cols-7 gap-1 w-full">
-                                {week.map((d) => {
-                                    const isSelected = selectedDate === d.fullDate
+            {/* Week strip with snap scrolling + prev/next arrows */}
+            <div className="flex items-center gap-1 px-2">
+                {/* Prev week button */}
+                <button
+                    type="button"
+                    onClick={prevWeek}
+                    aria-label="Previous week"
+                    className="shrink-0 w-8 h-8 flex items-center justify-center rounded-xl bg-[#1C2033]/60 border border-white/5 text-gray-500 hover:text-white hover:bg-white/10 active:scale-90 transition-all"
+                >
+                    <ChevronLeft className="w-4 h-4" />
+                </button>
 
-                                    return (
-                                        <button
-                                            key={d.fullDate}
-                                            type="button"
-                                            onClick={() => {
-                                                haptics.medium()
-                                                onSelectDate(d.fullDate)
-                                            }}
-                                            className="flex flex-col items-center justify-center py-2 bg-transparent border-none outline-none"
-                                            style={{ touchAction: 'manipulation' }}
-                                        >
-                                            {/* 
-                                              relative is ALWAYS on so the today-dot 
-                                              has a positioned ancestor at all times 
-                                            */}
-                                            <div
-                                                className={[
-                                                    'relative flex flex-col items-center justify-center',
-                                                    'w-full aspect-[1/1.5] max-w-[54px] rounded-[24px]',
-                                                    'border cursor-pointer',
-                                                    'transition-[background-color,border-color,box-shadow] duration-150',
-                                                    'active:scale-90',
-                                                    isSelected
-                                                        ? 'bg-[#00FFFF] border-[#00FFFF] shadow-[0_0_16px_rgba(0,255,255,0.35)]'
-                                                        : 'bg-[#1C2033]/50 border-white/5 hover:bg-[#1C2033]',
-                                                ].join(' ')}
+                <div
+                    ref={scrollRef}
+                    onScroll={handleScroll}
+                    className="flex-1 overflow-x-auto no-scrollbar snap-x snap-mandatory overscroll-x-contain"
+                    style={{ WebkitOverflowScrolling: 'touch', touchAction: 'pan-x' }}
+                >
+                    <div className="flex">
+                        {weeks.map((week, wIdx) => (
+                            <div
+                                key={wIdx}
+                                className="w-full shrink-0 snap-start px-2 box-border"
+                            >
+                                <div className="grid grid-cols-7 gap-1 w-full">
+                                    {week.map((d) => {
+                                        const isSelected = selectedDate === d.fullDate
+
+                                        return (
+                                            <button
+                                                key={d.fullDate}
+                                                type="button"
+                                                onClick={() => {
+                                                    haptics.medium()
+                                                    onSelectDate(d.fullDate)
+                                                }}
+                                                className="flex flex-col items-center justify-center py-2 bg-transparent border-none outline-none"
+                                                style={{ touchAction: 'manipulation' }}
                                             >
-                                                <span
-                                                    className={`text-[10px] font-bold uppercase tracking-wider mb-1 pointer-events-none ${isSelected ? 'text-black/60' : 'text-gray-500'
-                                                        }`}
+                                                {/* 
+                                                  relative is ALWAYS on so the today-dot 
+                                                  has a positioned ancestor at all times 
+                                                */}
+                                                <div
+                                                    className={[
+                                                        'relative flex flex-col items-center justify-center',
+                                                        'w-full aspect-[1/1.5] max-w-[54px] rounded-[24px]',
+                                                        'border cursor-pointer',
+                                                        'transition-[background-color,border-color,box-shadow] duration-150',
+                                                        'active:scale-90',
+                                                        isSelected
+                                                            ? 'bg-[#00FFFF] border-[#00FFFF] shadow-[0_0_16px_rgba(0,255,255,0.35)]'
+                                                            : 'bg-[#1C2033]/50 border-white/5 hover:bg-[#1C2033]',
+                                                    ].join(' ')}
                                                 >
-                                                    {d.dayStr}
-                                                </span>
-                                                <span
-                                                    className={`text-xl font-black pointer-events-none ${isSelected ? 'text-black' : 'text-white'
-                                                        }`}
-                                                >
-                                                    {d.num}
-                                                </span>
+                                                    <span
+                                                        className={`text-[10px] font-bold uppercase tracking-wider mb-1 pointer-events-none ${isSelected ? 'text-black/60' : 'text-gray-500'
+                                                            }`}
+                                                    >
+                                                        {d.dayStr}
+                                                    </span>
+                                                    <span
+                                                        className={`text-xl font-black pointer-events-none ${isSelected ? 'text-black' : 'text-white'
+                                                            }`}
+                                                    >
+                                                        {d.num}
+                                                    </span>
 
-                                                {/* Today dot — always has a relative parent now */}
-                                                {d.isToday && !isSelected && (
-                                                    <div className="absolute -bottom-1 w-1.5 h-1.5 rounded-full bg-[#00FFFF] shadow-[0_0_8px_rgba(0,255,255,0.8)] pointer-events-none" />
-                                                )}
-                                            </div>
-                                        </button>
-                                    )
-                                })}
+                                                    {/* Today dot — always has a relative parent now */}
+                                                    {d.isToday && !isSelected && (
+                                                        <div className="absolute -bottom-1 w-1.5 h-1.5 rounded-full bg-[#00FFFF] shadow-[0_0_8px_rgba(0,255,255,0.8)] pointer-events-none" />
+                                                    )}
+                                                </div>
+                                            </button>
+                                        )
+                                    })}
+                                </div>
                             </div>
-                        </div>
-                    ))}
+                        ))}
+                    </div>
                 </div>
+
+                {/* Next week button */}
+                <button
+                    type="button"
+                    onClick={nextWeek}
+                    aria-label="Next week"
+                    className="shrink-0 w-8 h-8 flex items-center justify-center rounded-xl bg-[#1C2033]/60 border border-white/5 text-gray-500 hover:text-white hover:bg-white/10 active:scale-90 transition-all"
+                >
+                    <ChevronRight className="w-4 h-4" />
+                </button>
             </div>
         </div >
     )
 }
+
