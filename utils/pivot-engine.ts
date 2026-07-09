@@ -164,20 +164,25 @@ export async function executeAlgorithmicSlide(goalId: string, userId: string) {
 
     // Exclude overdue tasks from the ripple so they don't get shifted
     const overdueIds = overdueTasks.map(t => t.id);
+    const overdueIdSet = new Set(overdueIds);
 
-    // Iterate backwards to avoid collisions during the shift
-    for (let i = datesToShift.length - 1; i >= 0; i--) {
+    // Build the date-shift map in memory (O(n), zero DB calls)
+    // Maps each date to the next date it should shift into
+    const dateShiftMap = new Map<string, string>();
+    for (let i = 0; i < datesToShift.length; i++) {
         const currentDate = datesToShift[i];
-        const nextDate = (i === datesToShift.length - 1) ? nearestVoidDate : datesToShift[i + 1];
+        const nextDate = (i === datesToShift.length - 1) ? nearestVoidDate! : datesToShift[i + 1];
+        dateShiftMap.set(currentDate, nextDate);
+    }
 
-        PIVOT_TRACE.log('TIER_1', `Shifting tasks from ${currentDate} to ${nextDate}`);
+    // Apply the shift to all future tasks in memory, excluding overdue and void tasks
+    const tasksToUpsert = futureTasks
+        .filter(t => t.id !== voidTask.id && !overdueIdSet.has(t.id) && dateShiftMap.has(t.due_date))
+        .map(t => ({ ...t, due_date: dateShiftMap.get(t.due_date)! }));
 
-        await supabase
-            .from('tasks')
-            .update({ due_date: nextDate })
-            .eq('goal_id', goalId)
-            .eq('due_date', currentDate)
-            .not('id', 'in', `(${overdueIds.join(',')})`);
+    if (tasksToUpsert.length > 0) {
+        PIVOT_TRACE.log('TIER_1', `Bulk upserting ${tasksToUpsert.length} tasks in a single DB call`);
+        await supabase.from('tasks').upsert(tasksToUpsert);
     }
 
     // 4c. Now move overdue tasks to today (after ripple, so they won't be shifted)

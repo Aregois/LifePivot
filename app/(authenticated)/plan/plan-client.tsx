@@ -9,11 +9,9 @@ import { LearningPlanCreator } from '@/components/learning-plan-creator'
 import { ResetPlanButton } from '@/components/reset-plan-button'
 import { PlanProgressCard } from '@/components/plan-progress-card'
 import { getLocalDateString } from '@/utils/date-utils'
-import { List, Network, Users, Compass, Paperclip, ArrowRight, ChevronLeft, ChevronRight, Plus, Lock, Crown, AlertTriangle, Library } from 'lucide-react'
+import { Users, Compass, Paperclip, ArrowRight, ChevronLeft, ChevronRight, Plus, Lock, Crown, AlertTriangle, Library } from 'lucide-react'
 import Link from 'next/link'
-import { MindMap } from '@/components/mind-map'
 import { haptics } from '@/utils/haptics'
-import { useEconomy } from '@/components/economy-provider'
 import { useLanguage } from '@/components/language-provider'
 import { translateGoalsArray } from '@/utils/translations'
 import { FileUploader } from '@/components/file-uploader'
@@ -34,8 +32,6 @@ export function PlanClient({ user, goals, goalsError, isSubscribed, subscription
     const urlDate = searchParams.get('date')
 
     const [selectedDate, setSelectedDate] = useState(urlDate || getLocalDateString())
-    const [viewMode, setViewMode] = useState<'list' | 'map'>('list')
-    const { setTokens } = useEconomy()
     const { t, locale } = useLanguage()
     const [materialsOpen, setMaterialsOpen] = useState<Record<string, boolean>>({})
     const [activePlanIndex, setActivePlanIndex] = useState(0)
@@ -63,7 +59,6 @@ export function PlanClient({ user, goals, goalsError, isSubscribed, subscription
     const activeGoal = visibleGoals?.[activePlanIndex] ?? null
 
     const toggleMaterials = (goalId: string) => {
-        setViewMode('list')
         setMaterialsOpen(prev => ({
             ...prev,
             [goalId]: !prev[goalId]
@@ -357,48 +352,17 @@ export function PlanClient({ user, goals, goalsError, isSubscribed, subscription
                 )}
             </AnimatePresence>
 
-            {/* ── View header (only when a plan is active and not adding) ──────── */}
+            {/* ── View header ─────────────────────────────────────────────────── */}
             {!goalsError && !showAddPlan && activeGoal && (
-                <div className="flex items-center justify-between px-6 pb-2">
+                <div className="flex items-center px-6 pb-2">
                     <div className="flex flex-col">
                         <h2 className="text-2xl lg:text-3xl font-extrabold text-white tracking-tight">
-                            {viewMode === 'list' ? t('plan.todays_focus') : t('plan.learning_map')}
+                            {t('plan.todays_focus')}
                         </h2>
                         <span className="text-sm text-gray-400 mt-1">
-                            {viewMode === 'list'
-                                ? t('plan.sessions_remaining').replace('{count}', totalRemaining.toString())
-                                : t('plan.interactive_roadmap')}
+                            {t('plan.sessions_remaining').replace('{count}', totalRemaining.toString())}
                         </span>
                     </div>
-
-                    {/* View switcher Segment Control */}
-                    <div className="bg-[#141824] p-1 rounded-2xl border border-white/5 flex gap-0.5 shadow-md">
-                        <button
-                            onClick={() => { haptics.light(); setViewMode('list') }}
-                            className={`p-2 lg:px-4 rounded-xl transition-all active:scale-90 flex items-center gap-2 ${viewMode === 'list' ? 'bg-electric-blue/15 text-electric-blue border border-electric-blue/20' : 'text-gray-500 hover:text-gray-300 border border-transparent'}`}
-                            title="List View"
-                        >
-                            <List className="w-4 h-4" />
-                            <span className="hidden md:inline text-xs font-bold uppercase tracking-wider">{t('plan.list_view')}</span>
-                        </button>
-                        <button
-                            onClick={() => { haptics.light(); setViewMode('map') }}
-                            className={`p-2 lg:px-4 rounded-xl transition-all active:scale-90 flex items-center gap-2 ${viewMode === 'map' ? 'bg-electric-blue/15 text-electric-blue border border-electric-blue/20' : 'text-gray-500 hover:text-gray-300 border border-transparent'}`}
-                            title="Mind Map View"
-                        >
-                            <Network className="w-4 h-4" />
-                            <span className="hidden md:inline text-xs font-bold uppercase tracking-wider">{t('plan.map_view')}</span>
-                        </button>
-                    </div>
-                </div>
-            )}
-
-            {!goalsError && activeGoal && viewMode === 'list' && !showAddPlan && (
-                <div className="px-6">
-                    <DateSelector
-                        selectedDate={selectedDate}
-                        onSelectDate={handleSelectDate}
-                    />
                 </div>
             )}
 
@@ -429,64 +393,62 @@ export function PlanClient({ user, goals, goalsError, isSubscribed, subscription
 
                 {/* Active plan content */}
                 {!goalsError && !showAddPlan && activeGoal && (
-                    viewMode === 'list' ? (
-                        <div className="flex flex-col xl:flex-row gap-8 w-full items-start">
-                            {/* Left Column: Progress Card */}
-                            <div className="flex-1 min-w-0 w-full">
-                                <PlanProgressCard
-                                    goalTitle={activeGoal.title}
-                                    createdAt={activeGoal.created_at}
-                                    durationDays={activeGoal.duration_days}
-                                    tasks={activeGoal.tasks}
+                    <div className="flex flex-col xl:flex-row gap-8 w-full items-start">
+                        {/* Left Column (main): Date Selector + Task List */}
+                        <div className="flex-1 min-w-0 w-full space-y-6">
+                            {/* Date Selector */}
+                            <DateSelector
+                                selectedDate={selectedDate}
+                                onSelectDate={handleSelectDate}
+                            />
+                            {/* Goal Section / Tasks */}
+                            <div className="bg-[#141824]/60 border border-white/5 p-6 rounded-[2.5rem] glass-card">
+                                <GoalSection
+                                    goal={activeGoal as any}
+                                    selectedDate={selectedDate}
+                                    isEnriching={isEnriching}
                                 />
                             </div>
-                            {/* Right Column: Goal Section / Tasks */}
-                            <div className="w-full xl:w-[450px] shrink-0 xl:sticky xl:top-24 space-y-6">
-                                <div className="bg-[#141824]/60 border border-white/5 p-6 rounded-[2.5rem] glass-card">
-                                    <GoalSection
-                                        goal={activeGoal as any}
-                                        selectedDate={selectedDate}
-                                        isEnriching={isEnriching}
-                                    />
-                                </div>
-
-                                {/* Study Materials Section */}
-                                <div className="bg-[#141824]/60 border border-white/5 p-6 rounded-[2.5rem] glass-card">
-                                    <button
-                                        onClick={() => { haptics.light(); toggleMaterials(activeGoal.id) }}
-                                        className="flex items-center gap-2 w-full text-left"
-                                    >
-                                        <Paperclip className="w-4 h-4 text-electric-blue" />
-                                        <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Study Materials</span>
-                                        <span className="ml-auto text-[10px] text-gray-500">{materialsOpen[activeGoal.id] ? '▲' : '▼'}</span>
-                                    </button>
-                                    <AnimatePresence>
-                                        {materialsOpen[activeGoal.id] && (
-                                            <motion.div
-                                                initial={{ opacity: 0, height: 0, marginTop: 0 }}
-                                                animate={{ opacity: 1, height: 'auto', marginTop: 16 }}
-                                                exit={{ opacity: 0, height: 0, marginTop: 0 }}
-                                                className="overflow-hidden"
-                                            >
-                                                <FileUploader planId={activeGoal.id} maxFiles={5} />
-                                            </motion.div>
-                                        )}
-                                    </AnimatePresence>
-                                </div>
+                        </div>
+                        {/* Right Column (sidebar): Plan Overview + Study Materials */}
+                        <div className="w-full xl:w-[400px] shrink-0 xl:sticky xl:top-24 space-y-6">
+                            {/* Plan Overview label */}
+                            <p className="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] px-1 hidden xl:block">Plan Overview</p>
+                            <PlanProgressCard
+                                goalTitle={activeGoal.title}
+                                createdAt={activeGoal.created_at}
+                                durationDays={activeGoal.duration_days}
+                                tasks={activeGoal.tasks}
+                            />
+                            {/* Study Materials Section */}
+                            <div className="bg-[#141824]/60 border border-white/5 p-6 rounded-[2.5rem] glass-card">
+                                <button
+                                    onClick={() => { haptics.light(); toggleMaterials(activeGoal.id) }}
+                                    className="flex items-center gap-2 w-full text-left"
+                                >
+                                    <Paperclip className="w-4 h-4 text-electric-blue" />
+                                    <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Study Materials</span>
+                                    <span className="ml-auto text-[10px] text-gray-500">{materialsOpen[activeGoal.id] ? '▲' : '▼'}</span>
+                                </button>
+                                <AnimatePresence>
+                                    {materialsOpen[activeGoal.id] && (
+                                        <motion.div
+                                            initial={{ opacity: 0, height: 0, marginTop: 0 }}
+                                            animate={{ opacity: 1, height: 'auto', marginTop: 16 }}
+                                            exit={{ opacity: 0, height: 0, marginTop: 0 }}
+                                            className="overflow-hidden"
+                                        >
+                                            <FileUploader planId={activeGoal.id} maxFiles={5} />
+                                        </motion.div>
+                                    )}
+                                </AnimatePresence>
                             </div>
                         </div>
-                    ) : (
-                        <div className="w-full h-[600px] lg:h-[800px] border border-white/5 rounded-[2.5rem] overflow-hidden bg-[#141824]/30 p-4 sm:p-6">
-                            <MindMap
-                                goal={activeGoal}
-                                onOptimisticTokenUpdate={(delta) => setTokens(prev => Math.max(0, prev + delta))}
-                            />
-                        </div>
-                    )
+                    </div>
                 )}
 
                 {/* Reset plan (only when there's an active plan visible) */}
-                {!goalsError && !showAddPlan && activeGoal && viewMode === 'list' && (
+                {!goalsError && !showAddPlan && activeGoal && (
                     <div className="pt-12 pb-8 border-t border-white/5 flex flex-col items-center mt-8">
                         <p className="text-xs text-gray-500 mb-4 uppercase tracking-widest font-bold">{t('profile.danger')}</p>
                         <ResetPlanButton />

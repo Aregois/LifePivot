@@ -1094,13 +1094,16 @@ async function executeAvalanche(goalId: string, userId: string) {
         .eq('status', 'pending')
         .lt('due_date', todayStr);
 
-    if (overdue) {
-        for (const t of overdue) {
-            await supabase
-                .from('tasks')
-                .update({ due_date: todayStr, pivoted_count: (t.pivoted_count || 0) + 1 })
-                .eq('id', t.id);
-        }
+    if (overdue && overdue.length > 0) {
+        const overdueIds = overdue.map(t => t.id);
+        // Find the max pivoted_count among overdue tasks and increment uniformly
+        const maxPivotedCount = Math.max(...overdue.map(t => t.pivoted_count || 0));
+
+        // Single bulk update: all overdue tasks moved to today in one DB call
+        await supabase
+            .from('tasks')
+            .update({ due_date: todayStr, pivoted_count: maxPivotedCount + 1 })
+            .in('id', overdueIds);
     }
     PIVOT_TRACE.log('TIER_3', 'Avalanche Complete. Tasks stacked on today.');
 }
