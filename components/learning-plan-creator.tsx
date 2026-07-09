@@ -187,6 +187,15 @@ const CATEGORIES: CategoryItem[] = [
     }
 ]
 
+const COMMITMENT_PRESETS = [
+    { value: 0.25, label: '15 min', sub: 'Casual' },
+    { value: 0.5,  label: '30 min', sub: 'Daily habit' },
+    { value: 1,    label: '1 hour',  sub: 'Focused' },
+    { value: 1.5,  label: '90 min',  sub: 'Serious' },
+    { value: 2,    label: '2 hours', sub: 'Deep work' },
+    { value: 3,    label: '3 hours', sub: 'Intensive' },
+]
+
 export function LearningPlanCreator() {
     const { t, locale } = useLanguage()
     const [step, setStep] = useState<Step>('CATEGORY')
@@ -197,7 +206,7 @@ export function LearningPlanCreator() {
     const [level, setLevel] = useState('Beginner')
     const [intent, setIntent] = useState<'Exam' | 'Level Up' | 'Intro'>('Level Up')
     const [sprintWalls, setSprintWalls] = useState<{ date: string; label: string }[]>([])
-    const [commitment, setCommitment] = useState(10)
+    const [commitment, setCommitment] = useState(1)
     const [progress, setProgress] = useState(0)
     const [statusText, setStatusText] = useState('')
     const [error, setError] = useState<string | null>(null)
@@ -483,47 +492,41 @@ CRITICAL CONSTRAINTS:
     }
 
     return (
-        <div className="mb-12 relative group rounded-3xl glass p-[1px] overflow-hidden transition-all duration-500 hover:shadow-[0_0_60px_rgba(0,240,255,0.15)]">
-            <div className="absolute inset-0 bg-gradient-to-r from-neon-violet via-electric-blue to-soft-cyan opacity-10 group-hover:opacity-30 transition-opacity duration-700 pointer-events-none" />
+        <div className="relative group rounded-2xl glass p-[1px] overflow-hidden transition-all duration-500 hover:shadow-[0_0_40px_rgba(0,240,255,0.1)]">
+            <div className="absolute inset-0 bg-gradient-to-r from-neon-violet via-electric-blue to-soft-cyan opacity-10 group-hover:opacity-20 transition-opacity duration-700 pointer-events-none" />
 
-            <div className="relative glass-card rounded-3xl p-6 sm:p-10 bg-[#0B0D17]/95 backdrop-blur-3xl border border-white/5">
+            <div className="relative glass-card rounded-2xl p-5 sm:p-7 bg-[#0B0D17]/95 backdrop-blur-3xl border border-white/5">
                 
-                {/* Stepper Progress Bar */}
-                <div className="flex items-center justify-between px-2 mb-10 relative">
-                    <div className="absolute left-2 right-2 top-[18px] h-[2px] bg-white/5 -translate-y-1/2 z-0" />
-                    <div 
-                        className="absolute left-2 top-[18px] h-[2px] bg-gradient-to-r from-electric-blue to-neon-violet -translate-y-1/2 z-0 transition-all duration-500 ease-out"
-                        style={{ width: `${(getStepIndex() / 2) * 94}%` }}
-                    />
+                {/* Compact pill stepper */}
+                <div className="flex items-center gap-2 mb-5 flex-wrap">
                     {[t('creator.step_category') || 'Category', t('creator.step_configure') || 'Configure', t('creator.step_commit') || 'Commit'].map((label, idx) => {
                         const isCompleted = getStepIndex() > idx
                         const isActive = getStepIndex() === idx
                         return (
-                            <div key={idx} className="relative z-10 flex flex-col items-center w-20 sm:w-32">
-                                <button 
-                                    disabled={idx > getStepIndex()}
-                                    onClick={() => {
-                                        haptics.light()
-                                        if (idx === 0) setStep('CATEGORY')
-                                        if (idx === 1) setStep('GOAL')
-                                        if (idx === 2) setStep('COMMITMENT')
-                                    }}
-                                    className={`h-9 w-9 rounded-full flex items-center justify-center border font-mono text-[10px] font-black transition-all duration-300 pointer-events-auto active:scale-95 disabled:pointer-events-none ${
-                                        isCompleted 
-                                            ? 'bg-gradient-to-r from-electric-blue to-neon-violet border-transparent text-white shadow-[0_0_15px_rgba(0,240,255,0.3)] cursor-pointer' 
-                                            : isActive 
-                                                ? 'bg-[#0B0D17] border-electric-blue text-electric-blue shadow-[0_0_15px_rgba(0,240,255,0.2)] scale-110' 
-                                                : 'bg-[#0B0D17] border-white/10 text-gray-500'
-                                    }`}
-                                >
-                                    {isCompleted ? '✓' : `0${idx + 1}`}
-                                </button>
-                                <span className={`w-full text-[8px] sm:text-[10px] font-black uppercase tracking-widest mt-2.5 text-center break-all sm:break-normal leading-normal transition-colors duration-300 ${
-                                    isActive ? 'text-electric-blue' : isCompleted ? 'text-white' : 'text-gray-500'
+                            <button
+                                key={idx}
+                                disabled={idx > getStepIndex()}
+                                onClick={() => {
+                                    haptics.light()
+                                    if (idx === 0) setStep('CATEGORY')
+                                    if (idx === 1) setStep('GOAL')
+                                    if (idx === 2) setStep('COMMITMENT')
+                                }}
+                                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-wider transition-all duration-300 disabled:pointer-events-none ${
+                                    isCompleted
+                                        ? 'bg-electric-blue/15 border border-electric-blue/30 text-electric-blue cursor-pointer'
+                                        : isActive
+                                            ? 'bg-white/10 border border-white/20 text-white'
+                                            : 'bg-white/[0.03] border border-white/5 text-gray-600'
+                                }`}
+                            >
+                                <span className={`w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-black ${
+                                    isCompleted ? 'bg-electric-blue text-black' : isActive ? 'bg-white/20 text-white' : 'bg-white/5 text-gray-600'
                                 }`}>
-                                    {label}
+                                    {isCompleted ? '✓' : idx + 1}
                                 </span>
-                            </div>
+                                <span className="hidden sm:inline">{label}</span>
+                            </button>
                         )
                     })}
                 </div>
@@ -545,37 +548,26 @@ CRITICAL CONSTRAINTS:
                             transition={{ duration: 0.25 }}
                             className="space-y-6"
                         >
-                            <div className="flex items-center gap-4 mb-4">
-                                <div className="h-12 w-12 rounded-2xl bg-[#00F0FF]/20 flex items-center justify-center border border-[#00F0FF]/30 shadow-[0_0_20px_rgba(0,240,255,0.2)]">
-                                    <Sparkles className="h-6 w-6 text-[#00F0FF]" />
-                                </div>
-                                <div>
-                                    <h2 className="text-2xl sm:text-3xl font-black tracking-tighter text-white uppercase italic">
-                                        {t('creator.title')}
-                                    </h2>
-                                    <p className="text-xs text-gray-500 font-mono tracking-widest uppercase">{t('creator.subtitle')}</p>
-                                </div>
+                            <div>
+                                <h2 className="text-xl font-black tracking-tighter text-white uppercase italic">{t('creator.title')}</h2>
+                                <p className="text-[10px] text-gray-500 font-mono tracking-widest uppercase mt-0.5">{t('creator.subtitle')}</p>
                             </div>
 
-                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 md:gap-4 max-w-3xl mx-auto pt-2">
+                            <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
                                 {CATEGORIES.map((cat) => {
                                     const Icon = cat.icon
                                     return (
                                         <button
                                             key={cat.id}
                                             onClick={() => handleSelectCategory(cat.id)}
-                                            className={`relative flex flex-col items-center text-center px-2 py-4 sm:p-4 rounded-2xl border transition-all duration-300 pointer-events-auto active:scale-95 group/card bg-[#121626]/30 hover:bg-[#121626]/60 min-h-[120px] justify-center ${cat.color} ${cat.shadow}`}
+                                            className={`relative flex flex-col items-center text-center px-2 py-3 rounded-xl border transition-all duration-200 pointer-events-auto active:scale-95 bg-[#121626]/40 hover:bg-[#121626]/80 ${cat.color} ${cat.shadow}`}
                                         >
-                                            <div className="absolute inset-0 bg-gradient-to-br rounded-2xl opacity-0 group-hover/card:opacity-100 transition-opacity duration-500 pointer-events-none" />
-                                            <div className={`w-10 h-10 rounded-xl mb-3 flex items-center justify-center ${cat.bgColor} border border-white/5`}>
-                                                <Icon className="w-5 h-5" />
+                                            <div className={`w-8 h-8 rounded-lg mb-2 flex items-center justify-center ${cat.bgColor} border border-white/5`}>
+                                                <Icon className="w-4 h-4" />
                                             </div>
-                                            <h3 className="text-[10px] sm:text-xs font-black uppercase tracking-wider text-white mb-1 group-hover/card:text-electric-blue transition-colors break-words leading-tight px-1 text-center">
+                                            <h3 className="text-[9px] sm:text-[10px] font-black uppercase tracking-wide text-white leading-tight">
                                                 {t(`categories.${cat.id}.name`)}
                                             </h3>
-                                            <p className="text-[10px] text-gray-500 leading-tight group-hover/card:text-gray-400 transition-colors">
-                                                {t(`categories.${cat.id}.desc`)}
-                                            </p>
                                         </button>
                                     )
                                 })}
@@ -592,22 +584,20 @@ CRITICAL CONSTRAINTS:
                             transition={{ duration: 0.25 }}
                             className="space-y-6"
                         >
-                            <div className="flex items-center gap-4 mb-4 justify-between">
-                                <div className="flex items-center gap-4">
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-3">
                                     <button
                                         onClick={() => { haptics.light(); setStep('CATEGORY') }}
-                                        className="h-10 w-10 rounded-xl bg-white/5 border border-white/5 flex items-center justify-center hover:bg-white/10 text-gray-400 hover:text-white transition-all pointer-events-auto"
+                                        className="h-8 w-8 rounded-lg bg-white/5 border border-white/5 flex items-center justify-center hover:bg-white/10 text-gray-400 hover:text-white transition-all pointer-events-auto"
                                     >
-                                        <ChevronLeft className="h-5 w-5" />
+                                        <ChevronLeft className="h-4 w-4" />
                                     </button>
                                     <div>
-                                        <h2 className="text-2xl sm:text-3xl font-black tracking-tighter text-white uppercase italic">
-                                            {t('creator.title')}
-                                        </h2>
-                                        <p className="text-xs text-gray-500 font-mono tracking-widest uppercase">{t('creator.subtitle')}</p>
+                                        <h2 className="text-xl font-black tracking-tighter text-white uppercase italic">{t('creator.title')}</h2>
+                                        <p className="text-[10px] text-gray-500 font-mono tracking-widest uppercase">{t('creator.subtitle')}</p>
                                     </div>
                                 </div>
-                                <span className="text-[10px] font-black font-mono bg-electric-blue/10 border border-electric-blue/20 text-electric-blue px-3 py-1.5 rounded-full uppercase tracking-wider">
+                                <span className="text-[10px] font-black font-mono bg-electric-blue/10 border border-electric-blue/20 text-electric-blue px-2.5 py-1 rounded-full uppercase tracking-wide">
                                     {t(`categories.${category}.name`)}
                                 </span>
                             </div>
@@ -637,77 +627,68 @@ CRITICAL CONSTRAINTS:
                             </div>
 
                             <div className="space-y-6">
-                                <div className="space-y-2">
-                                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">{t('creator.objective')}</label>
+                                <div className="space-y-1.5">
+                                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-0.5">{t('creator.objective')}</label>
                                     <input
                                         value={title}
                                         onChange={(e) => setTitle(e.target.value)}
-                                        placeholder="e.g. OBJECTIVE"
-                                        className="w-full bg-[#121626]/50 border border-white/5 rounded-2xl px-5 py-4 text-white placeholder-gray-600 focus:border-electric-blue focus:outline-none focus:ring-1 focus:ring-electric-blue/50 transition-all font-bold tracking-tight text-base sm:text-lg"
+                                        placeholder="e.g. MASTER NEXT.JS IN 30 DAYS"
+                                        className="w-full bg-[#121626]/50 border border-white/5 rounded-xl px-4 py-3 text-white placeholder-gray-600 focus:border-electric-blue focus:outline-none focus:ring-1 focus:ring-electric-blue/30 transition-all font-bold text-sm"
                                     />
                                 </div>
 
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div className="space-y-2">
-                                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">{t('creator.duration')}</label>
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div className="space-y-1.5">
+                                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-0.5">{t('creator.duration')}</label>
                                         <input
                                             type="number"
                                             min="1"
                                             max="90"
                                             value={duration}
                                             onChange={(e) => setDuration(parseInt(e.target.value) || 30)}
-                                            className="w-full bg-[#121626]/50 border border-white/5 rounded-2xl px-5 py-4 text-white focus:border-electric-blue focus:outline-none transition-all font-mono font-bold"
+                                            className="w-full bg-[#121626]/50 border border-white/5 rounded-xl px-4 py-3 text-white focus:border-electric-blue focus:outline-none transition-all font-mono font-bold text-sm"
                                         />
                                     </div>
-                                    <div className="space-y-2">
-                                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">{t('creator.intent')}</label>
-                                        <div className="relative">
-                                            <select
-                                                value={intent}
-                                                onChange={(e) => setIntent(e.target.value as any)}
-                                                className="w-full bg-[#121626]/50 border border-white/5 rounded-2xl px-5 py-4 text-white focus:border-electric-blue focus:outline-none transition-all font-bold appearance-none cursor-pointer"
-                                            >
-                                                <option value="Exam">{t('creator.intent_exam')}</option>
-                                                <option value="Level Up">{t('creator.intent_mastery')}</option>
-                                                <option value="Intro">{t('creator.intent_intro')}</option>
-                                            </select>
-                                        </div>
+                                    <div className="space-y-1.5">
+                                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-0.5">{t('creator.intent')}</label>
+                                        <select
+                                            value={intent}
+                                            onChange={(e) => setIntent(e.target.value as any)}
+                                            className="w-full bg-[#121626]/50 border border-white/5 rounded-xl px-4 py-3 text-white focus:border-electric-blue focus:outline-none transition-all font-bold appearance-none cursor-pointer text-sm"
+                                        >
+                                            <option value="Exam">{t('creator.intent_exam')}</option>
+                                            <option value="Level Up">{t('creator.intent_mastery')}</option>
+                                            <option value="Intro">{t('creator.intent_intro')}</option>
+                                        </select>
                                     </div>
                                 </div>
 
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div className="space-y-2">
-                                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">{t('creator.initial_level')}</label>
-                                        <div className="relative">
-                                            <select
-                                                value={level}
-                                                onChange={(e) => setLevel(e.target.value)}
-                                                className="w-full bg-[#121626]/50 border border-white/5 rounded-2xl px-5 py-4 text-white focus:border-electric-blue focus:outline-none transition-all font-bold appearance-none cursor-pointer"
-                                            >
-                                                <option>Beginner</option>
-                                                <option>Intermediate</option>
-                                                <option>Advanced</option>
-                                            </select>
-                                        </div>
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div className="space-y-1.5">
+                                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-0.5">{t('creator.initial_level')}</label>
+                                        <select
+                                            value={level}
+                                            onChange={(e) => setLevel(e.target.value)}
+                                            className="w-full bg-[#121626]/50 border border-white/5 rounded-xl px-4 py-3 text-white focus:border-electric-blue focus:outline-none transition-all font-bold appearance-none cursor-pointer text-sm"
+                                        >
+                                            <option>Beginner</option>
+                                            <option>Intermediate</option>
+                                            <option>Advanced</option>
+                                        </select>
                                     </div>
 
                                     {creationMode === 'import' && (
-                                        <div className="space-y-2">
-                                            <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Study Commitment</label>
-                                            <div className="relative">
-                                                <select
-                                                    value={commitment}
-                                                    onChange={(e) => setCommitment(parseInt(e.target.value) || 2)}
-                                                    className="w-full bg-[#121626]/50 border border-white/5 rounded-2xl px-5 py-4 text-white focus:border-electric-blue focus:outline-none transition-all font-bold appearance-none cursor-pointer"
-                                                >
-                                                    <option value={1}>1H / Day</option>
-                                                    <option value={2}>2H / Day</option>
-                                                    <option value={4}>4H / Day</option>
-                                                    <option value={6}>6H / Day</option>
-                                                    <option value={8}>8H / Day</option>
-                                                    <option value={12}>12H / Day (God Mode)</option>
-                                                </select>
-                                            </div>
+                                        <div className="space-y-1.5">
+                                            <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-0.5">Daily Study</label>
+                                            <select
+                                                value={commitment}
+                                                onChange={(e) => setCommitment(parseFloat(e.target.value))}
+                                                className="w-full bg-[#121626]/50 border border-white/5 rounded-xl px-4 py-3 text-white focus:border-electric-blue focus:outline-none transition-all font-bold appearance-none cursor-pointer text-sm"
+                                            >
+                                                {COMMITMENT_PRESETS.map(p => (
+                                                    <option key={p.value} value={p.value}>{p.label}</option>
+                                                ))}
+                                            </select>
                                         </div>
                                     )}
                                 </div>
@@ -815,61 +796,54 @@ CRITICAL CONSTRAINTS:
                             transition={{ duration: 0.25 }}
                             className="space-y-6"
                         >
-                            <div className="flex items-center gap-4 mb-4">
+                            <div className="flex items-center gap-3">
                                 <button
                                     onClick={() => { haptics.light(); setStep('GOAL') }}
-                                    className="h-10 w-10 rounded-xl bg-white/5 border border-white/5 flex items-center justify-center hover:bg-white/10 text-gray-400 hover:text-white transition-all pointer-events-auto"
+                                    className="h-8 w-8 rounded-lg bg-white/5 border border-white/5 flex items-center justify-center hover:bg-white/10 text-gray-400 hover:text-white transition-all pointer-events-auto"
                                 >
-                                    <ChevronLeft className="h-5 w-5" />
+                                    <ChevronLeft className="h-4 w-4" />
                                 </button>
                                 <div>
-                                    <h2 className="text-2xl sm:text-3xl font-black tracking-tighter text-white uppercase italic">
-                                        {t('creator.commitment_title')}
-                                    </h2>
-                                    <p className="text-xs text-gray-500 font-mono tracking-widest uppercase">{t('creator.commitment_subtitle')}</p>
+                                    <h2 className="text-xl font-black tracking-tighter text-white uppercase italic">{t('creator.commitment_title')}</h2>
+                                    <p className="text-[10px] text-gray-500 font-mono tracking-widest uppercase">{t('creator.commitment_subtitle')}</p>
                                 </div>
                             </div>
 
-                            <div className="space-y-8">
-                                <div className="p-6 rounded-2xl bg-white/[0.02] border border-white/5 italic text-gray-400 text-sm leading-relaxed">
-                                    {t('creator.commitment_desc')}
+                            <div className="space-y-4">
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-0.5">How much time can you realistically dedicate per day?</label>
+                                    <div className="grid grid-cols-3 gap-2">
+                                        {COMMITMENT_PRESETS.map((preset) => {
+                                            const isSelected = commitment === preset.value
+                                            return (
+                                                <button
+                                                    key={preset.value}
+                                                    onClick={() => { haptics.light(); setCommitment(preset.value) }}
+                                                    className={`flex flex-col items-center justify-center py-3 px-2 rounded-xl border transition-all duration-200 active:scale-95 pointer-events-auto cursor-pointer ${
+                                                        isSelected
+                                                            ? 'bg-electric-blue/15 border-electric-blue/40 shadow-[0_0_12px_rgba(0,240,255,0.15)]'
+                                                            : 'bg-white/[0.03] border-white/[0.06] hover:bg-white/[0.06] hover:border-white/10'
+                                                    }`}
+                                                >
+                                                    <span className={`text-sm font-black ${isSelected ? 'text-electric-blue' : 'text-white'}`}>{preset.label}</span>
+                                                    <span className={`text-[9px] font-bold uppercase tracking-wider mt-0.5 ${isSelected ? 'text-electric-blue/70' : 'text-gray-600'}`}>{preset.sub}</span>
+                                                </button>
+                                            )
+                                        })}
+                                    </div>
                                 </div>
 
-                                <div className="space-y-6">
-                                    <div className="space-y-4">
-                                        <div className="flex justify-between items-end">
-                                            <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">{t('creator.daily_limit')}</label>
-                                            <span className="text-2xl font-black text-electric-blue italic">{commitment}H</span>
-                                        </div>
-                                        <input
-                                            type="range"
-                                            min="1"
-                                            max="12"
-                                            value={commitment}
-                                            onChange={(e) => setCommitment(parseInt(e.target.value))}
-                                            className="w-full h-1 bg-white/10 rounded-lg appearance-none cursor-pointer accent-electric-blue pointer-events-auto"
-                                        />
-                                        <div className="flex justify-between text-[8px] text-gray-600 font-mono">
-                                            <span>1H (CAUSAL)</span>
-                                            <span>12H (GOD MODE)</span>
-                                        </div>
-                                    </div>
-
-                                    <div className="space-y-2">
-                                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1 shrink-0">Understanding Check</label>
-                                        <div className="flex items-center gap-3 p-5 rounded-2xl bg-white/5 border border-white/5">
-                                            <Clock className="h-5 w-5 text-neon-violet shrink-0" />
-                                            <p className="text-xs text-gray-300">{t('creator.check_desc')}</p>
-                                        </div>
-                                    </div>
+                                <div className="flex items-start gap-3 p-4 rounded-xl bg-white/[0.03] border border-white/5">
+                                    <Clock className="h-4 w-4 text-neon-violet shrink-0 mt-0.5" />
+                                    <p className="text-xs text-gray-400 leading-relaxed">{t('creator.check_desc')}</p>
                                 </div>
 
                                 <button
                                     onClick={handleStartGeneration}
-                                    className="group/btn flex items-center justify-center gap-3 w-full rounded-2xl bg-electric-blue py-5.5 font-black text-lg tracking-tighter uppercase transition-all shadow-[0_0_40px_rgba(0,240,255,0.3)] hover:scale-[1.02] active:scale-[0.98] text-white pointer-events-auto cursor-pointer"
+                                    className="group/btn flex items-center justify-center gap-2 w-full rounded-xl bg-electric-blue py-4 font-black text-base tracking-tighter uppercase transition-all shadow-[0_0_30px_rgba(0,240,255,0.25)] hover:scale-[1.02] active:scale-[0.98] text-white pointer-events-auto cursor-pointer"
                                 >
                                     <span>{t('creator.button_generate')}</span>
-                                    <Zap className="h-6 w-6 animate-pulse" />
+                                    <Zap className="h-5 w-5 animate-pulse" />
                                 </button>
                             </div>
                         </motion.div>
