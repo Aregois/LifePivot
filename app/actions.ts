@@ -1,4 +1,4 @@
-﻿'use server'
+'use server'
 
 import { createClient } from '@/utils/supabase/server'
 import { revalidatePath } from 'next/cache'
@@ -98,7 +98,7 @@ export async function createGoalBase(formData: FormData) {
             level: level,
             goal_intent: goalIntent,
             sprint_walls: sprintWalls,
-            commitment_hours_per_week: dailyHours * 7, // Keeping DB field but storing derived value for now or we could rename column
+            commitment_hours_per_week: Math.round(dailyHours * 7), // Keeping DB field but storing derived value for now or we could rename column
             plan_metadata: { category, language }
         })
         .select()
@@ -2766,7 +2766,7 @@ export async function importExternalPlan(formData: FormData) {
             level: level,
             goal_intent: goalIntent,
             sprint_walls: sprintWalls,
-            commitment_hours_per_week: dailyHours * 7,
+            commitment_hours_per_week: Math.round(dailyHours * 7),
             plan_metadata: {
                 category,
                 language,

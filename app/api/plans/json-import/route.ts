@@ -122,9 +122,13 @@ export async function POST(request: Request) {
             ? day1.goal_intent as typeof VALID_GOAL_INTENTS[number]
             : 'Level Up'
 
-        const derivedHours = typeof day1?.commitment_hours_per_week === 'number'
-            ? day1.commitment_hours_per_week
-            : 10
+        let derivedHours = 10
+        if (day1?.commitment_hours_per_week !== undefined && day1?.commitment_hours_per_week !== null) {
+            const parsed = parseFloat(day1.commitment_hours_per_week)
+            if (!isNaN(parsed)) {
+                derivedHours = Math.round(parsed)
+            }
+        }
 
         // totalDays = max day number in the array
         const totalDays = Math.max(...tasks.map((t: any) => t.day ?? t.day_number ?? 1))
