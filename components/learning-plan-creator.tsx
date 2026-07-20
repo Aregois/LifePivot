@@ -1,10 +1,10 @@
-﻿'use client'
+'use client'
 
-import { createGoalBase, generateTasksChunk, importExternalPlan } from '@/app/actions'
+import { createGoalBase, generateTasksChunk } from '@/app/actions'
 import { 
     Rocket, Brain, CheckCircle2, Loader2, Target, Clock, Zap, 
     Code, FlaskConical, Calculator, Languages, BookOpen, Palette, 
-    Briefcase, Music, Scroll, Users, Dumbbell, Sparkles, ChevronLeft, Copy
+    Briefcase, Music, Scroll, Users, Dumbbell, Sparkles, ChevronLeft
 } from 'lucide-react'
 import { haptics } from '@/utils/haptics'
 import { useState, useEffect } from 'react'
@@ -213,131 +213,7 @@ export function LearningPlanCreator() {
     const [planLanguage, setPlanLanguage] = useState<string>('')
     const [createdGoalId, setCreatedGoalId] = useState<string | null>(null)
     
-    // External Import States
-    const [creationMode, setCreationMode] = useState<'ai' | 'import'>('ai')
-    const [pastedJson, setPastedJson] = useState('')
-    const [copyFeedback, setCopyFeedback] = useState(false)
-
     const activePlanLanguage = planLanguage || locale
-
-    const getCopyPrompt = () => {
-        return `Generate a day-by-day learning plan for: "${title || '[Insert Goal Title]'}"
-Duration: ${duration || 30} days.
-Difficulty level: ${level || 'Beginner'}.
-Mission intent: ${intent || 'Level Up'}.
-Subject Category: "${category}".
-
-Format your output STRICTLY as a raw JSON array of task objects (do not wrap it in a nested parent object) matching this structure (showing multiple tasks for the same day):
-[
-  {
-    "day": 1,
-    "title": "Core Concept Overview",
-    "subject": "${category.toUpperCase()}",
-    "priority": 2,
-    "duration_mins": 30,
-    "subtasks": [],
-    "notes": "Understand the foundational concepts and read initial documentation."
-  },
-  {
-    "day": 1,
-    "title": "Practical Practice Exercises",
-    "subject": "${category.toUpperCase()}",
-    "priority": 3,
-    "duration_mins": 45,
-    "subtasks": ["Concrete step 1", "Concrete step 2"],
-    "notes": "Apply the concepts learned through hands-on practice problems."
-  }
-]
-
-CRITICAL CONSTRAINTS:
-1. Return ONLY the JSON code block. No introductory, conversational, or explaining text.
-2. MULTIPLE TASKS PER DAY: Distribute exactly 3 to 5 tasks for each day (except for Void Days). Every day must have multiple distinct tasks covering different topics or styles (e.g. overview, exercises, theory).
-3. priority must be 1 to 5. On day 6, 12, 18, 24, etc (every 6 days), inject exactly one "VOID DAY" task with priority 0, task_type "void", and no subtasks.
-4. Target Language: Output all text fields (title, subtasks, notes) in the language: "${activePlanLanguage}".
-`
-    }
-
-    const handleImportPlan = async () => {
-        if (!title) {
-            setError("Goal title is required.")
-            return
-        }
-        if (!pastedJson.trim()) {
-            setError("Please paste the generated JSON plan from the LLM.")
-            return
-        }
-
-        setError(null)
-
-        // Client-side cleaning and validation of pasted JSON
-        let cleanedJson = pastedJson.trim()
-        cleanedJson = cleanedJson.replace(/^```[a-zA-Z]*\s*/, '').replace(/\s*```$/, '')
-        cleanedJson = cleanedJson.trim()
-
-        let parsedTasks: any[] = []
-        try {
-            parsedTasks = JSON.parse(cleanedJson)
-            if (!Array.isArray(parsedTasks)) {
-                setError("Pasted content is not a JSON array of tasks. Make sure it starts with [ and ends with ].")
-                return
-            }
-        } catch (e: any) {
-            setError("Failed to parse JSON. Please ensure the LLM output is valid JSON. Error: " + e.message)
-            return
-        }
-
-        // Validate structure of parsed tasks
-        for (let i = 0; i < parsedTasks.length; i++) {
-            const task = parsedTasks[i]
-            if (!task || typeof task !== 'object') {
-                setError(`Task at index ${i} is not a valid task object.`)
-                return
-            }
-            if (typeof task.day !== 'number') {
-                setError(`Task at index ${i} is missing a numeric 'day' field.`)
-                return
-            }
-            if (!task.title) {
-                setError(`Task on day ${task.day} (index ${i}) is missing a 'title'.`)
-                return
-            }
-            if (task.priority !== undefined && (typeof task.priority !== 'number' || task.priority < 0 || task.priority > 5)) {
-                setError(`Task on day ${task.day} has an invalid priority. It must be a number between 0 and 5.`)
-                return
-            }
-        }
-
-        setStep('GENERATING')
-        setStatusText("Importing Plan...")
-
-        try {
-            const formData = new FormData()
-            formData.append('title', title)
-            formData.append('duration_days', duration.toString())
-            formData.append('level', level)
-            formData.append('goal_intent', intent)
-            formData.append('category', category)
-            formData.append('daily_hours', commitment.toString())
-            formData.append('language', activePlanLanguage)
-            formData.append('tasks_json', cleanedJson)
-
-            haptics.medium()
-            const result = await importExternalPlan(formData)
-
-            if (result.error) {
-                setError(result.error)
-                setStep('GOAL')
-                return
-            }
-
-            setStep('SUCCESS')
-            setStatusText("Plan Imported Successfully!")
-            setTimeout(() => window.location.reload(), 2000)
-        } catch (err: any) {
-            setError(err.message || 'Failed to import external plan.')
-            setStep('GOAL')
-        }
-    }
 
     const handleSelectCategory = (catId: string) => {
         haptics.light()
@@ -602,30 +478,6 @@ CRITICAL CONSTRAINTS:
                                 </span>
                             </div>
 
-                            {/* Creation Mode Toggle */}
-                            <div className="flex gap-2 p-1.5 bg-white/5 border border-white/5 rounded-2xl">
-                                <button
-                                    onClick={() => { haptics.light(); setCreationMode('ai') }}
-                                    className={`flex-1 py-3 text-[10px] font-black uppercase tracking-wider rounded-xl transition-all cursor-pointer ${
-                                        creationMode === 'ai'
-                                            ? 'bg-gradient-to-r from-electric-blue to-neon-violet text-white shadow-[0_0_15px_rgba(var(--accent-rgb),0.2)]'
-                                            : 'text-gray-400 hover:text-white'
-                                    }`}
-                                >
-                                    AI Generator
-                                </button>
-                                <button
-                                    onClick={() => { haptics.light(); setCreationMode('import') }}
-                                    className={`flex-1 py-3 text-[10px] font-black uppercase tracking-wider rounded-xl transition-all cursor-pointer ${
-                                        creationMode === 'import'
-                                            ? 'bg-gradient-to-r from-electric-blue to-neon-violet text-white shadow-[0_0_15px_rgba(var(--accent-rgb),0.2)]'
-                                            : 'text-gray-400 hover:text-white'
-                                    }`}
-                                >
-                                    Free LLM Import
-                                </button>
-                            </div>
-
                             <div className="space-y-6">
                                 <div className="space-y-1.5">
                                     <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-0.5">{t('creator.objective')}</label>
@@ -663,126 +515,61 @@ CRITICAL CONSTRAINTS:
                                     </div>
                                 </div>
 
-                                <div className="grid grid-cols-2 gap-3">
-                                    <div className="space-y-1.5">
-                                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-0.5">{t('creator.initial_level')}</label>
-                                        <select
-                                            value={level}
-                                            onChange={(e) => setLevel(e.target.value)}
-                                            className="w-full bg-[#121626]/50 border border-white/5 rounded-xl px-4 py-3 text-white focus:border-electric-blue focus:outline-none transition-all font-bold appearance-none cursor-pointer text-sm"
-                                        >
-                                            <option>Beginner</option>
-                                            <option>Intermediate</option>
-                                            <option>Advanced</option>
-                                        </select>
-                                    </div>
-
-                                    {creationMode === 'import' && (
-                                        <div className="space-y-1.5">
-                                            <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-0.5">Daily Study</label>
-                                            <select
-                                                value={commitment}
-                                                onChange={(e) => setCommitment(parseFloat(e.target.value))}
-                                                className="w-full bg-[#121626]/50 border border-white/5 rounded-xl px-4 py-3 text-white focus:border-electric-blue focus:outline-none transition-all font-bold appearance-none cursor-pointer text-sm"
-                                            >
-                                                {COMMITMENT_PRESETS.map(p => (
-                                                    <option key={p.value} value={p.value}>{p.label}</option>
-                                                ))}
-                                            </select>
-                                        </div>
-                                    )}
+                                <div className="space-y-1.5">
+                                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-0.5">{t('creator.initial_level')}</label>
+                                    <select
+                                        value={level}
+                                        onChange={(e) => setLevel(e.target.value)}
+                                        className="w-full bg-[#121626]/50 border border-white/5 rounded-xl px-4 py-3 text-white focus:border-electric-blue focus:outline-none transition-all font-bold appearance-none cursor-pointer text-sm"
+                                    >
+                                        <option>Beginner</option>
+                                        <option>Intermediate</option>
+                                        <option>Advanced</option>
+                                    </select>
                                 </div>
 
-                                {creationMode === 'ai' ? (
-                                    <>
-                                        {/* Sprint Walls / Milestones */}
-                                        <div className="space-y-3">
-                                            <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">{t('creator.milestones')}</label>
-                                            <div className="space-y-2">
-                                                {sprintWalls.map((wall, idx) => (
-                                                    <div key={idx} className="flex gap-2 items-center">
-                                                        <input
-                                                            type="date"
-                                                            value={wall.date}
-                                                            readOnly
-                                                            className="bg-white/5 border border-white/5 rounded-xl px-4 py-2.5 text-xs text-white flex-1"
-                                                        />
-                                                        <span className="text-xs text-gray-400 flex-1 truncate">{wall.label}</span>
-                                                        <button
-                                                            onClick={() => setSprintWalls(sprintWalls.filter((_, i) => i !== idx))}
-                                                            className="p-2 hover:text-red-400 transition-colors cursor-pointer text-lg font-bold pointer-events-auto"
-                                                        >
-                                                            ×
-                                                        </button>
-                                                    </div>
-                                                ))}
+                                {/* Sprint Walls / Milestones */}
+                                <div className="space-y-3">
+                                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">{t('creator.milestones')}</label>
+                                    <div className="space-y-2">
+                                        {sprintWalls.map((wall, idx) => (
+                                            <div key={idx} className="flex gap-2 items-center">
+                                                <input
+                                                    type="date"
+                                                    value={wall.date}
+                                                    readOnly
+                                                    className="bg-white/5 border border-white/5 rounded-xl px-4 py-2.5 text-xs text-white flex-1"
+                                                />
+                                                <span className="text-xs text-gray-400 flex-1 truncate">{wall.label}</span>
                                                 <button
-                                                    onClick={() => {
-                                                        const date = prompt("Milestone Date (YYYY-MM-DD):");
-                                                        const label = prompt("Milestone Label (e.g. Midterm Exam):");
-                                                        if (date && label) setSprintWalls([...sprintWalls, { date, label }]);
-                                                    }}
-                                                    className="w-full py-3 rounded-xl border border-dashed border-white/10 text-[10px] font-bold text-gray-400 uppercase tracking-widest hover:border-electric-blue/30 hover:text-electric-blue transition-all cursor-pointer pointer-events-auto"
+                                                    onClick={() => setSprintWalls(sprintWalls.filter((_, i) => i !== idx))}
+                                                    className="p-2 hover:text-red-400 transition-colors cursor-pointer text-lg font-bold pointer-events-auto"
                                                 >
-                                                    {t('creator.add_milestone')}
+                                                    ×
                                                 </button>
                                             </div>
-                                        </div>
-
+                                        ))}
                                         <button
-                                            onClick={() => title && setStep('COMMITMENT')}
-                                            disabled={!title}
-                                            className="group/btn flex items-center justify-center gap-3 w-full rounded-2xl bg-white text-black py-4.5 font-black text-sm tracking-widest uppercase transition-all hover:bg-electric-blue hover:text-white shadow-[0_0_30px_rgba(255,255,255,0.1)] active:scale-[0.98] disabled:opacity-30 disabled:grayscale pointer-events-auto cursor-pointer"
+                                            onClick={() => {
+                                                const date = prompt("Milestone Date (YYYY-MM-DD):");
+                                                const label = prompt("Milestone Label (e.g. Midterm Exam):");
+                                                if (date && label) setSprintWalls([...sprintWalls, { date, label }]);
+                                            }}
+                                            className="w-full py-3 rounded-xl border border-dashed border-white/10 text-[10px] font-bold text-gray-400 uppercase tracking-widest hover:border-electric-blue/30 hover:text-electric-blue transition-all cursor-pointer pointer-events-auto"
                                         >
-                                            <span>{t('creator.button_next')}</span>
-                                            <Rocket className="h-5 w-5 group-hover/btn:translate-x-1 group-hover/btn:-translate-y-1 transition-transform" />
+                                            {t('creator.add_milestone')}
                                         </button>
-                                    </>
-                                ) : (
-                                    <>
-                                        {/* External Import UI Details */}
-                                        <div className="bg-[#181D30]/40 border border-white/5 rounded-2xl p-5 space-y-4">
-                                            <div className="flex justify-between items-start">
-                                                <div>
-                                                    <h3 className="text-white text-xs font-black uppercase tracking-wider">Step 1: Copy Generation Prompt</h3>
-                                                    <p className="text-gray-400 text-[10px] leading-relaxed mt-1">Copy this prompt, paste it into ChatGPT/Claude to generate the plan structure for free, then return here.</p>
-                                                </div>
-                                                <button
-                                                    onClick={() => {
-                                                        haptics.medium()
-                                                        navigator.clipboard.writeText(getCopyPrompt())
-                                                        setCopyFeedback(true)
-                                                        setTimeout(() => setCopyFeedback(false), 2000)
-                                                    }}
-                                                    className="shrink-0 flex items-center gap-1.5 bg-electric-blue/10 border border-electric-blue/20 text-electric-blue hover:bg-electric-blue hover:text-white text-[10px] font-black tracking-wider uppercase px-3.5 py-2 rounded-xl transition-all cursor-pointer pointer-events-auto active:scale-95"
-                                                >
-                                                    <Copy className="h-3 w-3" />
-                                                    {copyFeedback ? "Copied!" : "Copy"}
-                                                </button>
-                                            </div>
-                                        </div>
+                                    </div>
+                                </div>
 
-                                        <div className="space-y-2">
-                                            <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Step 2: Paste Generated JSON</label>
-                                            <textarea
-                                                value={pastedJson}
-                                                onChange={(e) => setPastedJson(e.target.value)}
-                                                placeholder="Paste the raw JSON block starting with [ and ending with ] ..."
-                                                rows={5}
-                                                className="w-full bg-[#121626]/50 border border-white/5 rounded-2xl px-5 py-4 text-white placeholder-gray-600 focus:border-electric-blue focus:outline-none transition-all font-mono text-xs leading-relaxed"
-                                            />
-                                        </div>
-
-                                        <button
-                                            onClick={handleImportPlan}
-                                            disabled={!title || !pastedJson.trim()}
-                                            className="group/btn flex items-center justify-center gap-3 w-full rounded-2xl bg-white text-black py-4.5 font-black text-sm tracking-widest uppercase transition-all hover:bg-electric-blue hover:text-white shadow-[0_0_30px_rgba(255,255,255,0.1)] active:scale-[0.98] disabled:opacity-30 disabled:grayscale pointer-events-auto cursor-pointer"
-                                        >
-                                            <span>Import Learning Plan</span>
-                                            <Rocket className="h-5 w-5 group-hover/btn:translate-x-1 group-hover/btn:-translate-y-1 transition-transform" />
-                                        </button>
-                                    </>
-                                )}
+                                <button
+                                    onClick={() => title && setStep('COMMITMENT')}
+                                    disabled={!title}
+                                    className="group/btn flex items-center justify-center gap-3 w-full rounded-2xl bg-white text-black py-4.5 font-black text-sm tracking-widest uppercase transition-all hover:bg-electric-blue hover:text-white shadow-[0_0_30px_rgba(255,255,255,0.1)] active:scale-[0.98] disabled:opacity-30 disabled:grayscale pointer-events-auto cursor-pointer"
+                                >
+                                    <span>{t('creator.button_next')}</span>
+                                    <Rocket className="h-5 w-5 group-hover/btn:translate-x-1 group-hover/btn:-translate-y-1 transition-transform" />
+                                </button>
                             </div>
                         </motion.div>
                     )}
