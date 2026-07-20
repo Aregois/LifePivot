@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useEffect, useRef, useTransition } from 'react'
 import { Bot, User, Send, Loader2, Trophy, ShieldAlert, Sparkles, Shield, Heart } from 'lucide-react'
@@ -151,7 +151,7 @@ export function SocraticCheckpointBattle({ goalId, wallDate, wallLabel, onResolv
                         exit={{ opacity: 0, scale: 0.95 }}
                         className="relative z-10 w-full max-w-md bg-[#121626]/80 border border-white/5 p-8 rounded-[2.5rem] text-center shadow-2xl flex flex-col items-center gap-6"
                     >
-                        <div className="h-16 w-16 bg-neon-violet/10 border-2 border-neon-violet/30 rounded-2xl flex items-center justify-center text-neon-violet shadow-[0_0_25px_rgba(189,0,255,0.25)] animate-pulse">
+                        <div className="h-16 w-16 bg-neon-violet/10 border-2 border-neon-violet/30 rounded-2xl flex items-center justify-center text-neon-violet shadow-[0_0_25px_rgba(var(--violet-rgb),0.25)] animate-pulse">
                             <ShieldAlert className="h-8 w-8" />
                         </div>
                         <div>
@@ -178,7 +178,7 @@ export function SocraticCheckpointBattle({ goalId, wallDate, wallLabel, onResolv
                         </div>
                         <button
                             onClick={startBattle}
-                            className="w-full py-5 rounded-2xl bg-gradient-to-r from-neon-violet to-electric-blue text-white font-black text-sm tracking-widest uppercase hover:scale-[1.02] active:scale-[0.98] transition-all shadow-[0_0_35px_rgba(189,0,255,0.35)]"
+                            className="w-full py-5 rounded-2xl bg-gradient-to-r from-neon-violet to-electric-blue text-white font-black text-sm tracking-widest uppercase hover:scale-[1.02] active:scale-[0.98] transition-all shadow-[0_0_35px_rgba(var(--violet-rgb),0.35)]"
                         >
                             {t('socratic.enter_arena')}
                         </button>
@@ -197,7 +197,7 @@ export function SocraticCheckpointBattle({ goalId, wallDate, wallLabel, onResolv
                         <div className="p-5 border-b border-white/5 bg-white/[0.01] shrink-0 flex flex-col gap-3 relative z-10">
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 rounded-xl bg-neon-violet/10 border border-neon-violet/30 flex items-center justify-center text-neon-violet shadow-[0_0_15px_rgba(189,0,255,0.15)]">
+                                    <div className="w-10 h-10 rounded-xl bg-neon-violet/10 border border-neon-violet/30 flex items-center justify-center text-neon-violet shadow-[0_0_15px_rgba(var(--violet-rgb),0.15)]">
                                         <Bot className="h-5 w-5 animate-pulse" />
                                     </div>
                                     <div>

@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useEffect, useTransition } from 'react'
 import { motion, AnimatePresence, useMotionValue, useTransform } from 'framer-motion'
@@ -124,7 +124,7 @@ export function FlashcardsDeck() {
     if (loading) {
         return (
             <div className="flex flex-col items-center justify-center py-16">
-                <RefreshCw className="h-8 w-8 text-electric-blue animate-spin shadow-[0_0_15px_rgba(0,240,255,0.2)] mb-3" />
+                <RefreshCw className="h-8 w-8 text-electric-blue animate-spin shadow-[0_0_15px_rgba(var(--accent-rgb),0.2)] mb-3" />
                 <p className="text-gray-500 text-xs">{t('flashcards.accessing')}</p>
             </div>
         )
@@ -164,7 +164,7 @@ export function FlashcardsDeck() {
                 </div>
                 <div className="w-full h-1.5 bg-white/5 rounded-full overflow-hidden">
                     <div 
-                        className="h-full bg-electric-blue shadow-[0_0_8px_rgba(0,240,255,0.5)] transition-all duration-300"
+                        className="h-full bg-electric-blue shadow-[0_0_8px_rgba(var(--accent-rgb),0.5)] transition-all duration-300"
                         style={{ width: `${progress}%` }}
                     />
                 </div>
@@ -183,7 +183,7 @@ export function FlashcardsDeck() {
                         }`}
                     >
                         {/* Background Glow Ring */}
-                        <div className="absolute inset-0 pointer-events-none opacity-30 bg-[radial-gradient(circle_at_center,rgba(0,240,255,0.08),transparent_70%)]" />
+                        <div className="absolute inset-0 pointer-events-none opacity-30 bg-[radial-gradient(circle_at_center,rgba(var(--accent-rgb),0.08),transparent_70%)]" />
 
                         {/* Top Indicator */}
                         <div className="flex items-center gap-1.5 text-[9px] font-black tracking-widest text-gray-500 uppercase">
@@ -287,7 +287,7 @@ export function FlashcardsDeck() {
 
                 <button
                     onClick={() => { haptics.medium(); loadCards(); setReviewQueue([]) }}
-                    className="w-full py-4 rounded-2xl bg-electric-blue text-black font-black uppercase tracking-widest text-xs hover:scale-103 active:scale-97 shadow-[0_0_20px_rgba(0,240,255,0.3)] transition-transform"
+                    className="w-full py-4 rounded-2xl bg-electric-blue text-black font-black uppercase tracking-widest text-xs hover:scale-103 active:scale-97 shadow-[0_0_20px_rgba(var(--accent-rgb),0.3)] transition-transform"
                 >
                     {t('flashcards.return_btn')}
                 </button>
@@ -320,7 +320,7 @@ export function FlashcardsDeck() {
                     disabled={dueCount === 0}
                     className={`w-full py-4 rounded-2xl text-xs font-black uppercase tracking-widest transition-all duration-200 ${
                         dueCount > 0
-                            ? 'bg-electric-blue text-black hover:scale-103 active:scale-97 shadow-[0_0_20px_rgba(0,240,255,0.25)]'
+                            ? 'bg-electric-blue text-black hover:scale-103 active:scale-97 shadow-[0_0_20px_rgba(var(--accent-rgb),0.25)]'
                             : 'bg-white/5 border border-white/5 text-gray-500 cursor-not-allowed'
                     }`}
                 >
@@ -372,7 +372,7 @@ export function FlashcardsDeck() {
                                                 </span>
                                             )}
                                         </div>
-                                        <div className="h-2 w-2 lg:h-2.5 lg:w-2.5 rounded-full bg-electric-blue shadow-[0_0_8px_rgba(0,240,255,0.7)]" />
+                                        <div className="h-2 w-2 lg:h-2.5 lg:w-2.5 rounded-full bg-electric-blue shadow-[0_0_8px_rgba(var(--accent-rgb),0.7)]" />
                                     </div>
                                 </div>
                             )

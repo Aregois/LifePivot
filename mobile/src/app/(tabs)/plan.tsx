@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { View, Text, ScrollView, ActivityIndicator, Alert } from 'react-native'
+import { View, Text, ScrollView, ActivityIndicator, Alert, TouchableOpacity } from 'react-native'
 import { useRouter, useFocusEffect } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
 import { C, Shadows } from '../../constants/theme'
@@ -111,13 +111,46 @@ export default function PlanPortal() {
                 </FadeInView>
 
             {/* CREATE PLAN CTA — ALWAYS VISIBLE */}
-            <FadeInView delay={50} style={{ marginBottom: 24 }}>
+            <FadeInView delay={50} style={{ marginBottom: 12 }}>
                 <PremiumButton
                     title="CREATE NEW PLAN +"
                     onPress={() => router.push('/plan/create')}
                     variant="primary"
                 />
             </FadeInView>
+
+            {/* Pro Curriculum Builder — secondary entry point */}
+            <FadeInView delay={80} style={{ marginBottom: 24 }}>
+                <TouchableOpacity
+                    onPress={() => router.push('/plan/pro-curriculum')}
+                    activeOpacity={0.8}
+                    style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: 8,
+                        paddingVertical: 12,
+                        paddingHorizontal: 20,
+                        borderRadius: 20,
+                        backgroundColor: 'rgba(189, 0, 255, 0.06)',
+                        borderWidth: 1,
+                        borderColor: 'rgba(189, 0, 255, 0.15)',
+                    }}
+                >
+                    <Ionicons name="school-outline" size={15} color="#BD00FF" style={{ opacity: 0.8 }} />
+                    <Text style={{
+                        fontSize: 11,
+                        fontWeight: '900',
+                        color: '#BD00FF',
+                        opacity: 0.8,
+                        letterSpacing: 1,
+                        textTransform: 'uppercase',
+                    }}>
+                        🎓 Professional Curriculum Builder
+                    </Text>
+                </TouchableOpacity>
+            </FadeInView>
+
 
             {/* Link cards — LOCKED FOR NEW USERS (progressive reveal) */}
             {userLevel >= 2 && (

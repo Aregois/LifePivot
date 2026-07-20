@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useEffect, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
@@ -116,7 +116,7 @@ export function PlansClient({ user, goals, goalsError, isSubscribed, subscriptio
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div className="flex flex-col">
                     <div className="flex items-center gap-2">
-                        <div className="h-9 w-9 rounded-2xl bg-gradient-to-tr from-electric-blue to-neon-violet flex items-center justify-center border border-white/10 text-white shadow-[0_0_15px_rgba(0,240,255,0.25)]">
+                        <div className="h-9 w-9 rounded-2xl bg-gradient-to-tr from-electric-blue to-neon-violet flex items-center justify-center border border-white/10 text-white shadow-[0_0_15px_rgba(var(--accent-rgb),0.25)]">
                             <Library className="h-5 w-5 text-white" />
                         </div>
                         <span className="text-[10px] font-black text-electric-blue uppercase tracking-widest">Syllabus Registry</span>
@@ -131,7 +131,7 @@ export function PlansClient({ user, goals, goalsError, isSubscribed, subscriptio
 
                 <button
                     onClick={() => { haptics.medium(); setShowCreateModal(true) }}
-                    className="flex items-center justify-center gap-2 px-5 py-3 rounded-2xl bg-gradient-to-r from-neon-violet to-electric-blue text-white font-black text-[11px] tracking-widest uppercase shadow-[0_0_20px_rgba(0,240,255,0.25)] hover:scale-[1.02] active:scale-95 transition-all self-start md:self-auto"
+                    className="flex items-center justify-center gap-2 px-5 py-3 rounded-2xl bg-gradient-to-r from-neon-violet to-electric-blue text-white font-black text-[11px] tracking-widest uppercase shadow-[0_0_20px_rgba(var(--accent-rgb),0.25)] hover:scale-[1.02] active:scale-95 transition-all self-start md:self-auto"
                 >
                     <Plus className="w-4 h-4" />
                     Forge New Plan
@@ -160,7 +160,7 @@ export function PlansClient({ user, goals, goalsError, isSubscribed, subscriptio
                             onClick={() => { haptics.light(); setFilterIntent(intent) }}
                             className={`px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all active:scale-95 shrink-0 border ${
                                 filterIntent === intent
-                                    ? 'bg-electric-blue/15 border-electric-blue/35 text-electric-blue shadow-[0_0_12px_rgba(0,240,255,0.1)]'
+                                    ? 'bg-electric-blue/15 border-electric-blue/35 text-electric-blue shadow-[0_0_12px_rgba(var(--accent-rgb),0.1)]'
                                     : 'bg-white/[0.02] border-white/5 text-gray-400 hover:text-white hover:bg-white/[0.04]'
                             }`}
                         >
@@ -213,7 +213,7 @@ export function PlansClient({ user, goals, goalsError, isSubscribed, subscriptio
                                 animate={{ opacity: 1, y: 0 }}
                                 className={`relative flex flex-col p-6 rounded-[2.2rem] bg-gradient-to-b from-white/[0.04] to-white/[0.01] backdrop-blur-xl border transition-all duration-300 overflow-hidden ${
                                     isActive
-                                        ? 'border-electric-blue shadow-[0_0_20px_rgba(0,240,255,0.12)]'
+                                        ? 'border-electric-blue shadow-[0_0_20px_rgba(var(--accent-rgb),0.12)]'
                                         : isLocked
                                         ? 'border-white/5 opacity-55'
                                         : 'border-white/5 hover:border-white/10 hover:shadow-lg'

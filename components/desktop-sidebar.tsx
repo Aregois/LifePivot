@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useEffect } from 'react'
 import { Home, Calendar, Map, ShoppingBag, User, Sparkles, Award, Users, Compass, Library } from 'lucide-react'
@@ -58,7 +58,7 @@ export function DesktopSidebar() {
         <aside className="hidden md:flex flex-col w-64 fixed left-0 top-0 h-screen py-8 px-4 bg-[#0E111F]/80 backdrop-blur-xl border-r border-white/5 z-50 select-none">
             {/* Logo */}
             <div className="mb-8 px-4 flex items-center gap-2.5">
-                <img src="/logo.png" alt="LifePivot Logo" className="h-8 w-8 object-contain filter drop-shadow-[0_0_8px_rgba(0,240,255,0.3)]" />
+                <img src="/logo.png" alt="LifePivot Logo" className="h-8 w-8 object-contain filter drop-shadow-[0_0_8px_rgba(var(--accent-rgb),0.3)]" />
                 <div>
                     <h1 className="text-xl font-black tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-electric-blue to-neon-violet title-glow">
                         LifePivot
@@ -114,7 +114,7 @@ export function DesktopSidebar() {
                             }}
                             className={`flex items-center px-4 py-3 rounded-xl font-bold transition-all duration-200 active:scale-[0.98] border ${
                                 isActive
-                                    ? 'bg-electric-blue/10 border-electric-blue/20 text-electric-blue shadow-[0_0_15px_rgba(0,240,255,0.08)]'
+                                    ? 'bg-electric-blue/10 border-electric-blue/20 text-electric-blue shadow-[0_0_15px_rgba(var(--accent-rgb),0.08)]'
                                     : 'border-transparent text-gray-500 hover:text-gray-300 hover:bg-white/[0.02]'
                             }`}
                         >
@@ -130,7 +130,7 @@ export function DesktopSidebar() {
                 <div className="pt-4 mt-auto border-t border-white/5">
                     <button 
                         onClick={() => haptics.medium()}
-                        className="w-full py-3.5 rounded-xl border border-neon-violet/30 text-neon-violet bg-neon-violet/5 font-black text-[10px] tracking-widest uppercase hover:bg-neon-violet hover:text-white transition-all duration-300 shadow-[0_0_15px_rgba(189,0,255,0.08)] active:scale-95"
+                        className="w-full py-3.5 rounded-xl border border-neon-violet/30 text-neon-violet bg-neon-violet/5 font-black text-[10px] tracking-widest uppercase hover:bg-neon-violet hover:text-white transition-all duration-300 shadow-[0_0_15px_rgba(var(--violet-rgb),0.08)] active:scale-95"
                     >
                         {t('sidebar.upgrade')}
                     </button>

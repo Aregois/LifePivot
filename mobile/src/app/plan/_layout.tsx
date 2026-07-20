@@ -28,6 +28,19 @@ export default function PlanLayout() {
                     title: 'CREATE PLAN'
                 }} 
             />
+            <Stack.Screen
+                name="pro-curriculum"
+                options={{
+                    title: 'PRO CURRICULUM',
+                    headerTintColor: '#BD00FF',
+                }}
+            />
+            <Stack.Screen
+                name="import"
+                options={{
+                    title: 'IMPORT PLAN',
+                }}
+            />
         </Stack>
     )
 }

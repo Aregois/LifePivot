@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/utils/supabase/client'
@@ -66,7 +66,7 @@ function ChoiceCard({
             onClick={() => { haptics.light(); onSelect() }}
             className={`w-full flex items-center gap-4 rounded-2xl border p-4 text-left transition-all active:scale-[0.98] min-h-[64px]
                 ${selected
-                    ? 'border-electric-blue/60 bg-electric-blue/10 shadow-[0_0_16px_rgba(0,240,255,0.12)]'
+                    ? 'border-electric-blue/60 bg-electric-blue/10 shadow-[0_0_16px_rgba(var(--accent-rgb),0.12)]'
                     : 'border-white/[0.08] bg-white/[0.025] hover:border-white/20 hover:bg-white/[0.04]'
                 }`}
         >
@@ -75,7 +75,7 @@ function ChoiceCard({
                 <p className={`text-sm font-bold ${selected ? 'text-white' : 'text-gray-200'}`}>{label}</p>
                 <p className="text-[11px] text-gray-500 mt-0.5">{sub}</p>
             </div>
-            <div className={`shrink-0 h-4 w-4 rounded-full border transition-all ${selected ? 'border-electric-blue bg-electric-blue shadow-[0_0_8px_rgba(0,240,255,0.5)]' : 'border-white/20'}`}>
+            <div className={`shrink-0 h-4 w-4 rounded-full border transition-all ${selected ? 'border-electric-blue bg-electric-blue shadow-[0_0_8px_rgba(var(--accent-rgb),0.5)]' : 'border-white/20'}`}>
                 {selected && (
                     <motion.div
                         initial={{ scale: 0 }}
@@ -357,7 +357,7 @@ export default function OnboardingPage() {
                         id={`onboarding-continue-step-${step}`}
                         disabled={!canContinue() || saving}
                         onClick={step < TOTAL ? () => { haptics.medium(); goNext() } : handleFinish}
-                        className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-electric-blue/20 to-neon-violet/20 border border-electric-blue/20 px-4 py-3.5 text-xs font-black text-white uppercase tracking-widest transition-all hover:from-electric-blue/30 hover:to-neon-violet/30 hover:shadow-[0_0_20px_rgba(0,240,255,0.2)] active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed min-h-[44px]"
+                        className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-electric-blue/20 to-neon-violet/20 border border-electric-blue/20 px-4 py-3.5 text-xs font-black text-white uppercase tracking-widest transition-all hover:from-electric-blue/30 hover:to-neon-violet/30 hover:shadow-[0_0_20px_rgba(var(--accent-rgb),0.2)] active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed min-h-[44px]"
                     >
                         {saving ? (
                             <Loader2 className="w-4 h-4 animate-spin" />

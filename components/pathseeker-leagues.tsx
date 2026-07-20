@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useEffect } from 'react'
 import { Trophy, ArrowUp, ArrowDown, Sparkles, Diamond, Flame, ShieldAlert } from 'lucide-react'
@@ -255,7 +255,7 @@ export function PathseekerLeagues() {
                             <div key={`${competitor.name}-${index}`} className="flex flex-col gap-2">
                                 <div className={`flex items-center justify-between p-3 rounded-2xl border transition-all ${
                                     isUser 
-                                        ? 'bg-electric-blue/10 border-electric-blue/30 shadow-[0_0_12px_rgba(0,240,255,0.1)]' 
+                                        ? 'bg-electric-blue/10 border-electric-blue/30 shadow-[0_0_12px_rgba(var(--accent-rgb),0.1)]' 
                                         : 'bg-[#0B0D17] border-white/5'
                                 }`}>
                                     <div className="flex items-center gap-3">

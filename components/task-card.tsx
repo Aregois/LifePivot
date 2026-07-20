@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { CheckCircle2, Clock, Target, ChevronDown, Diamond, CheckSquare, Square, Zap, Circle, Calendar } from 'lucide-react'
 import { haptics } from '@/utils/haptics'
@@ -167,7 +167,7 @@ export function TaskCard({ task, onCheck, onSubtaskCheck, onFocus, onReschedule,
                             initial={{ opacity: 0, y: 15, scale: 0.8 }}
                             animate={{ opacity: [0, 1, 1, 0], y: -45, scale: [0.8, 1.25, 1.25, 0.9] }}
                             transition={{ duration: 0.8, ease: "easeOut" }}
-                            className="absolute left-1/2 -translate-x-1/2 top-4 z-50 text-electric-blue font-black text-xl drop-shadow-[0_0_12px_rgba(0,240,255,0.85)] pointer-events-none"
+                            className="absolute left-1/2 -translate-x-1/2 top-4 z-50 text-electric-blue font-black text-xl drop-shadow-[0_0_12px_rgba(var(--accent-rgb),0.85)] pointer-events-none"
                         >
                             +{baseXp} XP
                         </motion.div>

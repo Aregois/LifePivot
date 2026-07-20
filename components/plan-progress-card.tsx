@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useMemo } from 'react'
 import { getLocalDateString } from '@/utils/date-utils'
@@ -147,7 +147,7 @@ export function PlanProgressCard({ goalTitle, createdAt, durationDays, tasks }: 
                             />
                             {/* Progress circle */}
                             <circle
-                                className={`drop-shadow-[0_0_5px_rgba(0,240,255,0.5)] transition-all duration-1000 ease-out ${stats.status === 'critical' ? 'text-red-500' :
+                                className={`drop-shadow-[0_0_5px_rgba(var(--accent-rgb),0.5)] transition-all duration-1000 ease-out ${stats.status === 'critical' ? 'text-red-500' :
                                     stats.status === 'behind' ? 'text-amber-400' :
                                         'text-electric-blue'
                                     }`}
@@ -187,7 +187,7 @@ export function PlanProgressCard({ goalTitle, createdAt, durationDays, tasks }: 
                     <div
                         className={`h-full rounded-full transition-all duration-1000 ease-out ${stats.status === 'critical' ? 'bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.8)]' :
                             stats.status === 'behind' ? 'bg-amber-400 shadow-[0_0_10px_rgba(251,191,36,0.8)]' :
-                                'bg-electric-blue shadow-[0_0_10px_rgba(0,240,255,0.8)]'
+                                'bg-electric-blue shadow-[0_0_10px_rgba(var(--accent-rgb),0.8)]'
                             }`}
                         style={{ width: `${stats.completionPercent}%` }}
                     />

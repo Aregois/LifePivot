@@ -147,7 +147,8 @@ export function CircadianChests() {
                                             y: Math.sin((angle * Math.PI) / 180) * distance
                                         }}
                                         transition={{ duration: 1.5, ease: 'easeOut', repeat: 1 }}
-                                        className="absolute w-2.5 h-2.5 rounded-full bg-gradient-to-tr from-cyan-400 to-violet-500 shadow-[0_0_10px_#00f0ff]"
+                                        className="absolute w-2.5 h-2.5 rounded-full bg-gradient-to-tr from-cyan-400 to-violet-500"
+                                        style={{ boxShadow: '0 0 10px rgba(var(--accent-rgb), 0.8)' }}
                                     />
                                 )
                             })}
@@ -159,7 +160,7 @@ export function CircadianChests() {
                             transition={{ type: 'spring', damping: 15 }}
                             className="flex flex-col items-center gap-6 max-w-sm"
                         >
-                            <div className="h-24 w-24 bg-gradient-to-br from-cyan-400 to-violet-500 rounded-3xl flex items-center justify-center shadow-[0_0_40px_rgba(0,240,255,0.5)] border border-white/20">
+                            <div className="h-24 w-24 bg-gradient-to-br from-cyan-400 to-violet-500 rounded-3xl flex items-center justify-center shadow-[0_0_40px_rgba(var(--accent-rgb),0.5)] border border-white/20">
                                 <Sparkles className="h-12 w-12 text-white animate-pulse" />
                             </div>
                             <div className="space-y-2">
@@ -184,7 +185,7 @@ export function CircadianChests() {
                     >
                         <div className="absolute top-0 right-0 w-24 h-24 bg-cyan-400/5 rounded-full blur-2xl pointer-events-none" />
                         <div className="flex items-center gap-3.5">
-                            <div className="h-11 w-11 rounded-2xl bg-cyan-400/15 border border-cyan-400/20 flex items-center justify-center shadow-[0_0_15px_rgba(0,240,255,0.15)]">
+                            <div className="h-11 w-11 rounded-2xl bg-cyan-400/15 border border-cyan-400/20 flex items-center justify-center shadow-[0_0_15px_rgba(var(--accent-rgb),0.15)]">
                                 <Zap className="h-5 w-5 text-cyan-400 animate-bounce" />
                             </div>
                             <div>
@@ -254,7 +255,7 @@ export function CircadianChests() {
                             </div>
                             <button
                                 onClick={() => handleOpenChest('dusk')}
-                                className="px-4 py-2 bg-cyan-500 hover:bg-cyan-400 text-black font-black text-xs uppercase tracking-wider rounded-xl shadow-[0_0_12px_rgba(0,240,255,0.3)] active:scale-95 transition-all shrink-0"
+                                className="px-4 py-2 bg-cyan-500 hover:bg-cyan-400 text-black font-black text-xs uppercase tracking-wider rounded-xl shadow-[0_0_12px_rgba(var(--accent-rgb),0.3)] active:scale-95 transition-all shrink-0"
                             >
                                 {t('circadian.open_btn')}
                             </button>

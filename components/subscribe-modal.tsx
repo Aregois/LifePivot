@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useTransition } from 'react'
 import { Sparkles, Crown, CheckCircle2, X, Loader2, ExternalLink, Settings } from 'lucide-react'
@@ -93,7 +93,7 @@ export function SubscribeModal({ isOpen, onClose, onSuccess, isAlreadySubscribed
 
                     {/* Header */}
                     <div className="flex flex-col items-center text-center gap-2 mt-4">
-                        <div className="h-12 w-12 rounded-2xl bg-gradient-to-tr from-neon-violet to-electric-blue flex items-center justify-center border border-white/10 text-white shadow-[0_0_20px_rgba(189,0,255,0.3)]">
+                        <div className="h-12 w-12 rounded-2xl bg-gradient-to-tr from-neon-violet to-electric-blue flex items-center justify-center border border-white/10 text-white shadow-[0_0_20px_rgba(var(--violet-rgb),0.3)]">
                             <Crown className="h-6 w-6 text-white" />
                         </div>
                         <h3 className="text-xl font-black text-white uppercase tracking-wider italic mt-2">LifePivot Solo Power</h3>
@@ -147,7 +147,7 @@ export function SubscribeModal({ isOpen, onClose, onSuccess, isAlreadySubscribed
                                     onClick={() => { haptics.light(); setBillingCycle('monthly') }}
                                     className={`flex-1 p-4 rounded-2xl border transition-all cursor-pointer select-none flex flex-col gap-1 ${
                                         billingCycle === 'monthly'
-                                            ? 'bg-electric-blue/5 border-electric-blue shadow-[0_0_15px_rgba(0,240,255,0.1)]'
+                                            ? 'bg-electric-blue/5 border-electric-blue shadow-[0_0_15px_rgba(var(--accent-rgb),0.1)]'
                                             : 'bg-white/[0.01] border-white/5 hover:border-white/10'
                                     }`}
                                 >
@@ -159,7 +159,7 @@ export function SubscribeModal({ isOpen, onClose, onSuccess, isAlreadySubscribed
                                     onClick={() => { haptics.light(); setBillingCycle('yearly') }}
                                     className={`flex-1 p-4 rounded-2xl border transition-all cursor-pointer select-none flex flex-col gap-1 relative ${
                                         billingCycle === 'yearly'
-                                            ? 'bg-neon-violet/5 border-neon-violet shadow-[0_0_15px_rgba(189,0,255,0.1)]'
+                                            ? 'bg-neon-violet/5 border-neon-violet shadow-[0_0_15px_rgba(var(--violet-rgb),0.1)]'
                                             : 'bg-white/[0.01] border-white/5 hover:border-white/10'
                                     }`}
                                 >
@@ -178,7 +178,7 @@ export function SubscribeModal({ isOpen, onClose, onSuccess, isAlreadySubscribed
                             <button
                                 onClick={handleCheckout}
                                 disabled={isPending}
-                                className="w-full py-4 rounded-2xl bg-gradient-to-r from-neon-violet to-electric-blue text-white hover:scale-[1.02] active:scale-95 transition-all font-black text-[10px] tracking-widest uppercase shadow-[0_0_20px_rgba(0,240,255,0.25)] flex items-center justify-center gap-2 mt-2"
+                                className="w-full py-4 rounded-2xl bg-gradient-to-r from-neon-violet to-electric-blue text-white hover:scale-[1.02] active:scale-95 transition-all font-black text-[10px] tracking-widest uppercase shadow-[0_0_20px_rgba(var(--accent-rgb),0.25)] flex items-center justify-center gap-2 mt-2"
                             >
                                 {isPending
                                     ? <Loader2 className="w-4 h-4 animate-spin" />

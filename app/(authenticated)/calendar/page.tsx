@@ -1,4 +1,4 @@
-import { createClient } from '@/utils/supabase/server'
+﻿import { createClient } from '@/utils/supabase/server'
 import { ThreeDCalendarGrid } from '@/components/three-d-calendar-grid'
 import { getLocalDateString } from '@/utils/date-utils'
 import { redirect } from 'next/navigation'

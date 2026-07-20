@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useEffect, useMemo, useRef, useTransition } from 'react'
 import { createPortal } from 'react-dom'
@@ -690,7 +690,7 @@ export function MindMap({ goal, onOptimisticTokenUpdate }: MindMapProps) {
                             onClick={() => { haptics.light(); setSelectedWeek(w) }}
                             className={`px-4 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-wider transition-all border shrink-0 active:scale-95 ${
                                 isActive 
-                                    ? 'bg-electric-blue/15 border-electric-blue/30 text-electric-blue shadow-[0_0_15px_rgba(0,240,255,0.15)]' 
+                                    ? 'bg-electric-blue/15 border-electric-blue/30 text-electric-blue shadow-[0_0_15px_rgba(var(--accent-rgb),0.15)]' 
                                     : 'bg-black/20 border-white/5 text-gray-500 hover:text-gray-300'
                             }`}
                         >
@@ -709,13 +709,13 @@ export function MindMap({ goal, onOptimisticTokenUpdate }: MindMapProps) {
                 <div className="flex bg-black/35 p-0.5 rounded-xl border border-white/5 shrink-0 mr-2 select-none">
                     <button
                         onClick={() => { haptics.light(); setMapViewMode('canvas') }}
-                        className={`px-3.5 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all cursor-pointer ${mapViewMode === 'canvas' ? 'bg-electric-blue/15 text-electric-blue border border-electric-blue/15 shadow-[0_0_8px_rgba(0,240,255,0.1)]' : 'text-gray-500 border-transparent hover:text-gray-400'}`}
+                        className={`px-3.5 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all cursor-pointer ${mapViewMode === 'canvas' ? 'bg-electric-blue/15 text-electric-blue border border-electric-blue/15 shadow-[0_0_8px_rgba(var(--accent-rgb),0.1)]' : 'text-gray-500 border-transparent hover:text-gray-400'}`}
                     >
                         {t('plan.map_view')}
                     </button>
                     <button
                         onClick={() => { haptics.light(); setMapViewMode('timeline') }}
-                        className={`px-3.5 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all cursor-pointer ${mapViewMode === 'timeline' ? 'bg-electric-blue/15 text-electric-blue border border-electric-blue/15 shadow-[0_0_8px_rgba(0,240,255,0.1)]' : 'text-gray-500 border-transparent hover:text-gray-400'}`}
+                        className={`px-3.5 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all cursor-pointer ${mapViewMode === 'timeline' ? 'bg-electric-blue/15 text-electric-blue border border-electric-blue/15 shadow-[0_0_8px_rgba(var(--accent-rgb),0.1)]' : 'text-gray-500 border-transparent hover:text-gray-400'}`}
                     >
                         {t('plan.list_view')}
                     </button>
@@ -911,7 +911,7 @@ export function MindMap({ goal, onOptimisticTokenUpdate }: MindMapProps) {
                                                 transform: 'translate(-50%, -50%)' 
                                             }}
                                         >
-                                            <div className="flex flex-col items-center justify-center p-5 rounded-2xl bg-gradient-to-b from-[#131728]/95 to-[#0b0c16]/95 border-2 border-electric-blue text-center shadow-[0_0_30px_rgba(0,240,255,0.25)] min-w-[200px] max-w-[260px] backdrop-blur-xl">
+                                            <div className="flex flex-col items-center justify-center p-5 rounded-2xl bg-gradient-to-b from-[#131728]/95 to-[#0b0c16]/95 border-2 border-electric-blue text-center shadow-[0_0_30px_rgba(var(--accent-rgb),0.25)] min-w-[200px] max-w-[260px] backdrop-blur-xl">
                                                 <CompassIcon className="w-6 h-6 text-electric-blue mb-1 animate-pulse" />
                                                 <h3 className="text-white text-xs font-black tracking-tight leading-tight line-clamp-2 uppercase">{node.title}</h3>
                                                 <span className="text-[9px] font-bold text-gray-500 uppercase tracking-widest mt-1.5 bg-white/5 px-2 py-0.5 rounded-full">{node.subtitle}</span>
@@ -956,7 +956,7 @@ export function MindMap({ goal, onOptimisticTokenUpdate }: MindMapProps) {
                                             <motion.div
                                                 whileHover={{ scale: 1.05 }}
                                                 whileTap={{ scale: 0.95 }}
-                                                className={`flex flex-col items-center justify-center px-4 py-2.5 rounded-xl border bg-black/70 border-white/10 backdrop-blur-lg transition-all shadow-[0_0_15px_rgba(0,240,255,0.1)] relative`}
+                                                className={`flex flex-col items-center justify-center px-4 py-2.5 rounded-xl border bg-black/70 border-white/10 backdrop-blur-lg transition-all shadow-[0_0_15px_rgba(var(--accent-rgb),0.1)] relative`}
                                             >
                                                 {/* Completed Streak Flame Icon */}
                                                 {isDayCompleted && (
@@ -1148,7 +1148,7 @@ export function MindMap({ goal, onOptimisticTokenUpdate }: MindMapProps) {
 
                                 {/* Viewport Boundary Box */}
                                 <div
-                                    className="absolute border border-electric-blue/75 bg-electric-blue/10 rounded-sm shadow-[0_0_8px_rgba(0,240,255,0.2)] pointer-events-none"
+                                    className="absolute border border-electric-blue/75 bg-electric-blue/10 rounded-sm shadow-[0_0_8px_rgba(var(--accent-rgb),0.2)] pointer-events-none"
                                     style={{
                                         left: Math.max(0, Math.min(120, viewportLeftMini)),
                                         top: Math.max(0, Math.min(120, viewportTopMini)),
@@ -1458,7 +1458,7 @@ export function MindMap({ goal, onOptimisticTokenUpdate }: MindMapProps) {
                                     {selectedTask.status !== 'completed' && selectedTask.task_type !== 'void' && (
                                         <button
                                             onClick={() => { haptics.medium(); setFocusTask(selectedTask) }}
-                                            className="w-full py-4 rounded-xl text-xs font-black uppercase tracking-widest bg-electric-blue text-black flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(0,240,255,0.3)] hover:shadow-[0_0_25px_rgba(0,240,255,0.5)] active:scale-98 transition-all hover:scale-[1.01]"
+                                            className="w-full py-4 rounded-xl text-xs font-black uppercase tracking-widest bg-electric-blue text-black flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(var(--accent-rgb),0.3)] hover:shadow-[0_0_25px_rgba(var(--accent-rgb),0.5)] active:scale-98 transition-all hover:scale-[1.01]"
                                         >
                                             <Play className="w-3.5 h-3.5 fill-black" />
                                             {t('mind_map.launch_focus')}

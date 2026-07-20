@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useEffect, useTransition, useCallback } from 'react'
 import { Check, AlertCircle, Sparkles, Loader2, ArrowRight, RefreshCw, HelpCircle, Trophy } from 'lucide-react'
@@ -115,7 +115,7 @@ export function SocraticMicroDrills({ taskId, onPass, onSkip }: SocraticMicroDri
     if (isLoading) {
         return (
             <div className="flex flex-col items-center justify-center py-16 text-center gap-4 animate-fade-in select-none">
-                <Loader2 className="h-10 w-10 text-electric-blue animate-spin shadow-[0_0_15px_rgba(0,240,255,0.15)]" />
+                <Loader2 className="h-10 w-10 text-electric-blue animate-spin shadow-[0_0_15px_rgba(var(--accent-rgb),0.15)]" />
                 <div>
                     <h4 className="text-sm font-black text-white uppercase tracking-wider">{t('socratic.formulating_drill')}</h4>
                     <p className="text-[10px] text-gray-500 font-mono tracking-widest mt-1 uppercase">{t('socratic.structuring_mcqs')}</p>
@@ -259,7 +259,7 @@ export function SocraticMicroDrills({ taskId, onPass, onSkip }: SocraticMicroDri
                             onClick={() => handleSelectOption(oIdx)}
                             className={`p-4 rounded-2xl border text-left text-xs font-bold leading-relaxed transition-all active:scale-[0.99] flex items-center justify-between ${
                                 isSelected
-                                    ? 'bg-electric-blue/10 border-electric-blue text-electric-blue shadow-[0_0_15px_rgba(0,240,255,0.15)]'
+                                    ? 'bg-electric-blue/10 border-electric-blue text-electric-blue shadow-[0_0_15px_rgba(var(--accent-rgb),0.15)]'
                                     : 'bg-black/20 border-white/5 hover:border-white/10 text-gray-300'
                             }`}
                             style={{

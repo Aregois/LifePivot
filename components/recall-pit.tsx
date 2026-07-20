@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useEffect, useTransition } from 'react'
 import { motion, AnimatePresence, useMotionValue, useTransform } from 'framer-motion'
@@ -257,7 +257,7 @@ export function RecallPit() {
                     }`}
                 >
                     {/* Glow background */}
-                    <div className="absolute inset-0 pointer-events-none opacity-20 bg-[radial-gradient(circle_at_center,rgba(0,240,255,0.08),transparent_70%)]" />
+                    <div className="absolute inset-0 pointer-events-none opacity-20 bg-[radial-gradient(circle_at_center,rgba(var(--accent-rgb),0.08),transparent_70%)]" />
 
                     {/* Top label */}
                     <div className="flex items-center gap-1.5 text-[9px] font-black tracking-widest text-gray-500 uppercase">

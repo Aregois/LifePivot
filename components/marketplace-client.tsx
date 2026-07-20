@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useEffect, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
@@ -390,7 +390,7 @@ export function MarketplaceClient({ user, initialProfile }: MarketplaceClientPro
                                         <button
                                             onClick={() => handleImportPlan(selectedPlan)}
                                             disabled={isPending}
-                                            className="flex-1 py-4 rounded-2xl bg-electric-blue text-black hover:scale-[1.02] active:scale-95 transition-all font-black text-[10px] tracking-widest uppercase shadow-[0_0_20px_rgba(0,240,255,0.25)] flex items-center justify-center gap-1.5"
+                                            className="flex-1 py-4 rounded-2xl bg-electric-blue text-black hover:scale-[1.02] active:scale-95 transition-all font-black text-[10px] tracking-widest uppercase shadow-[0_0_20px_rgba(var(--accent-rgb),0.25)] flex items-center justify-center gap-1.5"
                                         >
                                             {isPending ? (
                                                 <Loader2 className="w-4 h-4 animate-spin" />

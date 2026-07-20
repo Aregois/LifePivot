@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useRef, useEffect, useTransition } from 'react'
 import { Send, Bot, User, Loader2, Volume2, VolumeX, ChevronDown } from 'lucide-react'
@@ -151,7 +151,7 @@ export function DesktopTutorPanel() {
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                         <div className="relative">
-                            <div className="w-10 h-10 rounded-xl bg-[#1C2033] flex items-center justify-center border border-electric-blue/30 shadow-[0_0_15px_rgba(0,240,255,0.15)]">
+                            <div className="w-10 h-10 rounded-xl bg-[#1C2033] flex items-center justify-center border border-electric-blue/30 shadow-[0_0_15px_rgba(var(--accent-rgb),0.15)]">
                                 <Bot className="h-5 w-5 text-electric-blue" />
                             </div>
                             {/* Animated Online Pulse */}
@@ -226,7 +226,7 @@ export function DesktopTutorPanel() {
                         
                         <div className={`max-w-[80%] px-3.5 py-2.5 rounded-2xl text-[12px] leading-relaxed font-medium ${
                             msg.role === 'user' 
-                                ? 'bg-electric-blue/10 border border-electric-blue/25 text-white rounded-tr-sm shadow-[0_0_15px_rgba(0,240,255,0.05)]' 
+                                ? 'bg-electric-blue/10 border border-electric-blue/25 text-white rounded-tr-sm shadow-[0_0_15px_rgba(var(--accent-rgb),0.05)]' 
                                 : 'bg-[#1C2033]/60 border border-white/5 text-gray-200 rounded-tl-sm shadow-md'
                         }`}>
                             {msg.text}
@@ -237,7 +237,7 @@ export function DesktopTutorPanel() {
                                 onClick={() => handleToggleSpeech(idx, msg.text)}
                                 className={`self-end mb-0.5 h-6.5 w-6.5 rounded-lg flex items-center justify-center border transition-all ${
                                     speakingMsgIndex === idx 
-                                        ? 'bg-neon-violet/20 border-neon-violet/30 text-neon-violet shadow-[0_0_8px_rgba(189,0,255,0.2)] animate-pulse' 
+                                        ? 'bg-neon-violet/20 border-neon-violet/30 text-neon-violet shadow-[0_0_8px_rgba(var(--violet-rgb),0.2)] animate-pulse' 
                                         : 'bg-white/5 border-white/10 text-gray-500 hover:text-white hover:bg-white/5'
                                 } shrink-0 active:scale-90`}
                             >
@@ -297,7 +297,7 @@ export function DesktopTutorPanel() {
                     <button 
                         onClick={handleSend} 
                         disabled={!input.trim() || isPending || isTyping}
-                        className="h-7 w-7 rounded-full bg-tertiary text-white hover:bg-white hover:text-tertiary transition-colors flex items-center justify-center disabled:opacity-30 disabled:hover:bg-tertiary disabled:hover:text-white shadow-[0_0_10px_rgba(189,0,255,0.6)] active:scale-95 shrink-0 animate-fade-in"
+                        className="h-7 w-7 rounded-full bg-tertiary text-white hover:bg-white hover:text-tertiary transition-colors flex items-center justify-center disabled:opacity-30 disabled:hover:bg-tertiary disabled:hover:text-white shadow-[0_0_10px_rgba(var(--violet-rgb),0.6)] active:scale-95 shrink-0 animate-fade-in"
                     >
                         <Send className="h-3 w-3 fill-current" />
                     </button>

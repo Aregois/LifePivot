@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useEffect, useTransition } from 'react'
 import { useEconomy } from './economy-provider'
@@ -135,7 +135,7 @@ export function ReactiveAvatar() {
     if (!mounted) return null
 
     // Determine visual tokens matching the mood
-    let haloColor = 'border-electric-blue/40 shadow-[0_0_20px_rgba(0,240,255,0.2)]'
+    let haloColor = 'border-electric-blue/40 shadow-[0_0_20px_rgba(var(--accent-rgb),0.2)]'
     let moodBadge = 'Focused'
     let moodBadgeColor = 'text-electric-blue bg-electric-blue/10 border-electric-blue/20'
     let tooltip = 'Click companion to review status.'

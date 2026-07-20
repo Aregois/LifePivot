@@ -9,7 +9,7 @@ import { LearningPlanCreator } from '@/components/learning-plan-creator'
 import { ResetPlanButton } from '@/components/reset-plan-button'
 import { PlanProgressCard } from '@/components/plan-progress-card'
 import { getLocalDateString } from '@/utils/date-utils'
-import { Users, Compass, Paperclip, ArrowRight, ChevronLeft, ChevronRight, Plus, Lock, Crown, AlertTriangle, Library } from 'lucide-react'
+import { Users, Compass, Paperclip, ArrowRight, ChevronLeft, ChevronRight, Plus, Lock, Crown, AlertTriangle, Library, GraduationCap } from 'lucide-react'
 import Link from 'next/link'
 import { haptics } from '@/utils/haptics'
 import { useLanguage } from '@/components/language-provider'
@@ -217,10 +217,10 @@ export function PlanClient({ user, goals, goalsError, isSubscribed, subscription
                 <Link
                     href="/workspaces"
                     onClick={() => haptics.light()}
-                    className="group w-[144px] py-2.5 px-3 rounded-2xl bg-gradient-to-b from-white/[0.04] to-white/[0.01] backdrop-blur-xl border border-white/[0.06] flex items-center justify-between hover:border-electric-blue/30 transition-all shadow-[0_4px_20px_rgba(0,0,0,0.25)] hover:shadow-[0_4px_25px_rgba(0,240,255,0.08)] active:scale-[0.98]"
+                    className="group w-[144px] py-2.5 px-3 rounded-2xl bg-gradient-to-b from-white/[0.04] to-white/[0.01] backdrop-blur-xl border border-white/[0.06] flex items-center justify-between hover:border-electric-blue/30 transition-all shadow-[0_4px_20px_rgba(0,0,0,0.25)] hover:shadow-[0_4px_25px_rgba(var(--accent-rgb),0.08)] active:scale-[0.98]"
                 >
                     <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-xl bg-electric-blue/10 border border-electric-blue/20 flex items-center justify-center shadow-[0_0_15px_rgba(0,240,255,0.1)] group-hover:bg-electric-blue/25 transition-all">
+                        <div className="w-8 h-8 rounded-xl bg-electric-blue/10 border border-electric-blue/20 flex items-center justify-center shadow-[0_0_15px_rgba(var(--accent-rgb),0.1)] group-hover:bg-electric-blue/25 transition-all">
                             <Users className="w-4 h-4 text-electric-blue" />
                         </div>
                         <span className="text-[10px] font-black text-white uppercase tracking-wider group-hover:text-electric-blue transition-colors">{t('nav.cohorts') || 'Cohorts'}</span>
@@ -230,10 +230,10 @@ export function PlanClient({ user, goals, goalsError, isSubscribed, subscription
                 <Link
                     href="/marketplace"
                     onClick={() => haptics.light()}
-                    className="group w-[144px] py-2.5 px-3 rounded-2xl bg-gradient-to-b from-white/[0.04] to-white/[0.01] backdrop-blur-xl border border-white/[0.06] flex items-center justify-between hover:border-electric-blue/30 transition-all shadow-[0_4px_20px_rgba(0,0,0,0.25)] hover:shadow-[0_4px_25px_rgba(0,240,255,0.08)] active:scale-[0.98]"
+                    className="group w-[144px] py-2.5 px-3 rounded-2xl bg-gradient-to-b from-white/[0.04] to-white/[0.01] backdrop-blur-xl border border-white/[0.06] flex items-center justify-between hover:border-electric-blue/30 transition-all shadow-[0_4px_20px_rgba(0,0,0,0.25)] hover:shadow-[0_4px_25px_rgba(var(--accent-rgb),0.08)] active:scale-[0.98]"
                 >
                     <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-xl bg-electric-blue/10 border border-electric-blue/20 flex items-center justify-center shadow-[0_0_15px_rgba(0,240,255,0.1)] group-hover:bg-electric-blue/25 transition-all">
+                        <div className="w-8 h-8 rounded-xl bg-electric-blue/10 border border-electric-blue/20 flex items-center justify-center shadow-[0_0_15px_rgba(var(--accent-rgb),0.1)] group-hover:bg-electric-blue/25 transition-all">
                             <Compass className="w-4 h-4 text-electric-blue" />
                         </div>
                         <span className="text-[10px] font-black text-white uppercase tracking-wider group-hover:text-electric-blue transition-colors">{t('nav.marketplace') || 'Marketplace'}</span>
@@ -299,6 +299,17 @@ export function PlanClient({ user, goals, goalsError, isSubscribed, subscription
                                 Add Plan
                             </button>
 
+                            {/* Pro Curriculum Builder secondary entry point */}
+                            <Link
+                                href="/plan/pro-curriculum"
+                                onClick={() => haptics.light()}
+                                className="flex items-center gap-1.5 px-3 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all active:scale-95 bg-[#BD00FF]/5 border border-[#BD00FF]/15 text-[#BD00FF]/70 hover:text-[#BD00FF] hover:bg-[#BD00FF]/10 hover:border-[#BD00FF]/25 whitespace-nowrap"
+                                title="Professional Curriculum Builder"
+                            >
+                                <GraduationCap className="w-3.5 h-3.5" />
+                                <span className="hidden sm:inline">Pro Builder</span>
+                            </Link>
+
                             {/* Upgrade tooltip */}
                             <AnimatePresence>
                                 {showUpgradeTip && (
@@ -354,7 +365,7 @@ export function PlanClient({ user, goals, goalsError, isSubscribed, subscription
 
             {/* ── View header ─────────────────────────────────────────────────── */}
             {!goalsError && !showAddPlan && activeGoal && (
-                <div className="flex items-center px-6 pb-2">
+                <div className="flex items-center px-6 pb-2 pt-2 border-t border-white/[0.04]">
                     <div className="flex flex-col">
                         <h2 className="text-2xl lg:text-3xl font-extrabold text-white tracking-tight">
                             {t('plan.todays_focus')}
@@ -388,8 +399,20 @@ export function PlanClient({ user, goals, goalsError, isSubscribed, subscription
                 {!goalsError && !showAddPlan && (!translatedGoals || translatedGoals.length === 0) && (
                     <div className="mt-8 max-w-2xl mx-auto">
                         <LearningPlanCreator />
+                        {/* Secondary Pro Builder entry */}
+                        <div className="mt-4 flex justify-center">
+                            <Link
+                                href="/plan/pro-curriculum"
+                                onClick={() => haptics.light()}
+                                className="flex items-center gap-2 px-4 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-widest text-[#BD00FF]/70 hover:text-[#BD00FF] border border-[#BD00FF]/10 hover:border-[#BD00FF]/25 bg-[#BD00FF]/5 hover:bg-[#BD00FF]/10 transition-all active:scale-95"
+                            >
+                                <GraduationCap className="w-3.5 h-3.5" />
+                                🎓 Professional Curriculum Builder
+                            </Link>
+                        </div>
                     </div>
                 )}
+
 
                 {/* Active plan content */}
                 {!goalsError && !showAddPlan && activeGoal && (

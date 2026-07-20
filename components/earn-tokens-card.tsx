@@ -182,7 +182,7 @@ export function EarnTokensCard({ tokens, setTokens }: EarnTokensCardProps) {
       <div className="absolute top-0 right-0 w-24 h-24 bg-electric-blue/5 rounded-full blur-[30px] pointer-events-none" />
       
       <div className="flex items-center gap-3 mb-4">
-        <div className="w-10 h-10 rounded-2xl bg-electric-blue/10 border border-electric-blue/20 flex items-center justify-center text-lg shadow-[0_0_12px_rgba(0,240,255,0.15)]">🎬</div>
+        <div className="w-10 h-10 rounded-2xl bg-electric-blue/10 border border-electric-blue/20 flex items-center justify-center text-lg shadow-[0_0_12px_rgba(var(--accent-rgb),0.15)]">🎬</div>
         <div>
           <p className="text-[10px] font-black text-electric-blue uppercase tracking-widest">Earn Free Tokens</p>
           <p className="text-[9px] text-gray-500 uppercase tracking-wider mt-0.5">Secure Ad Integration · Earn 5 tokens</p>
@@ -212,7 +212,7 @@ export function EarnTokensCard({ tokens, setTokens }: EarnTokensCardProps) {
           className={`w-full py-3.5 rounded-2xl font-black text-[10px] tracking-widest uppercase transition-all flex items-center justify-center gap-2 ${
             cooldownSecs > 0
               ? 'bg-white/5 border border-white/10 text-gray-500 cursor-not-allowed'
-              : 'bg-gradient-to-r from-electric-blue to-soft-cyan text-black hover:scale-[1.02] active:scale-95 shadow-[0_0_20px_rgba(0,240,255,0.25)]'
+              : 'bg-gradient-to-r from-electric-blue to-soft-cyan text-black hover:scale-[1.02] active:scale-95 shadow-[0_0_20px_rgba(var(--accent-rgb),0.25)]'
           }`}
         >
           {loadingSession ? (
@@ -258,7 +258,7 @@ export function EarnTokensCard({ tokens, setTokens }: EarnTokensCardProps) {
                     cy="16"
                     r={radius}
                     fill="transparent"
-                    stroke="#00f0ff"
+                    stroke="var(--color-electric-blue)"
                     strokeWidth="3"
                     strokeDasharray={circumference}
                     strokeDashoffset={strokeDashoffset}

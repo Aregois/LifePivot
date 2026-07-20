@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { motion, AnimatePresence } from 'framer-motion'
 import { AlertTriangle, Zap, Calendar, Coins } from 'lucide-react'
@@ -102,7 +102,7 @@ export function MissedSessionOverlay({ goalId, onClose }: MissedSessionOverlayPr
                                 <button
                                     onClick={handleAction}
                                     disabled={isPending}
-                                    className="group relative w-full rounded-xl bg-electric-blue py-4 px-6 flex items-center justify-between border border-electric-blue/20 shadow-[0_0_20px_rgba(0,240,255,0.2)] hover:scale-[1.02] active:scale-95 transition-all text-white overflow-hidden"
+                                    className="group relative w-full rounded-xl bg-electric-blue py-4 px-6 flex items-center justify-between border border-electric-blue/20 shadow-[0_0_20px_rgba(var(--accent-rgb),0.2)] hover:scale-[1.02] active:scale-95 transition-all text-white overflow-hidden"
                                 >
                                     <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
                                     <div className="flex flex-col items-start text-left relative z-10">

@@ -56,10 +56,10 @@ export function HUD() {
                         >
                             <AvatarIcon id={avatarId} className="w-full h-full" />
                         </Link>
-                        <img src="/logo.png" alt="Logo" className="w-6 h-6 object-contain filter drop-shadow-[0_0_6px_rgba(0,240,255,0.3)]" />
-                        <h1 className="text-xl font-black tracking-tight text-white">
+                        <img src="/logo.png" alt="Logo" className="w-6 h-6 object-contain filter drop-shadow-[0_0_6px_rgba(var(--accent-rgb),0.3)]" />
+                        <span className="text-xl font-black tracking-tight text-white">
                             LifePivot
-                        </h1>
+                        </span>
                         {!mindfulMode && (
                             <span className="text-[8px] font-black text-electric-blue bg-electric-blue/15 border border-electric-blue/25 px-2 py-0.5 rounded-full select-none uppercase">
                                 {t('hud.level')} {level}
@@ -82,7 +82,7 @@ export function HUD() {
                 {!mindfulMode && (
                     <div className="w-full h-1.5 bg-white/5 rounded-full overflow-hidden relative">
                         <div 
-                            className="h-full bg-gradient-to-r from-electric-blue to-neon-violet transition-all duration-1000 shadow-[0_0_8px_rgba(0,240,255,0.6)]"
+                            className="h-full bg-gradient-to-r from-electric-blue to-neon-violet transition-all duration-1000 shadow-[0_0_8px_rgba(var(--accent-rgb),0.6)]"
                             style={{ width: `${xpPercentage}%` }}
                         />
                     </div>
@@ -114,7 +114,7 @@ export function HUD() {
                                     haptics.medium()
                                     router.push('/profile?tab=mastery')
                                 }}
-                                className="px-5 py-2 rounded-xl bg-electric-blue/5 border border-electric-blue text-electric-blue md:bg-transparent md:border-white/10 md:text-slate-300 text-[10px] font-black tracking-widest uppercase hover:bg-electric-blue md:hover:bg-white/5 hover:text-black md:hover:text-white transition-all duration-300 shadow-[0_0_15px_rgba(0,240,255,0.15)] md:shadow-none active:scale-95 cursor-pointer"
+                                className="px-5 py-2 rounded-xl bg-electric-blue/5 border border-electric-blue text-electric-blue md:bg-transparent md:border-white/10 md:text-slate-300 text-[10px] font-black tracking-widest uppercase hover:bg-electric-blue md:hover:bg-white/5 hover:text-black md:hover:text-white transition-all duration-300 shadow-[0_0_15px_rgba(var(--accent-rgb),0.15)] md:shadow-none active:scale-95 cursor-pointer"
                             >
                                 {t('hud.level')} UP
                             </button>
@@ -126,8 +126,8 @@ export function HUD() {
                 {!mindfulMode && (
                     <div className="w-full h-[2px] bg-white/[0.03] relative overflow-hidden">
                         <div 
-                            className="h-full bg-gradient-to-r from-neon-violet to-electric-blue transition-all duration-1000 shadow-[0_0_10px_#bd00ff]"
-                            style={{ width: `${xpPercentage}%` }}
+                            className="h-full bg-gradient-to-r from-neon-violet to-electric-blue transition-all duration-1000"
+                            style={{ width: `${xpPercentage}%`, boxShadow: '0 0 10px rgba(var(--violet-rgb), 0.8)' }}
                         />
                     </div>
                 )}

@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useEffect, useTransition, ComponentType } from 'react'
 import { Coins, Zap, Sparkles, ShieldCheck, Loader2, Crown, Palette, Music, RotateCcw, Flame, ShoppingCart, Rocket, ExternalLink } from 'lucide-react'
@@ -65,7 +65,7 @@ export function ShopClient() {
             priceId: process.env.NEXT_PUBLIC_STRIPE_TOKENS_500_PRICE_ID,
             icon: Sparkles,
             color: 'from-electric-blue/20 to-cyan-600/20 border-electric-blue/20',
-            glow: 'shadow-[0_0_20px_rgba(0,240,255,0.1)]',
+            glow: 'shadow-[0_0_20px_rgba(var(--accent-rgb),0.1)]',
             badge: 'Best Value',
         },
         {
@@ -76,7 +76,7 @@ export function ShopClient() {
             priceId: process.env.NEXT_PUBLIC_STRIPE_TOKENS_1500_PRICE_ID,
             icon: Rocket,
             color: 'from-neon-violet/20 to-purple-600/20 border-neon-violet/20',
-            glow: 'shadow-[0_0_20px_rgba(189,0,255,0.1)]',
+            glow: 'shadow-[0_0_20px_rgba(var(--violet-rgb),0.1)]',
             badge: 'Most Tokens',
         },
     ]
@@ -227,7 +227,7 @@ export function ShopClient() {
             cost: 10,
             icon: Zap,
             color: 'from-soft-cyan/40 to-cyan-500 text-soft-cyan',
-            glowColor: 'rgba(0,240,255,0.3)',
+            glowColor: 'rgba(var(--accent-rgb),0.3)',
             badge: t('shop.items.void.badge')
         },
         {
@@ -647,7 +647,7 @@ export function ShopClient() {
                             <button
                                 onClick={handlePlaceWager}
                                 disabled={isPending}
-                                className="px-6 py-4 rounded-xl bg-neon-violet text-white hover:scale-[1.02] active:scale-95 transition-all font-black text-xs uppercase tracking-wider shadow-[0_0_20px_rgba(189,0,255,0.25)] flex items-center justify-center gap-1.5"
+                                className="px-6 py-4 rounded-xl bg-neon-violet text-white hover:scale-[1.02] active:scale-95 transition-all font-black text-xs uppercase tracking-wider shadow-[0_0_20px_rgba(var(--violet-rgb),0.25)] flex items-center justify-center gap-1.5"
                             >
                                 {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Confirm Wager'}
                             </button>
@@ -759,7 +759,7 @@ export function ShopClient() {
                                                 : isPending
                                                     ? 'bg-white/5 text-gray-600 border border-white/5 cursor-not-allowed'
                                                     : isAffordable
-                                                        ? 'bg-electric-blue text-black hover:scale-105 active:scale-95 shadow-[0_0_15px_rgba(0,240,255,0.2)]'
+                                                        ? 'bg-electric-blue text-black hover:scale-105 active:scale-95 shadow-[0_0_15px_rgba(var(--accent-rgb),0.2)]'
                                                         : 'bg-white/5 text-gray-500 border border-white/5 hover:bg-white/10'
                                         }`}
                                     >

@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useEffect, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
@@ -535,7 +535,7 @@ export function WorkspaceDetailClient({ user, workspace, initialProfile }: Works
                                         <button
                                             type="submit"
                                             disabled={isPending}
-                                            className="flex-1 py-3.5 rounded-2xl bg-electric-blue text-black hover:scale-[1.02] active:scale-95 transition-all font-black text-[10px] tracking-widest uppercase shadow-[0_0_20px_rgba(0,240,255,0.25)] flex items-center justify-center gap-1"
+                                            className="flex-1 py-3.5 rounded-2xl bg-electric-blue text-black hover:scale-[1.02] active:scale-95 transition-all font-black text-[10px] tracking-widest uppercase shadow-[0_0_20px_rgba(var(--accent-rgb),0.25)] flex items-center justify-center gap-1"
                                         >
                                             {isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : 'Inject'}
                                         </button>

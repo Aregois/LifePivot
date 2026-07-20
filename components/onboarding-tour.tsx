@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -62,7 +62,7 @@ export function OnboardingTour() {
             description: t('onboarding.desc_circadian'),
             icon: Zap,
             color: "from-cyan-400 to-violet-500 text-cyan-400",
-            glow: "rgba(0,240,255,0.25)",
+            glow: "rgba(var(--accent-rgb),0.25)",
             badge: t('onboarding.badge_multipliers')
         },
         {
@@ -213,7 +213,7 @@ export function OnboardingTour() {
                             onClick={handleNext}
                             className={`flex-1 py-3.5 rounded-xl font-black text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
                                 step === steps.length - 1
-                                    ? 'bg-electric-blue text-black shadow-[0_0_15px_rgba(0,240,255,0.25)] hover:scale-[1.02] active:scale-[0.98]'
+                                    ? 'bg-electric-blue text-black shadow-[0_0_15px_rgba(var(--accent-rgb),0.25)] hover:scale-[1.02] active:scale-[0.98]'
                                     : 'bg-white text-black hover:scale-[1.02] active:scale-[0.98]'
                             }`}
                         >

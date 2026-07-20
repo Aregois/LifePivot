@@ -1,4 +1,4 @@
-import { verifyUserSession } from '@/utils/auth'
+﻿import { verifyUserSession } from '@/utils/auth'
 import { createClient } from '@/utils/supabase/server'
 import { textModel } from '@/utils/gemini'
 import { NextResponse } from 'next/server'

@@ -162,7 +162,7 @@ export function DateSelector({ selectedDate, onSelectDate }: DateSelectorProps) 
                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#1C2033]/80 border border-white/5 hover:bg-white/10 transition-colors group shadow-lg active:scale-95"
                     style={{ touchAction: 'manipulation' }}
                 >
-                    <Calendar className="w-3.5 h-3.5 text-gray-400 group-hover:text-[#00FFFF] transition-colors" />
+                    <Calendar className="w-3.5 h-3.5 text-gray-400 group-hover:text-electric-blue transition-colors" />
                     <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest group-hover:text-white transition-colors">
                         {t('calendar.view_all')}
                     </span>
@@ -220,9 +220,10 @@ export function DateSelector({ selectedDate, onSelectDate }: DateSelectorProps) 
                                                         'transition-[background-color,border-color,box-shadow] duration-150',
                                                         'active:scale-90',
                                                         isSelected
-                                                            ? 'bg-[#00FFFF] border-[#00FFFF] shadow-[0_0_16px_rgba(0,255,255,0.35)]'
+                                                            ? 'bg-electric-blue border-electric-blue'
                                                             : 'bg-[#1C2033]/50 border-white/5 hover:bg-[#1C2033]',
                                                     ].join(' ')}
+                                                    style={isSelected ? { boxShadow: '0 0 16px rgba(var(--accent-rgb), 0.35)' } : undefined}
                                                 >
                                                     <span
                                                         className={`text-[10px] font-bold uppercase tracking-wider mb-1 pointer-events-none ${isSelected ? 'text-black/60' : 'text-gray-500'
@@ -239,7 +240,7 @@ export function DateSelector({ selectedDate, onSelectDate }: DateSelectorProps) 
 
                                                     {/* Today dot — always has a relative parent now */}
                                                     {d.isToday && !isSelected && (
-                                                        <div className="absolute -bottom-1 w-1.5 h-1.5 rounded-full bg-[#00FFFF] shadow-[0_0_8px_rgba(0,255,255,0.8)] pointer-events-none" />
+                                                        <div className="absolute -bottom-1 w-1.5 h-1.5 rounded-full bg-electric-blue pointer-events-none" style={{ boxShadow: '0 0 8px rgba(var(--accent-rgb), 0.8)' }} />
                                                     )}
                                                 </div>
                                             </button>

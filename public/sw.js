@@ -1,4 +1,9 @@
-const CACHE_NAME = 'lifepivot-cache-v1';
+// ─── Cache versioning ───────────────────────────────────────────────────────
+// Bump this version whenever you deploy code changes.
+// The activate event will delete all caches with a different name,
+// ensuring users always receive fresh JS/CSS bundles after updates.
+const CACHE_NAME = 'lifepivot-cache-v2';
+
 const STATIC_ASSETS = [
   '/',
   '/manifest.json',
@@ -17,7 +22,7 @@ self.addEventListener('install', (event) => {
   );
 });
 
-// Activate Event
+// Activate Event — delete ALL old caches so stale JS bundles are evicted
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((cacheNames) => {
@@ -38,65 +43,83 @@ self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
 
-  // Skip non-GET requests or requests to Supabase (dynamic API) or Chrome Extensions
-  if (request.method !== 'GET' || url.origin !== self.location.origin || request.url.includes('/_next/webpack-hmr') || request.url.includes('/supabase/')) {
+  // Skip non-GET, cross-origin, HMR, and Supabase requests
+  if (
+    request.method !== 'GET' ||
+    url.origin !== self.location.origin ||
+    request.url.includes('/_next/webpack-hmr') ||
+    request.url.includes('/supabase/')
+  ) {
     return;
   }
 
-  // Static Assets Strategy: Cache First
-  const isStaticAsset = 
+  // ── Next.js JS/CSS chunks: Stale-While-Revalidate ──────────────────────
+  // Serve from cache immediately (fast), then fetch fresh in background.
+  // On next load the user gets the updated version.
+  const isNextChunk =
     request.url.includes('/_next/static/') ||
-    url.pathname.endsWith('.png') ||
-    url.pathname.endsWith('.svg') ||
-    url.pathname.endsWith('.ico') ||
     url.pathname.endsWith('.css') ||
-    url.pathname.endsWith('.js') ||
-    url.pathname.includes('/fonts/');
+    url.pathname.endsWith('.js');
 
-  if (isStaticAsset) {
+  if (isNextChunk) {
     event.respondWith(
-      caches.match(request).then((cachedResponse) => {
-        if (cachedResponse) {
-          return cachedResponse;
-        }
-        return fetch(request).then((networkResponse) => {
-          if (!networkResponse || networkResponse.status !== 200) {
+      caches.open(CACHE_NAME).then((cache) => {
+        return cache.match(request).then((cachedResponse) => {
+          const networkFetch = fetch(request).then((networkResponse) => {
+            if (networkResponse && networkResponse.status === 200) {
+              cache.put(request, networkResponse.clone());
+            }
             return networkResponse;
-          }
-          const responseToCache = networkResponse.clone();
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(request, responseToCache);
-          });
-          return networkResponse;
-        }).catch(() => {
-          // Silent catch for offline failures of single static assets
+          }).catch(() => cachedResponse);
+
+          // Return cached immediately if available, otherwise wait for network
+          return cachedResponse || networkFetch;
         });
       })
     );
-  } else {
-    // Dynamic Pages Strategy: Network First (always show newest, fall back to offline cache)
-    event.respondWith(
-      fetch(request)
-        .then((networkResponse) => {
-          if (networkResponse && networkResponse.status === 200) {
-            const responseToCache = networkResponse.clone();
-            caches.open(CACHE_NAME).then((cache) => {
-              cache.put(request, responseToCache);
-            });
-          }
-          return networkResponse;
-        })
-        .catch(() => {
-          return caches.match(request).then((cachedResponse) => {
-            if (cachedResponse) {
-              return cachedResponse;
-            }
-            // Fallback for document pages when offline
-            if (request.headers.get('accept').includes('text/html')) {
-              return caches.match('/');
-            }
-          });
-        })
-    );
+    return;
   }
+
+  // ── Images/fonts: Cache First (immutable, no need to re-fetch) ──────────
+  const isImmutableAsset =
+    url.pathname.endsWith('.png') ||
+    url.pathname.endsWith('.svg') ||
+    url.pathname.endsWith('.ico') ||
+    url.pathname.endsWith('.webp') ||
+    url.pathname.includes('/fonts/');
+
+  if (isImmutableAsset) {
+    event.respondWith(
+      caches.match(request).then((cachedResponse) => {
+        if (cachedResponse) return cachedResponse;
+        return fetch(request).then((networkResponse) => {
+          if (!networkResponse || networkResponse.status !== 200) return networkResponse;
+          const responseToCache = networkResponse.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(request, responseToCache));
+          return networkResponse;
+        }).catch(() => undefined);
+      })
+    );
+    return;
+  }
+
+  // ── Dynamic pages: Network First ────────────────────────────────────────
+  event.respondWith(
+    fetch(request)
+      .then((networkResponse) => {
+        if (networkResponse && networkResponse.status === 200) {
+          const responseToCache = networkResponse.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(request, responseToCache));
+        }
+        return networkResponse;
+      })
+      .catch(() => {
+        return caches.match(request).then((cachedResponse) => {
+          if (cachedResponse) return cachedResponse;
+          if (request.headers.get('accept').includes('text/html')) {
+            return caches.match('/');
+          }
+        });
+      })
+  );
 });

@@ -1,4 +1,4 @@
-import { createClient } from '@/utils/supabase/server'
+﻿import { createClient } from '@/utils/supabase/server'
 import { WorkspacesClient } from '@/components/workspaces-client'
 import { redirect } from 'next/navigation'
 import { Suspense } from 'react'

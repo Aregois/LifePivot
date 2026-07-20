@@ -159,7 +159,7 @@ export function DashboardClient({
             </p>
           </div>
           {/* Mobile Reactive Avatar */}
-          <div className="flex md:hidden justify-start shrink-0">
+          <div className="flex md:hidden w-full justify-center shrink-0">
             <ReactiveAvatar />
           </div>
 
@@ -197,7 +197,7 @@ export function DashboardClient({
       {userLevel < 2 ? (
         <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#141824] to-[#0B0D17] border border-white/5 p-8 text-center flex flex-col items-center justify-center min-h-[350px] shadow-2xl glass-card w-full">
           <div className="absolute top-0 right-0 w-64 h-64 bg-electric-blue/5 rounded-full blur-[80px] -translate-y-1/2 translate-x-1/4 pointer-events-none" />
-          <div className="w-16 h-16 rounded-2xl bg-electric-blue/10 flex items-center justify-center border border-electric-blue/20 mb-6 shadow-[0_0_15px_rgba(0,240,255,0.1)]">
+          <div className="w-16 h-16 rounded-2xl bg-electric-blue/10 flex items-center justify-center border border-electric-blue/20 mb-6 shadow-[0_0_15px_rgba(var(--accent-rgb),0.1)]">
             <Zap className="h-8 w-8 text-electric-blue" />
           </div>
           <h2 className="text-xl font-black text-white uppercase tracking-wider mb-2">Next Checkpoint</h2>
@@ -213,7 +213,7 @@ export function DashboardClient({
             </div>
             <div className="w-full bg-[#0B0D17] h-2 rounded-full overflow-hidden border border-white/5 shadow-inner">
               <div 
-                className="h-full bg-gradient-to-r from-electric-blue to-neon-violet transition-all duration-1000 ease-out shadow-[0_0_12px_rgba(0,240,255,0.4)]"
+                className="h-full bg-gradient-to-r from-electric-blue to-neon-violet transition-all duration-1000 ease-out shadow-[0_0_12px_rgba(var(--accent-rgb),0.4)]"
                 style={{ width: `${Math.min(100, Math.max(0, ((profile?.xp ?? 0) / 1000) * 100))}%` }}
               />
             </div>
@@ -221,7 +221,7 @@ export function DashboardClient({
 
           <Link
             href="/plan"
-            className="px-6 py-3.5 rounded-xl border border-electric-blue/30 text-electric-blue bg-electric-blue/5 font-black text-xs tracking-widest uppercase hover:bg-electric-blue hover:text-black transition-all duration-300 shadow-[0_0_15px_rgba(0,240,255,0.08)] active:scale-95 animate-pulse"
+            className="px-6 py-3.5 rounded-xl border border-electric-blue/30 text-electric-blue bg-electric-blue/5 font-black text-xs tracking-widest uppercase hover:bg-electric-blue hover:text-black transition-all duration-300 shadow-[0_0_15px_rgba(var(--accent-rgb),0.08)] active:scale-95 animate-pulse"
           >
             Go to Plan Portal
           </Link>
@@ -266,7 +266,7 @@ export function DashboardClient({
                   </div>
                   <div className="w-full h-3 bg-[#0B0D17] rounded-full overflow-hidden border border-white/5 shadow-inner">
                     <div
-                      className="h-full bg-gradient-to-r from-electric-blue to-neon-violet shadow-[0_0_15px_rgba(0,240,255,0.8)] rounded-full transition-all duration-1000 ease-out"
+                      className="h-full bg-gradient-to-r from-electric-blue to-neon-violet shadow-[0_0_15px_rgba(var(--accent-rgb),0.8)] rounded-full transition-all duration-1000 ease-out"
                       style={{ width: `${stats.total > 0 ? Math.round((stats.completed / stats.total) * 100) : 0}%` }}
                     >
                       <div className="absolute right-0 top-0 bottom-0 w-8 bg-white/30 blur-[4px]"></div>
@@ -302,7 +302,7 @@ export function DashboardClient({
                             <div className={`group flex items-start gap-4 p-4 rounded-2xl border transition-all duration-200 ${
                               isDone 
                                 ? 'bg-[#1C2136]/30 border-white/5 opacity-60 line-through' 
-                                : 'bg-[#1C2136]/80 border-electric-blue/20 shadow-[0_0_15px_rgba(0,240,255,0.05)] hover:border-electric-blue/40'
+                                : 'bg-[#1C2136]/80 border-electric-blue/20 shadow-[0_0_15px_rgba(var(--accent-rgb),0.05)] hover:border-electric-blue/40'
                             }`}>
                               <div className={`mt-0.5 w-6 h-6 rounded-md border-2 flex items-center justify-center shrink-0 ${
                                 isDone ? 'bg-electric-blue border-electric-blue' : 'border-gray-600 bg-[#0B0D17]'
@@ -318,7 +318,7 @@ export function DashboardClient({
                                 </p>
                               </div>
                               {!isDone && (
-                                <div className="flex items-center bg-[#0B0D17] rounded-full px-2.5 py-1 border border-electric-blue/30 shadow-[0_0_10px_rgba(0,240,255,0.15)]">
+                                <div className="flex items-center bg-[#0B0D17] rounded-full px-2.5 py-1 border border-electric-blue/30 shadow-[0_0_10px_rgba(var(--accent-rgb),0.15)]">
                                   <span className="font-black text-[11px] text-electric-blue">+{task.priority * 10} XP</span>
                                 </div>
                               )}
@@ -344,7 +344,7 @@ export function DashboardClient({
               <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-1 gap-4">
                 <Link href="/plan" className="group p-5 rounded-2xl bg-[#1C2136]/50 border border-white/5 hover:border-electric-blue/30 hover:bg-[#1C2136] transition-all relative overflow-hidden active:scale-[0.98]">
                   <div className="absolute top-0 right-0 w-24 h-24 bg-electric-blue/10 rounded-full blur-[30px] group-hover:bg-electric-blue/20 transition-all pointer-events-none" />
-                  <div className="h-12 w-12 rounded-[1rem] bg-electric-blue/10 flex items-center justify-center border border-electric-blue/20 mb-3 group-hover:scale-110 group-hover:rotate-3 transition-transform shadow-[0_0_15px_rgba(0,240,255,0.1)]">
+                  <div className="h-12 w-12 rounded-[1rem] bg-electric-blue/10 flex items-center justify-center border border-electric-blue/20 mb-3 group-hover:scale-110 group-hover:rotate-3 transition-transform shadow-[0_0_15px_rgba(var(--accent-rgb),0.1)]">
                     <Calendar className="h-6 w-6 text-electric-blue" />
                   </div>
                   <h3 className="text-white font-bold text-sm">{t('dashboard.review_plan')}</h3>

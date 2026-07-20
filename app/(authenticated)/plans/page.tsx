@@ -1,4 +1,4 @@
-import { createClient } from '@/utils/supabase/server'
+﻿import { createClient } from '@/utils/supabase/server'
 import { PlansClient } from './plans-client'
 import { redirect } from 'next/navigation'
 import { Suspense } from 'react'
@@ -43,7 +43,7 @@ export default async function PlansPage() {
     return (
         <Suspense fallback={
             <div className="flex items-center justify-center min-h-[50vh]">
-                <div className="w-8 h-8 border-4 border-[#00F0FF] border-t-transparent rounded-full animate-spin shadow-[0_0_15px_rgba(0,240,255,0.2)]" />
+                <div className="w-8 h-8 border-4 border-[#00F0FF] border-t-transparent rounded-full animate-spin shadow-[0_0_15px_rgba(var(--accent-rgb),0.2)]" />
             </div>
         }>
             <PlansClient

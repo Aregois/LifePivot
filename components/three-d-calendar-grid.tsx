@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useMemo, useEffect, useTransition, useRef } from 'react'
 import { motion } from 'framer-motion'
@@ -501,7 +501,7 @@ export function ThreeDCalendarGrid({
                                 onClick={() => { haptics.light(); setIs3D(prev => !prev) }}
                                 className={`glass px-3.5 py-2.5 rounded-xl text-[9px] font-black uppercase tracking-wider transition-all border shrink-0 active:scale-95 ${
                                     is3D 
-                                        ? 'bg-electric-blue/15 border-electric-blue/30 text-electric-blue shadow-[0_0_15px_rgba(0,240,255,0.15)]' 
+                                        ? 'bg-electric-blue/15 border-electric-blue/30 text-electric-blue shadow-[0_0_15px_rgba(var(--accent-rgb),0.15)]' 
                                         : 'bg-black/20 border-white/5 text-gray-500 hover:text-gray-300'
                                 }`}
                             >
@@ -544,7 +544,7 @@ export function ThreeDCalendarGrid({
                     let glowHex = ''
 
                     if (isPending) {
-                        statusClasses = 'border-electric-blue/30 bg-electric-blue/10 shadow-[0_0_15px_rgba(0,240,255,0.2)]'
+                        statusClasses = 'border-electric-blue/30 bg-electric-blue/10 shadow-[0_0_15px_rgba(var(--accent-rgb),0.2)]'
                         glowColor = 'bg-electric-blue'
                         glowHex = '#00F0FF'
                     } else if (isCompleted) {

@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { login, forgotPassword } from './actions'
 import { useLanguage } from '@/components/language-provider'
@@ -298,7 +298,7 @@ export default function LoginPage() {
                                         id="login-btn"
                                         type="submit"
                                         formAction={login}
-                                        className="group relative flex w-full justify-center items-center gap-2 overflow-hidden rounded-xl bg-gradient-to-r from-electric-blue/20 to-neon-violet/20 border border-electric-blue/20 px-4 py-3.5 text-sm font-black text-white transition-all hover:from-electric-blue/30 hover:to-neon-violet/30 hover:shadow-[0_0_20px_rgba(0,240,255,0.2)] active:scale-[0.98] min-h-[44px]"
+                                        className="group relative flex w-full justify-center items-center gap-2 overflow-hidden rounded-xl bg-gradient-to-r from-electric-blue/20 to-neon-violet/20 border border-electric-blue/20 px-4 py-3.5 text-sm font-black text-white transition-all hover:from-electric-blue/30 hover:to-neon-violet/30 hover:shadow-[0_0_20px_rgba(var(--accent-rgb),0.2)] active:scale-[0.98] min-h-[44px]"
                                     >
                                         <span className="relative z-10 font-black uppercase tracking-wider text-xs">{t('auth.login')}</span>
                                         <ArrowRight className="w-3.5 h-3.5 relative z-10 group-hover:translate-x-0.5 transition-transform" />

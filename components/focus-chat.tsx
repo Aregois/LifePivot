@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useRef, useEffect, useTransition } from 'react'
 import { createPortal } from 'react-dom'
@@ -144,7 +144,7 @@ export function FocusChat({ task, goalTitle, activeSubtaskTitle, onClose, person
                             onClick={() => handlePersonaChange(p.id)}
                             className={`px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-wider transition-all duration-200 shrink-0 border ${
                                 isActive 
-                                    ? 'bg-electric-blue/15 border-electric-blue/35 text-electric-blue shadow-[0_0_10px_rgba(0,240,255,0.15)]' 
+                                    ? 'bg-electric-blue/15 border-electric-blue/35 text-electric-blue shadow-[0_0_10px_rgba(var(--accent-rgb),0.15)]' 
                                     : 'bg-white/5 border-white/5 text-gray-400 hover:text-gray-200'
                             }`}
                         >
@@ -188,13 +188,13 @@ export function FocusChat({ task, goalTitle, activeSubtaskTitle, onClose, person
                                 <div className={`h-8 w-8 rounded-full flex-shrink-0 flex items-center justify-center border ${msg.role === 'user' ? 'bg-electric-blue/10 border-electric-blue/20' : 'bg-neon-violet/10 border-neon-violet/20'}`}>
                                     {msg.role === 'user' ? <User className="h-3.5 w-3.5 text-electric-blue" /> : <Bot className="h-3.5 w-3.5 text-neon-violet" />}
                                 </div>
-                                <div className={`max-w-[80%] px-4 py-3 rounded-2xl text-xs leading-relaxed font-medium ${msg.role === 'user' ? 'bg-electric-blue/10 border border-electric-blue/25 text-white rounded-tr-sm shadow-[0_0_15px_rgba(0,240,255,0.05)]' : 'bg-[#1C2033]/60 border border-white/5 text-gray-200 rounded-tl-sm'}`}>
+                                <div className={`max-w-[80%] px-4 py-3 rounded-2xl text-xs leading-relaxed font-medium ${msg.role === 'user' ? 'bg-electric-blue/10 border border-electric-blue/25 text-white rounded-tr-sm shadow-[0_0_15px_rgba(var(--accent-rgb),0.05)]' : 'bg-[#1C2033]/60 border border-white/5 text-gray-200 rounded-tl-sm'}`}>
                                     {msg.text}
                                 </div>
                                 {msg.role === 'model' && (
                                     <button 
                                         onClick={() => handleToggleSpeech(i, msg.text)}
-                                        className={`self-end mb-1 h-7 w-7 rounded-xl flex items-center justify-center border transition-all ${speakingMsgIndex === i ? 'bg-neon-violet/20 border-neon-violet/30 text-neon-violet shadow-[0_0_8px_rgba(189,0,255,0.2)]' : 'bg-white/5 border-white/10 text-gray-500 hover:text-white hover:bg-white/5'} shrink-0 active:scale-90`}
+                                        className={`self-end mb-1 h-7 w-7 rounded-xl flex items-center justify-center border transition-all ${speakingMsgIndex === i ? 'bg-neon-violet/20 border-neon-violet/30 text-neon-violet shadow-[0_0_8px_rgba(var(--violet-rgb),0.2)]' : 'bg-white/5 border-white/10 text-gray-500 hover:text-white hover:bg-white/5'} shrink-0 active:scale-90`}
                                     >
                                         {speakingMsgIndex === i ? <VolumeX className="h-3.5 w-3.5" /> : <Volume2 className="h-3.5 w-3.5" />}
                                     </button>
@@ -242,7 +242,7 @@ export function FocusChat({ task, goalTitle, activeSubtaskTitle, onClose, person
                     <button 
                         onClick={handleSend} 
                         disabled={!input.trim() || isPending || !task}
-                        className="h-8 w-8 rounded-xl bg-tertiary text-white hover:bg-white hover:text-tertiary transition-colors flex items-center justify-center disabled:opacity-30 disabled:hover:bg-tertiary disabled:hover:text-white shadow-[0_0_10px_rgba(189,0,255,0.6)] active:scale-95 shrink-0"
+                        className="h-8 w-8 rounded-xl bg-tertiary text-white hover:bg-white hover:text-tertiary transition-colors flex items-center justify-center disabled:opacity-30 disabled:hover:bg-tertiary disabled:hover:text-white shadow-[0_0_10px_rgba(var(--violet-rgb),0.6)] active:scale-95 shrink-0"
                     >
                         <Send className="h-3.5 w-3.5 fill-current" />
                     </button>

@@ -1,4 +1,4 @@
-import { createClient } from '@/utils/supabase/server'
+﻿import { createClient } from '@/utils/supabase/server'
 import { MarketplaceClient } from '@/components/marketplace-client'
 import { redirect } from 'next/navigation'
 import { Suspense } from 'react'

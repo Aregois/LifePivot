@@ -1,4 +1,4 @@
-import { Plus } from 'lucide-react'
+﻿import { Plus } from 'lucide-react'
 import { useLanguage } from './language-provider'
 
 export function TodaysFocusHeader({ remainingSessions }: { remainingSessions: number }) {

@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useEffect, useRef, useTransition, useCallback } from 'react'
 import type { PanInfo } from 'framer-motion'
@@ -412,7 +412,7 @@ export function FocusModeOverlay({ task, goalTitle, onClose, onOptimisticTokenUp
                         {/* Modal Header */}
                         <div className="flex items-center justify-between border-b border-white/5 pb-4 relative z-10">
                             <div className="flex items-center gap-3">
-                                <div className="h-10 w-10 bg-primary/10 border border-primary/20 text-primary rounded-2xl flex items-center justify-center shadow-[0_0_15px_rgba(0,240,255,0.15)]">
+                                <div className="h-10 w-10 bg-primary/10 border border-primary/20 text-primary rounded-2xl flex items-center justify-center shadow-[0_0_15px_rgba(var(--accent-rgb),0.15)]">
                                     <Sparkles className="h-5 w-5 animate-pulse" />
                                 </div>
                                 <div>
@@ -454,7 +454,7 @@ export function FocusModeOverlay({ task, goalTitle, onClose, onOptimisticTokenUp
                                     }}
                                     className={`px-5 py-3 rounded-2xl border flex items-center gap-2.5 transition-all text-xs font-black uppercase tracking-wider ${
                                         isSpeakingHint
-                                            ? 'bg-neon-violet/10 border-neon-violet/30 text-neon-violet shadow-[0_0_15px_rgba(189,0,255,0.15)]'
+                                            ? 'bg-neon-violet/10 border-neon-violet/30 text-neon-violet shadow-[0_0_15px_rgba(var(--violet-rgb),0.15)]'
                                             : 'bg-white/5 border-white/10 text-gray-300 hover:bg-white/10 hover:text-white'
                                     }`}
                                 >
@@ -512,7 +512,7 @@ export function FocusModeOverlay({ task, goalTitle, onClose, onOptimisticTokenUp
                                     stopSpeaking()
                                     setIsSpeakingHint(false)
                                 }}
-                                className="w-full py-4 rounded-2xl text-black font-black text-sm uppercase tracking-wider flex items-center justify-center gap-2 hover:scale-[1.01] active:scale-[0.99] transition-all shadow-[0_0_20px_rgba(0,240,255,0.2)]"
+                                className="w-full py-4 rounded-2xl text-black font-black text-sm uppercase tracking-wider flex items-center justify-center gap-2 hover:scale-[1.01] active:scale-[0.99] transition-all shadow-[0_0_20px_rgba(var(--accent-rgb),0.2)]"
                                 style={{ background: timerColor }}
                             >
                                 Got it, continuing
@@ -885,7 +885,7 @@ export function FocusModeOverlay({ task, goalTitle, onClose, onOptimisticTokenUp
                                                                     className="w-full flex items-start gap-3.5 p-4 rounded-2xl text-left bg-black/30 border border-white/5 hover:border-primary/30 hover:bg-black/40 transition-all group"
                                                                 >
                                                                     {st.completed ? (
-                                                                        <CheckSquare className="h-4.5 w-4.5 text-primary shrink-0 mt-0.5 shadow-[0_0_8px_rgba(0,240,255,0.4)]" />
+                                                                        <CheckSquare className="h-4.5 w-4.5 text-primary shrink-0 mt-0.5 shadow-[0_0_8px_rgba(var(--accent-rgb),0.4)]" />
                                                                     ) : (
                                                                         <Square className="h-4.5 w-4.5 text-gray-600 group-hover:text-primary/50 shrink-0 mt-0.5 transition-colors" />
                                                                     )}

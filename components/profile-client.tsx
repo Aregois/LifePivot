@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useEffect, useTransition } from 'react'
 import { 
@@ -222,15 +222,23 @@ export function ProfileClient({
         if (nextAccent === 'violet') {
             root.style.setProperty('--color-electric-blue', '#bd00ff')
             root.style.setProperty('--color-neon-violet', '#ff00a0')
+            root.style.setProperty('--accent-rgb', '189, 0, 255')
+            root.style.setProperty('--violet-rgb', '255, 0, 160')
         } else if (nextAccent === 'green') {
             root.style.setProperty('--color-electric-blue', '#10b981')
             root.style.setProperty('--color-neon-violet', '#059669')
+            root.style.setProperty('--accent-rgb', '16, 185, 129')
+            root.style.setProperty('--violet-rgb', '5, 150, 105')
         } else if (nextAccent === 'sunset') {
             root.style.setProperty('--color-electric-blue', '#f59e0b')
             root.style.setProperty('--color-neon-violet', '#d97706')
+            root.style.setProperty('--accent-rgb', '245, 158, 11')
+            root.style.setProperty('--violet-rgb', '217, 119, 6')
         } else {
             root.style.setProperty('--color-electric-blue', '#00f0ff')
             root.style.setProperty('--color-neon-violet', '#bd00ff')
+            root.style.setProperty('--accent-rgb', '0, 240, 255')
+            root.style.setProperty('--violet-rgb', '189, 0, 255')
         }
     }
 
@@ -414,7 +422,7 @@ export function ProfileClient({
                     </div>
                     <div className="w-full h-2 bg-[#1C2033]/50 rounded-full overflow-hidden border border-white/5 shadow-inner">
                         <div 
-                            className="h-full bg-gradient-to-r from-electric-blue to-neon-violet transition-all duration-1000 shadow-[0_0_8px_rgba(0,240,255,0.6)] rounded-full"
+                            className="h-full bg-gradient-to-r from-electric-blue to-neon-violet transition-all duration-1000 shadow-[0_0_8px_rgba(var(--accent-rgb),0.6)] rounded-full"
                             style={{ width: `${xpPercentage}%` }}
                         />
                     </div>
@@ -501,7 +509,7 @@ export function ProfileClient({
                                                     day.isCompleted
                                                         ? 'bg-emerald-500/20 border-emerald-500 text-emerald-400 shadow-[0_0_10px_rgba(16,185,129,0.3)]'
                                                         : day.isToday
-                                                            ? 'bg-electric-blue/10 border-electric-blue text-electric-blue shadow-[0_0_10px_rgba(0,240,255,0.25)] animate-pulse'
+                                                            ? 'bg-electric-blue/10 border-electric-blue text-electric-blue shadow-[0_0_10px_rgba(var(--accent-rgb),0.25)] animate-pulse'
                                                             : day.isFuture
                                                                 ? 'bg-transparent border-dashed border-white/10 text-gray-700'
                                                                 : 'bg-[#1C2033] border-white/5 text-gray-500'
@@ -590,7 +598,7 @@ export function ProfileClient({
                                                         className={`px-3.5 py-1.5 lg:px-4 lg:py-2 rounded-xl text-[9px] lg:text-[10px] font-black uppercase tracking-wider shrink-0 transition-transform ${
                                                             isClaimed 
                                                                 ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 cursor-default'
-                                                                : 'bg-electric-blue text-black hover:scale-105 active:scale-95 shadow-[0_0_10px_rgba(0,240,255,0.25)]'
+                                                                : 'bg-electric-blue text-black hover:scale-105 active:scale-95 shadow-[0_0_10px_rgba(var(--accent-rgb),0.25)]'
                                                         }`}
                                                     >
                                                         {claimingId === quest.id ? (
@@ -679,7 +687,7 @@ export function ProfileClient({
                                                     <button
                                                         onClick={() => handleClaimAchievement(ach.id)}
                                                         disabled={claimingId === ach.id}
-                                                        className="px-3.5 py-1.5 lg:px-4 lg:py-2 rounded-xl text-[9px] lg:text-[10px] font-black tracking-wider bg-electric-blue text-black hover:scale-105 active:scale-95 shadow-[0_0_10px_rgba(0,240,255,0.25)] transition-transform"
+                                                        className="px-3.5 py-1.5 lg:px-4 lg:py-2 rounded-xl text-[9px] lg:text-[10px] font-black tracking-wider bg-electric-blue text-black hover:scale-105 active:scale-95 shadow-[0_0_10px_rgba(var(--accent-rgb),0.25)] transition-transform"
                                                     >
                                                         {claimingId === ach.id ? (
                                                             <Loader2 className="h-3 w-3 animate-spin" />
@@ -723,7 +731,7 @@ export function ProfileClient({
                                                 onClick={() => handleEquipTitle(tId)}
                                                 className={`w-full py-3 px-4 rounded-2xl text-left bg-[#0c0e17] border flex items-center justify-between active:scale-98 transition-all duration-200 ${
                                                     equippedTitle === tId 
-                                                        ? 'border-electric-blue text-white shadow-[0_0_12px_rgba(0,240,255,0.1)]' 
+                                                        ? 'border-electric-blue text-white shadow-[0_0_12px_rgba(var(--accent-rgb),0.1)]' 
                                                         : 'border-white/5 text-gray-400 hover:border-white/10'
                                                 }`}
                                             >
@@ -751,7 +759,7 @@ export function ProfileClient({
                                                     onClick={() => handleEquipFrame(fId)}
                                                     className={`w-full py-3 px-4 rounded-2xl text-left bg-[#0c0e17] border flex items-center justify-between active:scale-98 transition-all duration-200 ${
                                                         equippedFrame === fId 
-                                                            ? 'border-electric-blue text-white shadow-[0_0_12px_rgba(0,240,255,0.1)]' 
+                                                            ? 'border-electric-blue text-white shadow-[0_0_12px_rgba(var(--accent-rgb),0.1)]' 
                                                             : 'border-white/5 text-gray-400 hover:border-white/10'
                                                     }`}
                                                 >
@@ -777,7 +785,7 @@ export function ProfileClient({
                                             }}
                                             className={`flex flex-col items-center gap-2 p-3 rounded-2xl bg-[#0c0e17] border active:scale-95 transition-all duration-200 ${
                                                 avatarId === avatar.id 
-                                                    ? 'border-electric-blue shadow-[0_0_12px_rgba(0,240,255,0.15)]' 
+                                                    ? 'border-electric-blue shadow-[0_0_12px_rgba(var(--accent-rgb),0.15)]' 
                                                     : 'border-white/5 hover:border-white/10'
                                             }`}
                                         >
@@ -822,7 +830,7 @@ export function ProfileClient({
                                         onClick={() => handleAccentChange(swatch.id as AccentType)}
                                         className={`flex flex-col items-center gap-1.5 p-2.5 rounded-2xl bg-[#0c0e17] border active:scale-95 transition-all ${
                                             accent === swatch.id 
-                                                ? 'border-electric-blue shadow-[0_0_12px_rgba(0,240,255,0.15)]' 
+                                                ? 'border-electric-blue shadow-[0_0_12px_rgba(var(--accent-rgb),0.15)]' 
                                                 : 'border-white/5 hover:border-white/10'
                                         }`}
                                     >

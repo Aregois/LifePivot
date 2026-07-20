@@ -37,10 +37,10 @@ export function BottomNav() {
                     }}
                     className="absolute -top-6 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1 group active:scale-90 transition-transform duration-200"
                 >
-                    <div className="w-16 h-16 rounded-full bg-electric-blue border-4 border-[#0B0D17] flex items-center justify-center shadow-[0_0_12px_rgba(0,240,255,0.18)] cursor-pointer hover:bg-electric-blue/90 transition-colors z-10">
+                    <div className="w-16 h-16 rounded-full bg-electric-blue border-4 border-[#0B0D17] flex items-center justify-center shadow-[0_0_12px_rgba(var(--accent-rgb),0.18)] cursor-pointer hover:bg-electric-blue/90 transition-colors z-10">
                         <Bot className="h-6 w-6 text-white" />
                     </div>
-                    <span className="text-[10px] font-bold text-electric-blue uppercase tracking-widest mt-0.5 opacity-80 group-hover:opacity-100 transition-opacity">
+                    <span className="relative z-10 text-[10px] font-bold text-electric-blue uppercase tracking-widest mt-0.5 opacity-80 group-hover:opacity-100 transition-opacity">
                         {t('nav.tutor')}
                     </span>
                 </button>
@@ -50,8 +50,8 @@ export function BottomNav() {
                     const isActive = pathname === tab.href
 
                     // Push left tabs left, and right tabs right to make space for the central Tutor button
-                    const isLeftCenter = idx === 1
-                    const isRightCenter = idx === 2
+                    const isLeftCenter = idx === 2
+                    const isRightCenter = idx === 3
 
                     const isLocked = tab.href === '/shop' && level < 2
 

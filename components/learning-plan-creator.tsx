@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { createGoalBase, generateTasksChunk, importExternalPlan } from '@/app/actions'
 import { 
@@ -60,7 +60,7 @@ const CATEGORIES: CategoryItem[] = [
         color: 'text-[#00F0FF] border-[#00F0FF]/20',
         bgColor: 'bg-[#00F0FF]/10',
         gradient: 'from-[#00F0FF]/5 to-transparent',
-        shadow: 'hover:shadow-[0_0_20px_rgba(0,240,255,0.15)]',
+        shadow: 'hover:shadow-[0_0_20px_rgba(var(--accent-rgb),0.15)]',
         description: 'Coding drills, modules, and system designs.',
         suggestedGoal: 'MASTER NEXT.JS AND ADVANCED SYSTEMS DESIGN'
     },
@@ -82,7 +82,7 @@ const CATEGORIES: CategoryItem[] = [
         color: 'text-[#BD00FF] border-[#BD00FF]/20',
         bgColor: 'bg-[#BD00FF]/10',
         gradient: 'from-[#BD00FF]/5 to-transparent',
-        shadow: 'hover:shadow-[0_0_20px_rgba(189,0,255,0.15)]',
+        shadow: 'hover:shadow-[0_0_20px_rgba(var(--violet-rgb),0.15)]',
         description: 'Rigorous derivations, proofs, computations.',
         suggestedGoal: 'DERIVE EINSTEIN FIELD EQUATIONS'
     },
@@ -450,7 +450,7 @@ CRITICAL CONSTRAINTS:
                             <TextTicker />
                             <div className="w-full max-w-md bg-white/5 h-2 rounded-full mt-8 overflow-hidden">
                                 <div
-                                    className="h-full bg-gradient-to-r from-electric-blue to-neon-violet transition-all duration-1000 ease-out shadow-[0_0_20px_rgba(0,240,255,0.5)]"
+                                    className="h-full bg-gradient-to-r from-electric-blue to-neon-violet transition-all duration-1000 ease-out shadow-[0_0_20px_rgba(var(--accent-rgb),0.5)]"
                                     style={{ width: `${progress}%` }}
                                 />
                             </div>
@@ -483,7 +483,7 @@ CRITICAL CONSTRAINTS:
 
                 <button
                     onClick={() => window.location.reload()}
-                    className="w-full py-4 rounded-2xl bg-gradient-to-r from-electric-blue to-soft-cyan text-black font-black text-xs uppercase tracking-widest hover:scale-[1.01] active:scale-95 transition-all shadow-[0_0_20px_rgba(0,240,255,0.2)]"
+                    className="w-full py-4 rounded-2xl bg-gradient-to-r from-electric-blue to-soft-cyan text-black font-black text-xs uppercase tracking-widest hover:scale-[1.01] active:scale-95 transition-all shadow-[0_0_20px_rgba(var(--accent-rgb),0.2)]"
                 >
                     Done & Go to Dashboard
                 </button>
@@ -492,7 +492,7 @@ CRITICAL CONSTRAINTS:
     }
 
     return (
-        <div className="relative group rounded-2xl glass p-[1px] overflow-hidden transition-all duration-500 hover:shadow-[0_0_40px_rgba(0,240,255,0.1)]">
+        <div className="relative group rounded-2xl glass p-[1px] overflow-hidden transition-all duration-500 hover:shadow-[0_0_40px_rgba(var(--accent-rgb),0.1)]">
             <div className="absolute inset-0 bg-gradient-to-r from-neon-violet via-electric-blue to-soft-cyan opacity-10 group-hover:opacity-20 transition-opacity duration-700 pointer-events-none" />
 
             <div className="relative glass-card rounded-2xl p-5 sm:p-7 bg-[#0B0D17]/95 backdrop-blur-3xl border border-white/5">
@@ -608,7 +608,7 @@ CRITICAL CONSTRAINTS:
                                     onClick={() => { haptics.light(); setCreationMode('ai') }}
                                     className={`flex-1 py-3 text-[10px] font-black uppercase tracking-wider rounded-xl transition-all cursor-pointer ${
                                         creationMode === 'ai'
-                                            ? 'bg-gradient-to-r from-electric-blue to-neon-violet text-white shadow-[0_0_15px_rgba(0,240,255,0.2)]'
+                                            ? 'bg-gradient-to-r from-electric-blue to-neon-violet text-white shadow-[0_0_15px_rgba(var(--accent-rgb),0.2)]'
                                             : 'text-gray-400 hover:text-white'
                                     }`}
                                 >
@@ -618,7 +618,7 @@ CRITICAL CONSTRAINTS:
                                     onClick={() => { haptics.light(); setCreationMode('import') }}
                                     className={`flex-1 py-3 text-[10px] font-black uppercase tracking-wider rounded-xl transition-all cursor-pointer ${
                                         creationMode === 'import'
-                                            ? 'bg-gradient-to-r from-electric-blue to-neon-violet text-white shadow-[0_0_15px_rgba(0,240,255,0.2)]'
+                                            ? 'bg-gradient-to-r from-electric-blue to-neon-violet text-white shadow-[0_0_15px_rgba(var(--accent-rgb),0.2)]'
                                             : 'text-gray-400 hover:text-white'
                                     }`}
                                 >
@@ -821,7 +821,7 @@ CRITICAL CONSTRAINTS:
                                                     onClick={() => { haptics.light(); setCommitment(preset.value) }}
                                                     className={`flex flex-col items-center justify-center py-3 px-2 rounded-xl border transition-all duration-200 active:scale-95 pointer-events-auto cursor-pointer ${
                                                         isSelected
-                                                            ? 'bg-electric-blue/15 border-electric-blue/40 shadow-[0_0_12px_rgba(0,240,255,0.15)]'
+                                                            ? 'bg-electric-blue/15 border-electric-blue/40 shadow-[0_0_12px_rgba(var(--accent-rgb),0.15)]'
                                                             : 'bg-white/[0.03] border-white/[0.06] hover:bg-white/[0.06] hover:border-white/10'
                                                     }`}
                                                 >
@@ -840,7 +840,7 @@ CRITICAL CONSTRAINTS:
 
                                 <button
                                     onClick={handleStartGeneration}
-                                    className="group/btn flex items-center justify-center gap-2 w-full rounded-xl bg-electric-blue py-4 font-black text-base tracking-tighter uppercase transition-all shadow-[0_0_30px_rgba(0,240,255,0.25)] hover:scale-[1.02] active:scale-[0.98] text-white pointer-events-auto cursor-pointer"
+                                    className="group/btn flex items-center justify-center gap-2 w-full rounded-xl bg-electric-blue py-4 font-black text-base tracking-tighter uppercase transition-all shadow-[0_0_30px_rgba(var(--accent-rgb),0.25)] hover:scale-[1.02] active:scale-[0.98] text-white pointer-events-auto cursor-pointer"
                                 >
                                     <span>{t('creator.button_generate')}</span>
                                     <Zap className="h-5 w-5 animate-pulse" />

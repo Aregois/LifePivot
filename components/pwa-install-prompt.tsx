@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -142,7 +142,7 @@ export function PwaInstallPrompt() {
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.9, opacity: 0, y: 20 }}
             transition={{ type: 'spring', damping: 25, stiffness: 150 }}
-            className="relative overflow-hidden rounded-[2.5rem] bg-[#0E111F]/95 backdrop-blur-2xl border border-white/10 p-8 shadow-[0_20px_50px_rgba(0,0,0,0.6),0_0_40px_rgba(0,240,255,0.08)] w-full max-w-sm mx-auto text-center z-10"
+            className="relative overflow-hidden rounded-[2.5rem] bg-[#0E111F]/95 backdrop-blur-2xl border border-white/10 p-8 shadow-[0_20px_50px_rgba(0,0,0,0.6),0_0_40px_rgba(var(--accent-rgb),0.08)] w-full max-w-sm mx-auto text-center z-10"
           >
             {/* Subtle top neon border accent */}
             <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-electric-blue via-neon-violet to-electric-blue opacity-80" />
@@ -156,7 +156,7 @@ export function PwaInstallPrompt() {
             </button>
 
             {/* Premium Icon */}
-            <div className="mx-auto h-20 w-20 rounded-[2rem] bg-gradient-to-br from-electric-blue/20 to-neon-violet/20 border border-electric-blue/30 flex items-center justify-center text-electric-blue shadow-[0_0_30px_rgba(0,240,255,0.2)] mb-6">
+            <div className="mx-auto h-20 w-20 rounded-[2rem] bg-gradient-to-br from-electric-blue/20 to-neon-violet/20 border border-electric-blue/30 flex items-center justify-center text-electric-blue shadow-[0_0_30px_rgba(var(--accent-rgb),0.2)] mb-6">
               <Download className="h-9 w-9 text-white animate-pulse" />
             </div>
 
@@ -201,7 +201,7 @@ export function PwaInstallPrompt() {
                 <div className="mt-4">
                   <button
                     onClick={handleInstallClick}
-                    className="w-full bg-gradient-to-r from-electric-blue to-neon-violet hover:from-electric-blue/90 hover:to-neon-violet/90 text-white font-extrabold py-4 px-6 rounded-[1.8rem] text-xs uppercase tracking-wider transition-all duration-300 shadow-[0_0_25px_rgba(0,240,255,0.3)] active:scale-[0.98]"
+                    className="w-full bg-gradient-to-r from-electric-blue to-neon-violet hover:from-electric-blue/90 hover:to-neon-violet/90 text-white font-extrabold py-4 px-6 rounded-[1.8rem] text-xs uppercase tracking-wider transition-all duration-300 shadow-[0_0_25px_rgba(var(--accent-rgb),0.3)] active:scale-[0.98]"
                   >
                     {t('pwa.install_now')}
                   </button>

@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useEffect, useState } from 'react'
 import { usePathname } from 'next/navigation'
@@ -102,7 +102,7 @@ export function AuthenticatedLayoutClient({
                                 </div>
                                 <div className="w-full bg-[#0B0D17] h-2 rounded-full overflow-hidden border border-white/5 shadow-inner">
                                     <div 
-                                        className="h-full bg-gradient-to-r from-electric-blue to-neon-violet transition-all duration-1000 ease-out shadow-[0_0_12px_rgba(0,240,255,0.4)]"
+                                        className="h-full bg-gradient-to-r from-electric-blue to-neon-violet transition-all duration-1000 ease-out shadow-[0_0_12px_rgba(var(--accent-rgb),0.4)]"
                                         style={{ width: `${Math.min(100, Math.max(0, (xp / 1000) * 100))}%` }}
                                     />
                                 </div>
@@ -113,7 +113,7 @@ export function AuthenticatedLayoutClient({
 
                             <Link
                                 href="/"
-                                className="inline-block w-full py-3.5 rounded-xl border border-electric-blue/30 text-electric-blue bg-electric-blue/5 font-black text-xs tracking-widest uppercase hover:bg-electric-blue hover:text-black transition-all duration-300 shadow-[0_0_15px_rgba(0,240,255,0.08)] active:scale-95"
+                                className="inline-block w-full py-3.5 rounded-xl border border-electric-blue/30 text-electric-blue bg-electric-blue/5 font-black text-xs tracking-widest uppercase hover:bg-electric-blue hover:text-black transition-all duration-300 shadow-[0_0_15px_rgba(var(--accent-rgb),0.08)] active:scale-95"
                             >
                                 Back to Dashboard
                             </Link>

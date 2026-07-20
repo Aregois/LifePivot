@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { Upload, Trash2, FileText, Image, Loader2, AlertTriangle } from 'lucide-react'
@@ -225,19 +225,19 @@ export function FileUploader({ planId, workspaceId, maxFiles = 5 }: FileUploader
         animate={
           isDragOver
             ? {
-                borderColor: 'rgba(0,240,255,0.4)',
-                boxShadow: '0 0 20px rgba(0,240,255,0.1)',
+                borderColor: 'rgba(var(--accent-rgb),0.4)',
+                boxShadow: '0 0 20px rgba(var(--accent-rgb),0.1)',
               }
             : {
                 borderColor: 'rgba(255,255,255,0.08)',
-                boxShadow: '0 0 0px rgba(0,240,255,0)',
+                boxShadow: '0 0 0px rgba(var(--accent-rgb),0)',
               }
         }
         transition={{ duration: 0.2 }}
         className="relative border-2 border-dashed rounded-2xl p-8 text-center cursor-pointer transition-all select-none group bg-white/[0.02] hover:bg-white/[0.04]"
         style={{ borderColor: 'rgba(255,255,255,0.08)' }}
         whileHover={{
-          borderColor: 'rgba(0,240,255,0.25)',
+          borderColor: 'rgba(var(--accent-rgb),0.25)',
           backgroundColor: 'rgba(255,255,255,0.03)',
         }}
       >
@@ -248,7 +248,7 @@ export function FileUploader({ planId, workspaceId, maxFiles = 5 }: FileUploader
           }`}
           style={{
             background:
-              'radial-gradient(ellipse at center, rgba(0,240,255,0.06) 0%, transparent 70%)',
+              'radial-gradient(ellipse at center, rgba(var(--accent-rgb),0.06) 0%, transparent 70%)',
           }}
         />
 
@@ -256,8 +256,8 @@ export function FileUploader({ planId, workspaceId, maxFiles = 5 }: FileUploader
           <div
             className={`w-12 h-12 rounded-xl flex items-center justify-center border transition-all duration-300 ${
               isDragOver
-                ? 'bg-[rgba(0,240,255,0.1)] border-[rgba(0,240,255,0.3)]'
-                : 'bg-white/5 border-white/10 group-hover:bg-[rgba(0,240,255,0.07)] group-hover:border-[rgba(0,240,255,0.2)]'
+                ? 'bg-[rgba(var(--accent-rgb),0.1)] border-[rgba(var(--accent-rgb),0.3)]'
+                : 'bg-white/5 border-white/10 group-hover:bg-[rgba(var(--accent-rgb),0.07)] group-hover:border-[rgba(var(--accent-rgb),0.2)]'
             }`}
           >
             {uploading ? (

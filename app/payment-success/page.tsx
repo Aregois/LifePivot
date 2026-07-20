@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useEffect, useState } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
@@ -48,7 +48,7 @@ export default function PaymentSuccessPage() {
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
                     transition={{ delay: 0.2, type: 'spring', bounce: 0.5 }}
-                    className="w-20 h-20 rounded-full bg-gradient-to-br from-neon-violet/20 to-electric-blue/20 border border-white/10 flex items-center justify-center shadow-[0_0_40px_rgba(189,0,255,0.25)]"
+                    className="w-20 h-20 rounded-full bg-gradient-to-br from-neon-violet/20 to-electric-blue/20 border border-white/10 flex items-center justify-center shadow-[0_0_40px_rgba(var(--violet-rgb),0.25)]"
                 >
                     <Sparkles className="w-9 h-9 text-electric-blue" />
                 </motion.div>
@@ -71,7 +71,7 @@ export default function PaymentSuccessPage() {
                 <div className="w-full flex flex-col gap-3 border-t border-white/5 pt-4">
                     <Link
                         href="/plan"
-                        className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-neon-violet to-electric-blue text-white font-black text-[10px] tracking-widest uppercase text-center shadow-[0_0_20px_rgba(0,240,255,0.2)] hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-2"
+                        className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-neon-violet to-electric-blue text-white font-black text-[10px] tracking-widest uppercase text-center shadow-[0_0_20px_rgba(var(--accent-rgb),0.2)] hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-2"
                     >
                         Go to My Plans
                         <ArrowRight className="w-3.5 h-3.5" />
