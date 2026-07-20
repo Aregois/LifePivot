@@ -146,17 +146,26 @@ export default function RegisterPage() {
 
         try {
             const supabase = createClient()
+            const siteUrl = process.env.NEXT_PUBLIC_APP_URL ||
+                (typeof window !== 'undefined' ? window.location.origin : 'https://lifepivot.vercel.app')
             const { data, error } = await supabase.auth.signUp({
                 email: email.trim(),
                 password,
-                options: { data: { full_name: name.trim() } },
+                options: {
+                    data: { full_name: name.trim() },
+                    // Points the confirmation email to /auth/callback so
+                    // the session is properly created and onboarding is triggered.
+                    emailRedirectTo: `${siteUrl}/auth/callback`,
+                },
             })
             if (error) {
                 setToastMsg(error.message)
                 setLoading(false)
             } else if (data.session) {
+                // Auto-confirmed (e.g. email confirmation disabled in Supabase)
                 router.push('/onboarding')
             } else {
+                // Confirmation email sent
                 setLoading(false)
                 setConfirmationSent(true)
             }
@@ -179,7 +188,7 @@ export default function RegisterPage() {
                     transition={{ duration: 0.4, ease: 'easeOut' }}
                     className="glass-card relative z-10 w-full max-w-md rounded-2xl p-8 shadow-2xl text-center flex flex-col items-center gap-5"
                 >
-                    <div className="h-16 w-16 rounded-2xl bg-gradient-to-tr from-neon-violet to-electric-blue flex items-center justify-center border border-white/10 shadow-[0_0_24px_rgba(0,240,255,0.3)]">
+                    <div className="h-16 w-16 rounded-2xl bg-gradient-to-tr from-neon-violet to-electric-blue flex items-center justify-center border border-white/10 shadow-[0_0_24px_rgba(var(--accent-rgb),0.3)]">
                         <Mail className="w-7 h-7 text-white" />
                     </div>
 
@@ -221,7 +230,7 @@ export default function RegisterPage() {
 
                 {/* Header */}
                 <div className="mb-7 text-center">
-                    <div className="mx-auto mb-4 h-12 w-12 rounded-2xl bg-gradient-to-tr from-neon-violet to-electric-blue flex items-center justify-center border border-white/10 shadow-[0_0_20px_rgba(189,0,255,0.3)]">
+                    <div className="mx-auto mb-4 h-12 w-12 rounded-2xl bg-gradient-to-tr from-neon-violet to-electric-blue flex items-center justify-center border border-white/10 shadow-[0_0_20px_rgba(var(--violet-rgb),0.3)]">
                         <span className="text-xl font-black text-white">LP</span>
                     </div>
                     <h1 className="title-glow text-2xl font-bold tracking-tight text-white mb-1.5">
@@ -345,7 +354,7 @@ export default function RegisterPage() {
                         id="register-btn"
                         type="submit"
                         disabled={loading}
-                        className="group relative mt-1 flex w-full justify-center items-center gap-2 overflow-hidden rounded-xl bg-gradient-to-r from-neon-violet/20 to-electric-blue/20 border border-neon-violet/20 px-4 py-3.5 text-sm font-black text-white transition-all hover:from-neon-violet/30 hover:to-electric-blue/30 hover:shadow-[0_0_20px_rgba(189,0,255,0.25)] active:scale-[0.98] disabled:opacity-60 min-h-[44px]"
+                        className="group relative mt-1 flex w-full justify-center items-center gap-2 overflow-hidden rounded-xl bg-gradient-to-r from-neon-violet/20 to-electric-blue/20 border border-neon-violet/20 px-4 py-3.5 text-sm font-black text-white transition-all hover:from-neon-violet/30 hover:to-electric-blue/30 hover:shadow-[0_0_20px_rgba(var(--violet-rgb),0.25)] active:scale-[0.98] disabled:opacity-60 min-h-[44px]"
                     >
                         {loading ? (
                             <Loader2 className="w-4 h-4 animate-spin" />

@@ -8,7 +8,8 @@ export async function GET(request: NextRequest) {
     const origin = requestUrl.origin
 
     if (code) {
-        const response = NextResponse.redirect(`${origin}/`)
+        // Build a mutable response that cookies can be written into
+        let response = NextResponse.redirect(`${origin}/onboarding`)
 
         const supabase = createServerClient(
             process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -44,20 +45,30 @@ export async function GET(request: NextRequest) {
             } = await supabase.auth.getUser()
 
             if (user) {
-                const { data: profile } = await supabase
-                    .from('profiles')
-                    .select('onboarding_completed')
-                    .eq('id', user.id)
-                    .single()
+                // Retry up to 3 times with a small delay to handle the race condition
+                // where the handle_new_user trigger hasn't inserted the profile row yet.
+                let profile: { onboarding_completed: boolean | null } | null = null
+                for (let attempt = 0; attempt < 3; attempt++) {
+                    const { data } = await supabase
+                        .from('profiles')
+                        .select('onboarding_completed')
+                        .eq('id', user.id)
+                        .single()
+                    profile = data
+                    if (profile) break
+                    // Wait 400ms before retrying
+                    await new Promise(r => setTimeout(r, 400))
+                }
 
                 // New user (no profile row yet) or onboarding not completed → onboarding
                 const needsOnboarding =
                     !profile || profile.onboarding_completed === null || profile.onboarding_completed === false
 
                 const destination = needsOnboarding ? '/onboarding' : '/'
-                return NextResponse.redirect(`${origin}${destination}`, {
+                response = NextResponse.redirect(`${origin}${destination}`, {
                     headers: response.headers,
                 })
+                return response
             }
         }
     }
