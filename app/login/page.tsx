@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { login, forgotPassword } from './actions'
 import { useLanguage } from '@/components/language-provider'
@@ -150,13 +150,13 @@ export default function LoginPage() {
                                     <div className="w-12 h-12 mx-auto rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
                                         <Mail className="w-5 h-5 text-emerald-400" />
                                     </div>
-                                    <p className="text-white font-bold text-sm">Check your inbox</p>
-                                    <p className="text-gray-400 text-xs">Password reset link sent to <span className="text-electric-blue">{forgotEmail}</span></p>
+                                    <p className="text-white font-bold text-sm">{t('auth.check_inbox')}</p>
+                                    <p className="text-gray-400 text-xs">{t('auth.reset_link_sent', { email: forgotEmail })}</p>
                                 </div>
                             ) : (
                                 <>
                                     <div className="flex flex-col gap-2">
-                                        <label className="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1">Your Email</label>
+                                        <label className="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1">{t('auth.email')}</label>
                                         <input
                                             type="email"
                                             value={forgotEmail}
@@ -170,7 +170,7 @@ export default function LoginPage() {
                                         disabled={isPending || !forgotEmail.trim()}
                                         className="w-full flex items-center justify-center gap-2 rounded-lg bg-electric-blue/10 border border-electric-blue/20 px-4 py-3 text-xs font-black text-electric-blue uppercase tracking-widest hover:bg-electric-blue/20 transition-all disabled:opacity-50"
                                     >
-                                        {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Send Reset Link'}
+                                        {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : t('auth.send_reset_link')}
                                     </button>
                                 </>
                             )}
@@ -178,7 +178,7 @@ export default function LoginPage() {
                                 onClick={() => { setForgotMode(false); setForgotSent(false) }}
                                 className="text-xs text-gray-500 hover:text-gray-300 transition-colors text-center font-bold uppercase tracking-widest"
                             >
-                                ← Back to Sign In
+                                ← {t('auth.back_to_sign_in')}
                             </button>
                         </motion.div>
 
@@ -203,13 +203,13 @@ export default function LoginPage() {
                                         <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
                                     </svg>
                                 )}
-                                <span className="text-[11px] font-black uppercase tracking-widest">Continue with Google</span>
+                                <span className="text-[11px] font-black uppercase tracking-widest">{t('auth.continue_google')}</span>
                             </button>
 
                             {/* Divider */}
                             <div className="flex items-center gap-3">
                                 <div className="flex-1 h-px bg-white/[0.06]" />
-                                <span className="text-[10px] font-black text-gray-600 uppercase tracking-widest">or continue with email</span>
+                                <span className="text-[10px] font-black text-gray-600 uppercase tracking-widest">{t('auth.or_email')}</span>
                                 <div className="flex-1 h-px bg-white/[0.06]" />
                             </div>
 
@@ -281,7 +281,7 @@ export default function LoginPage() {
                                         onClick={() => { haptics.light(); setForgotMode(true) }}
                                         className="self-end text-[10px] text-gray-600 hover:text-electric-blue transition-colors font-bold uppercase tracking-widest"
                                     >
-                                        Forgot Password?
+                                        {t('auth.forgot_password')}
                                     </button>
                                 </div>
 
@@ -309,9 +309,9 @@ export default function LoginPage() {
                             {/* Register link */}
                             <div className="border-t border-white/5 pt-4 text-center">
                                 <p className="text-xs text-gray-500">
-                                    Don&apos;t have an account?{' '}
+                                    {t('auth.no_account')}{' '}
                                     <Link href="/register" onClick={() => haptics.light()} className="text-electric-blue font-bold hover:underline">
-                                        Create one →
+                                        {t('auth.signup')} →
                                     </Link>
                                 </p>
                             </div>

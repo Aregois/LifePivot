@@ -213,15 +213,15 @@ export function PlanClient({ user, goals, goalsError, isSubscribed, subscription
             )}
 
             {/* ── Mobile Portal Subnav ────────────────────────────────────────── */}
-            <div className="flex justify-center gap-3 px-6 pt-2 mb-2 md:hidden">
+            <div className="flex justify-center gap-3 px-4 sm:px-6 pt-2 mb-2 md:hidden">
                 <Link
                     href="/workspaces"
                     onClick={() => haptics.light()}
-                    className="group w-[144px] py-2.5 px-3 rounded-2xl bg-gradient-to-b from-white/[0.04] to-white/[0.01] backdrop-blur-xl border border-white/[0.06] flex items-center justify-between hover:border-electric-blue/30 transition-all shadow-[0_4px_20px_rgba(0,0,0,0.25)] hover:shadow-[0_4px_25px_rgba(var(--accent-rgb),0.08)] active:scale-[0.98]"
+                    className="group flex-1 max-w-[170px] py-2.5 px-3 rounded-2xl bg-gradient-to-b from-white/[0.04] to-white/[0.01] backdrop-blur-xl border border-white/[0.06] flex items-center justify-between hover:border-electric-blue/30 transition-all shadow-[0_4px_20px_rgba(0,0,0,0.25)] hover:shadow-[0_4px_25px_rgba(var(--accent-rgb),0.08)] active:scale-[0.98]"
                 >
                     <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-xl bg-electric-blue/10 border border-electric-blue/20 flex items-center justify-center shadow-[0_0_15px_rgba(var(--accent-rgb),0.1)] group-hover:bg-electric-blue/25 transition-all">
-                            <Users className="w-4 h-4 text-electric-blue" />
+                        <div className="w-7 h-7 rounded-xl bg-electric-blue/10 border border-electric-blue/20 flex items-center justify-center shadow-[0_0_15px_rgba(var(--accent-rgb),0.1)] group-hover:bg-electric-blue/25 transition-all">
+                            <Users className="w-3.5 h-3.5 text-electric-blue" />
                         </div>
                         <span className="text-[10px] font-black text-white uppercase tracking-wider group-hover:text-electric-blue transition-colors">{t('nav.cohorts') || 'Cohorts'}</span>
                     </div>
@@ -230,11 +230,11 @@ export function PlanClient({ user, goals, goalsError, isSubscribed, subscription
                 <Link
                     href="/marketplace"
                     onClick={() => haptics.light()}
-                    className="group w-[144px] py-2.5 px-3 rounded-2xl bg-gradient-to-b from-white/[0.04] to-white/[0.01] backdrop-blur-xl border border-white/[0.06] flex items-center justify-between hover:border-electric-blue/30 transition-all shadow-[0_4px_20px_rgba(0,0,0,0.25)] hover:shadow-[0_4px_25px_rgba(var(--accent-rgb),0.08)] active:scale-[0.98]"
+                    className="group flex-1 max-w-[170px] py-2.5 px-3 rounded-2xl bg-gradient-to-b from-white/[0.04] to-white/[0.01] backdrop-blur-xl border border-white/[0.06] flex items-center justify-between hover:border-electric-blue/30 transition-all shadow-[0_4px_20px_rgba(0,0,0,0.25)] hover:shadow-[0_4px_25px_rgba(var(--accent-rgb),0.08)] active:scale-[0.98]"
                 >
                     <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-xl bg-electric-blue/10 border border-electric-blue/20 flex items-center justify-center shadow-[0_0_15px_rgba(var(--accent-rgb),0.1)] group-hover:bg-electric-blue/25 transition-all">
-                            <Compass className="w-4 h-4 text-electric-blue" />
+                        <div className="w-7 h-7 rounded-xl bg-electric-blue/10 border border-electric-blue/20 flex items-center justify-center shadow-[0_0_15px_rgba(var(--accent-rgb),0.1)] group-hover:bg-electric-blue/25 transition-all">
+                            <Compass className="w-3.5 h-3.5 text-electric-blue" />
                         </div>
                         <span className="text-[10px] font-black text-white uppercase tracking-wider group-hover:text-electric-blue transition-colors">{t('nav.marketplace') || 'Marketplace'}</span>
                     </div>
@@ -244,10 +244,10 @@ export function PlanClient({ user, goals, goalsError, isSubscribed, subscription
 
             {/* ── Plan Selector Header ────────────────────────────────────────── */}
             {!goalsError && !showAddPlan && totalGoals > 0 && (
-                <div className="px-6">
-                    <div className="flex items-center justify-between bg-[#141824]/80 border border-white/[0.06] rounded-[1.8rem] px-5 py-4 shadow-lg gap-4">
+                <div className="px-4 sm:px-6">
+                    <div className="flex flex-col md:flex-row md:items-center justify-between bg-[#141824]/80 border border-white/[0.06] rounded-[1.8rem] p-4 md:px-5 md:py-4 shadow-lg gap-3 md:gap-4">
                         {/* Plan nav arrows + label */}
-                        <div className="flex items-center gap-3 min-w-0">
+                        <div className="flex items-center justify-between md:justify-start gap-3 w-full md:w-auto min-w-0">
                             <button
                                 onClick={() => handlePlanNav('prev')}
                                 disabled={activePlanIndex === 0}
@@ -256,8 +256,8 @@ export function PlanClient({ user, goals, goalsError, isSubscribed, subscription
                                 <ChevronLeft className="w-4 h-4" />
                             </button>
 
-                            <div className="flex flex-col min-w-0">
-                                <span className="text-[9px] font-black text-gray-500 uppercase tracking-[0.2em]">
+                            <div className="flex flex-col min-w-0 text-center md:text-left flex-1">
+                                <span className="text-[9px] font-black text-gray-500 uppercase tracking-[0.2em] truncate">
                                     Learning Plan {activePlanIndex + 1} of {visibleGoals?.length ?? 0}
                                     {lockedCount > 0 && <span className="text-neon-violet ml-1.5">+{lockedCount} locked</span>}
                                 </span>
@@ -275,12 +275,12 @@ export function PlanClient({ user, goals, goalsError, isSubscribed, subscription
                             </button>
                         </div>
 
-                        {/* Add New Plan button */}
-                        <div className="relative shrink-0 flex gap-2">
+                        {/* Add New Plan & Navigation buttons */}
+                        <div className="shrink-0 flex items-center justify-center md:justify-end gap-2 w-full md:w-auto pt-2 md:pt-0 border-t md:border-t-0 border-white/5">
                             <Link
                                 href="/plans"
                                 onClick={() => haptics.light()}
-                                className="flex items-center gap-1.5 px-4 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all active:scale-95 bg-white/[0.03] border border-white/[0.06] text-gray-400 hover:text-white hover:border-white/20"
+                                className="flex-1 md:flex-none flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all active:scale-95 bg-white/[0.03] border border-white/[0.06] text-gray-400 hover:text-white hover:border-white/20"
                             >
                                 <Library className="w-3.5 h-3.5 text-electric-blue" />
                                 My Plans
@@ -289,7 +289,7 @@ export function PlanClient({ user, goals, goalsError, isSubscribed, subscription
                             <button
                                 id="add-new-plan-btn"
                                 onClick={handleAddNewPlan}
-                                className={`flex items-center gap-1.5 px-4 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all active:scale-95 ${
+                                className={`flex-1 md:flex-none flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all active:scale-95 ${
                                     isSubscribed
                                         ? 'bg-electric-blue/10 border border-electric-blue/20 text-electric-blue hover:bg-electric-blue/20'
                                         : 'bg-white/[0.03] border border-white/[0.06] text-gray-500 hover:border-neon-violet/20 hover:text-neon-violet'
@@ -303,7 +303,7 @@ export function PlanClient({ user, goals, goalsError, isSubscribed, subscription
                             <Link
                                 href="/plan/pro-curriculum"
                                 onClick={() => haptics.light()}
-                                className="flex items-center gap-1.5 px-3 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all active:scale-95 bg-[#BD00FF]/5 border border-[#BD00FF]/15 text-[#BD00FF]/70 hover:text-[#BD00FF] hover:bg-[#BD00FF]/10 hover:border-[#BD00FF]/25 whitespace-nowrap"
+                                className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all active:scale-95 bg-[#BD00FF]/5 border border-[#BD00FF]/15 text-[#BD00FF]/70 hover:text-[#BD00FF] hover:bg-[#BD00FF]/10 hover:border-[#BD00FF]/25 whitespace-nowrap"
                                 title="Professional Curriculum Builder"
                             >
                                 <GraduationCap className="w-3.5 h-3.5" />

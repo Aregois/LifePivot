@@ -1,9 +1,10 @@
-﻿'use client'
+'use client'
 
 import { useState, useTransition } from 'react'
 import { Sparkles, Crown, CheckCircle2, X, Loader2, ExternalLink, Settings } from 'lucide-react'
 import { haptics } from '@/utils/haptics'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useLanguage } from '@/components/language-provider'
 
 interface SubscribeModalProps {
     isOpen: boolean
@@ -13,6 +14,7 @@ interface SubscribeModalProps {
 }
 
 export function SubscribeModal({ isOpen, onClose, onSuccess, isAlreadySubscribed }: SubscribeModalProps) {
+    const { t } = useLanguage()
     const [isPending, startTransition] = useTransition()
     const [portalPending, setPortalPending] = useState(false)
     const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly')
@@ -67,11 +69,11 @@ export function SubscribeModal({ isOpen, onClose, onSuccess, isAlreadySubscribed
     }
 
     const benefits = [
-        'Unlimited learning plans — no cap',
-        'Ambient study soundscapes (cafe, rain, space)',
-        'Exclusive profile border cosmetics',
-        '2× XP and focus token reward catalysts',
-        'Priority Socratic AI tutor responses',
+        t('subscribe.benefit_unlimited_plans'),
+        t('subscribe.benefit_soundscapes'),
+        t('subscribe.benefit_cosmetics'),
+        t('subscribe.benefit_catalysts'),
+        t('subscribe.benefit_priority_tutor'),
     ]
 
     return (
@@ -96,9 +98,9 @@ export function SubscribeModal({ isOpen, onClose, onSuccess, isAlreadySubscribed
                         <div className="h-12 w-12 rounded-2xl bg-gradient-to-tr from-neon-violet to-electric-blue flex items-center justify-center border border-white/10 text-white shadow-[0_0_20px_rgba(var(--violet-rgb),0.3)]">
                             <Crown className="h-6 w-6 text-white" />
                         </div>
-                        <h3 className="text-xl font-black text-white uppercase tracking-wider italic mt-2">LifePivot Solo Power</h3>
+                        <h3 className="text-xl font-black text-white uppercase tracking-wider italic mt-2">{t('subscribe.solo_power')}</h3>
                         <p className="text-gray-400 text-xs font-medium max-w-xs">
-                            Unlock your full learning potential with premium tools.
+                            {t('subscribe.desc')}
                         </p>
                     </div>
 
@@ -109,9 +111,9 @@ export function SubscribeModal({ isOpen, onClose, onSuccess, isAlreadySubscribed
                                 <div className="w-12 h-12 rounded-full bg-neon-violet/10 border border-neon-violet/20 flex items-center justify-center">
                                     <Sparkles className="w-6 h-6 text-neon-violet" />
                                 </div>
-                                <p className="text-white font-black text-base uppercase tracking-wider">Solo Power Active</p>
+                                <p className="text-white font-black text-base uppercase tracking-wider">{t('subscribe.solo_power_active')}</p>
                                 <p className="text-gray-400 text-xs text-center leading-relaxed max-w-xs">
-                                    Your Pro subscription is active. You can manage billing, update your card, or cancel via the Stripe portal.
+                                    {t('subscribe.desc')}
                                 </p>
                             </div>
 
@@ -126,7 +128,7 @@ export function SubscribeModal({ isOpen, onClose, onSuccess, isAlreadySubscribed
                                 disabled={portalPending}
                                 className="w-full py-3.5 rounded-2xl bg-white/5 border border-white/10 text-white font-black text-[10px] tracking-widest uppercase flex items-center justify-center gap-2 hover:bg-white/10 transition-all active:scale-95"
                             >
-                                {portalPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Settings className="w-3.5 h-3.5" /> Manage Subscription</>}
+                                {portalPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Settings className="w-3.5 h-3.5" /> {t('subscribe.btn_manage')}</>}
                             </button>
                         </div>
                     ) : (
@@ -151,8 +153,8 @@ export function SubscribeModal({ isOpen, onClose, onSuccess, isAlreadySubscribed
                                             : 'bg-white/[0.01] border-white/5 hover:border-white/10'
                                     }`}
                                 >
-                                    <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Monthly plan</span>
-                                    <span className="text-lg font-black text-white">$9.99<span className="text-xs text-gray-400 font-normal">/mo</span></span>
+                                    <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">{t('subscribe.monthly_billing')}</span>
+                                    <span className="text-lg font-black text-white">{t('subscribe.monthly_price')}</span>
                                 </div>
 
                                 <div
@@ -163,9 +165,8 @@ export function SubscribeModal({ isOpen, onClose, onSuccess, isAlreadySubscribed
                                             : 'bg-white/[0.01] border-white/5 hover:border-white/10'
                                     }`}
                                 >
-                                    <span className="absolute -top-2.5 right-3 px-2 py-0.5 rounded-full bg-neon-violet border border-neon-violet/20 text-[8px] font-black uppercase text-white tracking-widest">Save 50%</span>
-                                    <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Yearly plan</span>
-                                    <span className="text-lg font-black text-white">$59.99<span className="text-xs text-gray-400 font-normal">/yr</span></span>
+                                    <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">{t('subscribe.yearly_billing')}</span>
+                                    <span className="text-lg font-black text-white">{t('subscribe.yearly_price')}</span>
                                 </div>
                             </div>
 
@@ -182,13 +183,9 @@ export function SubscribeModal({ isOpen, onClose, onSuccess, isAlreadySubscribed
                             >
                                 {isPending
                                     ? <Loader2 className="w-4 h-4 animate-spin" />
-                                    : <><ExternalLink className="w-3.5 h-3.5" />{`Upgrade Now • $${billingCycle === 'monthly' ? '9.99/mo' : '59.99/yr'}`}</>
+                                    : <><ExternalLink className="w-3.5 h-3.5" />{t('subscribe.btn_upgrade')}</>
                                 }
                             </button>
-
-                            <p className="text-center text-[9px] text-gray-600 font-medium">
-                                Secure checkout via Stripe. Cancel anytime.
-                            </p>
                         </>
                     )}
                 </motion.div>

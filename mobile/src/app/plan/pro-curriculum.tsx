@@ -1,19 +1,22 @@
-import React, { useState } from 'react'
+import React, { useState } from 'react';
 import {
-    View,
-    Text,
-    ScrollView,
-    TouchableOpacity,
-    Share,
-    Alert,
-    StyleSheet,
-    Platform,
-} from 'react-native'
-import { useRouter } from 'expo-router'
-import { Ionicons } from '@expo/vector-icons'
-import * as Haptics from 'expo-haptics'
-import { C, BorderRadius, Shadows } from '../../constants/theme'
-import { FadeInView } from '../../components/ui'
+  View,
+  Text,
+  ScrollView,
+  TouchableOpacity,
+  Share,
+  Alert,
+  StyleSheet,
+  Platform,
+} from 'react-native';
+import { useRouter } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
+import * as Haptics from 'expo-haptics';
+import { HapticsEngine } from '../../utils/HapticsEngine';
+import { useTheme } from '../../context/ThemeContext';
+import { useLanguage } from '../../context/LanguageContext';
+import { BorderRadius, Shadows } from '../../constants/theme';
+import { FadeInView, GlassCard } from '../../components/ui';
 
 // ── Prompt text constants ────────────────────────────────────────────────────
 
@@ -147,802 +150,795 @@ B3. "Are there specific systems or topics you
      [Suggested: Nervous system and endocrine system]
 
 ── STEM_CS ──
-CS1. "What programming languages do you already
-      know, and at what level?"
-      [Suggested: Python basics, no algorithms]
-CS2. "Is this for a job interview, a university course,
-      a personal project, or general skill building?"
-      [Suggested: Job interview preparation]
-CS3. "Do you prefer learning through reading and
-      theory first, or building projects immediately?"
-      [Suggested: Projects — learn by doing]
-CS4. "Are there specific topics you know you must
-      cover? (e.g. trees, dynamic programming, system
-      design, REST APIs)"
-      [Suggested: Arrays, trees, and dynamic programming]
+CS1. "What programming languages are you comfortable in?
+      (none / Python / JS / C++ / Java / etc.)"
+      [Suggested: Intermediate Python]
+CS2. "Is your focus theoretical (algorithms, math proofs)
+      or practical (building projects, passing interviews)?"
+      [Suggested: Practical project-building]
+CS3. "Do you have a specific stack, framework, or tool
+      in mind?"
+      [Suggested: React Native and TypeScript]
 
 ── LANGUAGE ──
 L1. "What is your current level in this language?
-     (complete beginner / can read basics /
-      can hold simple conversations / intermediate)"
-     [Suggested: Complete beginner]
-L2. "What is your primary goal — speaking fluency,
-     reading/writing, passing a proficiency exam,
-     or travel survival?"
-     [Suggested: Speaking fluency]
-L3. "How many new words per day are you comfortable
-     memorizing?"
-     [Suggested: 10–15 words/day]
-L4. "Do you have any exposure to related languages
-     that might help? (e.g. knowing Spanish helps
-     with Italian)"
-     [Suggested: No related language background]
+     (absolute zero / know some words / A2 / B1 / B2)"
+     [Suggested: A1 — know basic alphabet and phrases]
+L2. "What is your primary goal:
+     speaking fluency / reading literature / passing an exam?"
+     [Suggested: Conversational speaking fluency]
+L3. "Have you learned any other foreign languages before?
+     (Knowing grammar from another language helps)"
+     [Suggested: Learned some French in school]
 
 ── MUSIC ──
-MU1. "What instrument or musical skill are you
-      learning, and what is your current level?"
-      [Suggested: Guitar — complete beginner]
-MU2. "Can you already read sheet music or use
-      tabs/chord charts?"
-      [Suggested: Can read basic tabs]
-MU3. "Is your goal to perform a specific piece,
-      pass a grade exam, or build general technique?"
-      [Suggested: Build general technique and learn
-       3–4 songs]
-MU4. "How much of your daily time can be spent
-      on active instrument practice vs theory study?"
-      [Suggested: 70% practice, 30% theory]
+MU1. "Do you read sheet music or chord charts,
+      or learn by ear?"
+      [Suggested: Chord charts and tabs]
+MU2. "Do you have your instrument available to practice
+      daily right now?"
+      [Suggested: Yes, acoustic guitar]
+MU3. "What specific piece, style, or technique is your
+      milestone goal?"
+      [Suggested: Fingerstyle chord melody]
 
 ── HUMANITIES ──
-H1. "What is your existing background in this subject?
-     (no background / casual interest /
-      studied it formally)"
-     [Suggested: Casual interest, no formal study]
-H2. "Is this for an academic essay, exam, debate
-     preparation, or personal understanding?"
-     [Suggested: University exam]
-H3. "Are there specific thinkers, events, periods,
-     or arguments you must cover?"
-     [Suggested: Enlightenment philosophy and
-      Kant's major works]
+H1. "What primary texts, eras, or thinkers do you
+     most want to understand?"
+     [Suggested: 20th century existentialism — Sartre, Camus]
+H2. "Are you writing an essay or thesis, or reading
+     for personal depth and understanding?"
+     [Suggested: Personal depth and discussion capability]
+H3. "Do you have a reading list already, or do you need
+     curated recommendations?"
+     [Suggested: Need recommendations from primary sources]
 
 ── PROFESSIONAL ──
-PR1. "What is your current professional background
-      related to this topic?"
-      [Suggested: Entry-level, no formal training]
-PR2. "Is this for a certification exam, a new job role,
-      a promotion, or freelance work?"
-      [Suggested: Certification exam]
-PR3. "Are there specific frameworks, tools, or
-      standards you must know?"
-      [Suggested: Agile, Scrum, and PMP framework]
+PR1. "What is your current role and what role are you
+      targeting with this learning?"
+      [Suggested: Junior developer targeting Senior role]
+PR2. "Will you be applying this on real work projects
+      simultaneously?"
+      [Suggested: Yes, on a live production app]
+PR3. "Do you need certification preparation or practical
+      on-the-job mastery?"
+      [Suggested: Practical mastery and portfolio artifact]
 
 ── OTHER ──
-O1. "What do you already know about this topic?"
-    [Suggested: Very basics, self-taught]
-O2. "What would success look like for you at
-     the end of this plan?"
-     [Suggested: Be able to apply it independently]
-O3. "Are there specific aspects of this topic
-     you know you need to focus on?"
-     [Suggested: Practical application over theory]
+O1. "What prior experience do you have that is related
+     to this topic, even indirectly?"
+     [Suggested: Complete beginner, no prior background]
+O2. "What does success look like at the end of this plan?
+     Describe what you will be able to do."
+     [Suggested: Able to build and explain a complete project]
+O3. "Are there any specific resources, people, or courses
+     you want integrated?"
+     [Suggested: Open to the best available resources]
 
 ═══════════════════════════════════════
-PHASE 2 COMPLETION — CONFIRMATION CARD
+FINAL STEP — THE MASTER PROMPT HANDOFF
 ═══════════════════════════════════════
-After all Phase 2 questions are answered, show:
+Once all questions are answered, output EXACTLY this:
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-✅ DIAGNOSTIC COMPLETE — LEARNER PROFILE
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Topic:          [T]
-Daily Hours:    [H] hrs/day
-Objective:      [O]
-Duration:       [D] days
-Topic Category: [CATEGORY]
-Prior Knowledge: [summary of Phase 2 answers]
-Key Focus Areas: [list the specific subtopics/skills
-                  the user identified as priorities]
-Starting Level:  [Beginner / Pre-Intermediate /
-                  Intermediate / Advanced]
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+"Thank you. Your learner profile is complete.
+Here is your Step 2 Master Prompt. Copy everything inside the
+box below and proceed to Step 2:"
 
-Then immediately generate the MASTER PROMPT below.
+[Generate a customized, comprehensive Master Prompt that
+synthesizes every single answer the user gave, tailored to their
+exact timeline, daily hours, current level, and topic category.]`;
 
-═══════════════════════════════════════
-MASTER PROMPT GENERATION
-═══════════════════════════════════════
-Generate a single self-contained prompt the user will
-paste into Gemini Notebook to generate their full
-learning plan as JSON.
+const STEP2_PROMPT = `Based on our Socratic Diagnostic Interview, generate a curated list of the top 3-5 authoritative textbooks and sources for this learning roadmap.
 
-The Master Prompt must:
+Output the results with:
+1. Book/Source Title and Author
+2. Why this source is uniquely suited for my background
+3. Key chapters directly relevant to my goal
 
-1. Include the full learner profile inline
-   (all parameters + prior knowledge + focus areas)
-
-2. Instruct Gemini Notebook to use uploaded source
-   books as structural and conceptual references to
-   BUILD the curriculum — NOT to assign them as
-   required reading. Tasks should reflect the
-   knowledge from the books without telling the
-   user to "read Chapter X." The books are the
-   teacher's resource, not the student's homework.
-   Exception: if the user explicitly has their own
-   textbooks (Route B), tasks CAN reference chapters.
-
-3. Instruct Gemini Notebook to output ONLY a raw
-   JSON array — no markdown, no explanation,
-   no text before or after the array.
-
-4. Use this exact task schema (one object per line):
-   {
-     "day": 1,
-     "title": "Task title describing what to do",
-     "priority": 2,
-     "estimated_mins": 45,
-     "subject": "SCIENCE",
-     "subtasks": [],
-     "level": "Intermediate",
-     "goal_intent": "Exam",
-     "commitment_hours_per_week": 10.5
-   }
-
-   Note: level, goal_intent, commitment_hours_per_week
-   appear only on DAY 1 TASK as plan metadata.
-   All other tasks omit these three fields.
-
-5. Include these priority rules:
-   P5 Deep Theory: fundamental proofs, derivations,
-     research-level analysis
-     → 4–5 subtasks, max 1 per day
-     → In plans 31+ days: P0 Void Day must follow
-   P4 Hard Application: problem sets, coding tasks,
-     calculations, written arguments
-     → 3–4 subtasks
-   P3 Standard Practice: exercises, drills, speaking,
-     ear training, active recall sessions
-     → exactly 2 subtasks
-   P2 Theory Overview: conceptual understanding,
-     mental model building, watching explanations
-     → no subtasks (subtasks: [])
-   P1 Light Exercises: vocabulary, flashcards,
-     quick drills, short repetition tasks
-     → no subtasks
-   P0 Void Day: rest and recovery only
-     → title must be exactly "VOID DAY"
-     → no subtasks
-     → estimated_mins: 90
-
-6. Include these Void Day rules:
-   - 30-day plans: 1 Void Day every 6 days
-   - 31–90 day plans: 1 Void Day every 7 days
-     + 1 after every P5 day
-   - Never place a Void Day on Day 1 or the final day
-
-7. Include this subject mapping rule:
-   The "subject" field must be one of:
-   TECH / SCIENCE / MATH / HISTORY / ARTS / GENERAL
-   Choose based on the topic:
-   CS/programming → TECH
-   Physics/Chemistry/Biology → SCIENCE
-   Mathematics → MATH
-   History/Philosophy/Literature → HISTORY
-   Music/Visual Arts/Design → ARTS
-   Everything else → GENERAL
-
-8. End the Master Prompt with this exact instruction:
-   "Output only the raw JSON array starting with [
-   and ending with ]. No markdown code blocks.
-   No explanation. No text before or after the array."
-
-═══════════════════════════════════════
-BEGIN
-═══════════════════════════════════════
-Start now. Greet the user in one sentence and ask
-Phase 1, Question 1 about their topic.`
-
-const STEP2_PROMPT = `Now that my diagnostic parameters are confirmed, act as
-LifePivot's Head of Academic Acquisitions.
-
-Your task: generate a precise, non-redundant reading list
-of authoritative sources that will serve as the foundation
-for my study plan. These sources will be uploaded to
-Gemini Notebook to ground every task in real content.
-
-CURATION RULES:
-- Recommend exactly 2 to 5 sources. No more, no less.
-- Match difficulty and depth to my objective and timeline.
-- Do not recommend overlapping or redundant materials.
-- Prioritize: official documentation, foundational textbooks,
-  industry-standard references, or peer-reviewed materials.
-- If my timeline is short (under 14 days), recommend fewer,
-  more focused sources — not comprehensive textbooks.
-- For each source provide:
-  · Full title and author(s)
-  · Specific chapters or sections to focus on (not the whole book)
-  · One sentence explaining why this source is essential
-  · Whether it is freely available online or must be purchased
-
-OUTPUT FORMAT:
-Present as a clean table with these columns:
-| Title | Author | Focus Chapters | Why Essential | Availability |
-
-After the table, add a short paragraph titled
-"How to add these to Gemini Notebook:" explaining that
-the user should search for these sources, obtain PDFs
-or access online versions, and upload them to a new
-Gemini Notebook dedicated to this study plan.
-Do not suggest illegal download sources.`
-
-const STEP3_INSTRUCTIONS = [
-    'Open Gemini Notebook at gemini.google.com/notebook',
-    'Open the notebook you created in Step 2 (with your uploaded source files)',
-    'Go to the chat input area and paste the Master Prompt generated at the end of your Step 1 chat',
-    'Send it — Gemini Notebook will read your sources and output a complete JSON plan',
-    'Copy the JSON output, then use "Import JSON Plan" below to create your plan in LifePivot',
-]
-
-// ── Step colors ──────────────────────────────────────────────────────────────
-
-const STEP_COLORS = ['#00F0FF', '#BD00FF', '#F59E0B']
-const STEP_TITLES = ['Grill-Me Diagnostic', 'Find Your Sources', 'Generate in Gemini Notebook']
-const STEP_SUBTITLES = [
-    'Get a personalized Master Prompt',
-    'Get an authoritative reading list',
-    'Grounded in your real textbooks',
-]
-const STEP_WHERE = [
-    'Paste into Claude, ChatGPT, or Gemini',
-    'Paste into the same chat after Step 1',
-    'Paste your Master Prompt into Gemini Notebook',
-]
-const STEP_TIPS = [
-    'The AI will interview you and generate a Master Prompt at the end. Copy that Master Prompt — you will use it in Step 3.',
-    'Upload the recommended sources to a new Gemini Notebook (gemini.google.com/notebook).',
-    'Copy the JSON output and use the Import button below to create your plan.',
-]
+Then prepare to synthesize these sources into a day-by-day JSON study plan for LifePivot.`;
 
 // ── CopyButton ───────────────────────────────────────────────────────────────
 
-function CopyPromptButton({ text, stepNum }: { text: string; stepNum: number }) {
-    const [copied, setCopied] = useState(false)
+function CopyPromptButton({
+  text,
+  stepNum,
+  primaryColor,
+  emeraldColor,
+}: {
+  text: string;
+  stepNum: number;
+  primaryColor: string;
+  emeraldColor: string;
+}) {
+  const [copied, setCopied] = useState(false);
+  const { t } = useLanguage();
 
-    const handleCopy = async () => {
-        await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
-        try {
-            await Share.share({ message: text, title: `Step ${stepNum} Prompt` })
-            setCopied(true)
-            setTimeout(() => setCopied(false), 3000)
-        } catch {
-            Alert.alert('Copy Failed', 'Could not share the prompt. Please try again.')
-        }
+  const handleCopy = async () => {
+    HapticsEngine.tier1.light();
+    try {
+      await Share.share({ message: text, title: `Step ${stepNum} Prompt` });
+      setCopied(true);
+      setTimeout(() => setCopied(false), 3000);
+    } catch {
+      Alert.alert('Copy Failed', 'Could not share the prompt. Please try again.');
     }
+  };
 
-    return (
-        <View style={{ alignItems: 'flex-end' }}>
-            <TouchableOpacity
-                onPress={handleCopy}
-                activeOpacity={0.8}
-                style={[
-                    styles.copyBtn,
-                    copied && { backgroundColor: 'rgba(16, 185, 129, 0.15)', borderColor: 'rgba(16, 185, 129, 0.3)' }
-                ]}
-            >
-                <Ionicons
-                    name={copied ? 'checkmark' : 'copy-outline'}
-                    size={13}
-                    color={copied ? '#10B981' : C.electricBlue}
-                />
-                <Text style={[styles.copyBtnText, copied && { color: '#10B981' }]}>
-                    {copied ? 'SHARED!' : 'COPY PROMPT'}
-                </Text>
-            </TouchableOpacity>
-            {Platform.OS === 'android' && !copied && (
-                <Text style={styles.copyHint}>Tap Share → select Copy to Clipboard</Text>
-            )}
-        </View>
-    )
+  return (
+    <View style={{ alignItems: 'flex-end' }}>
+      <TouchableOpacity
+        onPress={handleCopy}
+        activeOpacity={0.8}
+        style={[
+          styles.copyBtn,
+          {
+            borderColor: copied ? `${emeraldColor}66` : `${primaryColor}40`,
+            backgroundColor: copied ? `${emeraldColor}20` : `${primaryColor}15`,
+          },
+        ]}
+      >
+        <Ionicons
+          name={copied ? 'checkmark' : 'copy-outline'}
+          size={13}
+          color={copied ? emeraldColor : primaryColor}
+        />
+        <Text style={[styles.copyBtnText, { color: copied ? emeraldColor : primaryColor }]}>
+          {copied ? (t('pro_curriculum.shared') || 'SHARED!') : (t('pro_curriculum.copy_prompt') || 'COPY PROMPT')}
+        </Text>
+      </TouchableOpacity>
+      {Platform.OS === 'android' && !copied && (
+        <Text style={styles.copyHint}>Tap Share → select Copy to Clipboard</Text>
+      )}
+    </View>
+  );
 }
 
 // ── Main component ───────────────────────────────────────────────────────────
 
 export default function ProCurriculumScreen() {
-    const router = useRouter()
+  const router = useRouter();
+  const { colors } = useTheme();
+  const { t } = useLanguage();
 
-    return (
-        <ScrollView
-            style={styles.container}
-            contentContainerStyle={styles.content}
-            showsVerticalScrollIndicator={false}
-        >
-            {/* ── Header ──────────────────────────────────────────────────── */}
-            <FadeInView delay={0}>
-                {/* PRO badge */}
-                <View style={styles.proBadge}>
-                    <View style={styles.proBadgeDot} />
-                    <Text style={styles.proBadgeText}>PRO FEATURE</Text>
+  const stepTitles = [
+    t('pro_curriculum.step1_title') || 'AI Socratic Diagnostic Interview',
+    t('pro_curriculum.step2_title') || 'Upload Course Materials & Textbooks',
+    t('pro_curriculum.step3_title') || 'Import Generated Learning Plan',
+  ];
+  const stepSubtitles = [
+    t('pro_curriculum.step1_subtitle') || 'Run the interactive prompt below in any AI to extract your precise syllabus requirements.',
+    t('pro_curriculum.step2_subtitle') || 'Supply PDFs, lecture slides, or chapter outlines to anchor the AI generation.',
+    t('pro_curriculum.step3_subtitle') || 'Paste the final structured JSON from the AI to instantly populate your LifePivot roadmap.',
+  ];
+  const stepWhere = [
+    'ChatGPT, Claude, or Gemini',
+    'Gemini Notebook / Note-taking AI',
+    'LifePivot Plan Importer',
+  ];
+  const stepTips = [
+    'The AI will interview you and generate a Master Prompt at the end. Copy that Master Prompt — you will use it in Step 3.',
+    'Upload the recommended sources to a new Gemini Notebook (gemini.google.com/notebook).',
+    'Copy the JSON output and use the Import button below to create your plan.',
+  ];
+  const step3Instructions = [
+    'Copy the structured JSON generated by your AI tutor.',
+    'Open the LifePivot JSON Importer below.',
+    'Paste the curriculum and review your prioritized tasks.',
+    'Tap Import to generate your active daily schedule.',
+    'Track your streak, focus timers, and Socratic drills!',
+  ];
+
+  return (
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
+      {/* Background Ambient Glows */}
+      <View
+        pointerEvents="none"
+        style={[
+          styles.ambientGlowTop,
+          { backgroundColor: colors.primary, opacity: 0.05 },
+        ]}
+      />
+      <View
+        pointerEvents="none"
+        style={[
+          styles.ambientGlowBottom,
+          { backgroundColor: colors.secondary, opacity: 0.04 },
+        ]}
+      />
+
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* ── Header ──────────────────────────────────────────────────── */}
+        <FadeInView delay={0}>
+          {/* PRO badge */}
+          <View
+            style={[
+              styles.proBadge,
+              {
+                backgroundColor: `${colors.secondary}18`,
+                borderColor: `${colors.secondary}33`,
+              },
+            ]}
+          >
+            <View style={[styles.proBadgeDot, { backgroundColor: colors.secondary }]} />
+            <Text style={[styles.proBadgeText, { color: colors.secondary }]}>
+              {t('pro_curriculum.badge') || 'PRO FEATURE'}
+            </Text>
+          </View>
+
+          <Text style={styles.pageTitle}>{t('pro_curriculum.title') || 'Professional Curriculum Builder'}</Text>
+          <Text style={[styles.pageSubtitle, { color: colors.textSecondary }]}>
+            {t('pro_curriculum.subtitle') || 'Build a source-grounded study plan using your real textbooks and AI — in 3 steps.'}
+          </Text>
+
+          <View
+            style={[
+              styles.aiNote,
+              {
+                backgroundColor: 'rgba(255, 255, 255, 0.03)',
+                borderColor: colors.glassBorder,
+              },
+            ]}
+          >
+            <Text style={[styles.aiNoteLabel, { color: colors.textMuted }]}>{t('pro_curriculum.works_with') || 'Works with'} </Text>
+            <Text style={styles.aiNoteValue}>{t('pro_curriculum.models') || 'Claude · ChatGPT · Gemini · Any AI'}</Text>
+          </View>
+        </FadeInView>
+
+        {/* ── Step 1 ──────────────────────────────────────────────────── */}
+        <FadeInView delay={80}>
+          <StepCard
+            stepNum={1}
+            prompt={STEP1_PROMPT}
+            title={stepTitles[0]}
+            subtitle={stepSubtitles[0]}
+            where={stepWhere[0]}
+            tip={stepTips[0]}
+            color={colors.primary}
+            cardBg={colors.card}
+            glassBorder={colors.glassBorder}
+            primaryColor={colors.primary}
+            emeraldColor={colors.emerald}
+          />
+        </FadeInView>
+
+        {/* ── Step 2 ──────────────────────────────────────────────────── */}
+        <FadeInView delay={160}>
+          <StepCard
+            stepNum={2}
+            prompt={STEP2_PROMPT}
+            title={stepTitles[1]}
+            subtitle={stepSubtitles[1]}
+            where={stepWhere[1]}
+            tip={stepTips[1]}
+            color={colors.secondary}
+            cardBg={colors.card}
+            glassBorder={colors.glassBorder}
+            primaryColor={colors.primary}
+            emeraldColor={colors.emerald}
+          />
+        </FadeInView>
+
+        {/* ── Step 3 (instructions only) ──────────────────────────────── */}
+        <FadeInView delay={240}>
+          <View
+            style={[
+              styles.card,
+              {
+                backgroundColor: colors.card,
+                borderColor: `${colors.emerald}33`,
+              },
+            ]}
+          >
+            {/* Step header */}
+            <View style={styles.cardHeader}>
+              <View
+                style={[
+                  styles.stepCircle,
+                  {
+                    backgroundColor: `${colors.emerald}18`,
+                    borderColor: `${colors.emerald}40`,
+                  },
+                ]}
+              >
+                <Text style={[styles.stepNumber, { color: colors.emerald }]}>3</Text>
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.stepLabel, { color: colors.emerald }]}>STEP 3</Text>
+                <Text style={styles.stepTitle}>{stepTitles[2]}</Text>
+                <Text style={[styles.stepSubtitle, { color: colors.textMuted }]}>{stepSubtitles[2]}</Text>
+              </View>
+            </View>
+
+            {/* Where */}
+            <View
+              style={[
+                styles.whereRow,
+                {
+                  backgroundColor: `${colors.emerald}08`,
+                  borderColor: `${colors.emerald}20`,
+                },
+              ]}
+            >
+              <Text style={[styles.whereLabel, { color: `${colors.emerald}99` }]}>WHERE </Text>
+              <Text style={[styles.whereValue, { color: colors.emerald }]}>{stepWhere[2]}</Text>
+            </View>
+
+            {/* Instructions */}
+            <View style={styles.instructionsList}>
+              {step3Instructions.map((instruction, i) => (
+                <View key={i} style={styles.instructionItem}>
+                  <View
+                    style={[
+                      styles.instructionNumber,
+                      {
+                        backgroundColor: 'rgba(255, 255, 255, 0.04)',
+                        borderColor: colors.glassBorder,
+                      },
+                    ]}
+                  >
+                    <Text style={[styles.instructionNumberText, { color: colors.primary }]}>{i + 1}</Text>
+                  </View>
+                  <Text style={[styles.instructionText, { color: colors.textSecondary }]}>{instruction}</Text>
                 </View>
+              ))}
+            </View>
 
-                <Text style={styles.pageTitle}>Professional{'\n'}Curriculum Builder</Text>
-                <Text style={styles.pageSubtitle}>
-                    Build a source-grounded study plan using your real textbooks and AI — in 3 steps.
-                </Text>
+            {/* Pro note */}
+            <View
+              style={[
+                styles.tipBox,
+                {
+                  backgroundColor: `${colors.emerald}08`,
+                  borderColor: `${colors.emerald}20`,
+                },
+              ]}
+            >
+              <Text style={[styles.tipText, { color: colors.textSecondary }]}>
+                <Text style={{ fontWeight: '900', color: colors.emerald }}>💡 Note: </Text>
+                Your curriculum will describe concrete concepts, exercises, and drills. Textbooks anchor the quality of your syllabus seamlessly.
+              </Text>
+            </View>
 
-                <View style={styles.aiNote}>
-                    <Text style={styles.aiNoteLabel}>Works with  </Text>
-                    <Text style={styles.aiNoteValue}>Claude · ChatGPT · Gemini · Any AI</Text>
+            {/* What your plan will have */}
+            <View style={styles.planPerks}>
+              {[
+                'Every task grounded in your real textbooks',
+                'P0–P5 priorities for the Pivot Engine to manage',
+                'Automatic recovery if you miss sessions',
+                'XP and gamification on every task',
+              ].map((perk) => (
+                <View key={perk} style={styles.perkRow}>
+                  <View style={[styles.perkDot, { backgroundColor: colors.emerald }]} />
+                  <Text style={[styles.perkText, { color: colors.textSecondary }]}>{perk}</Text>
                 </View>
-            </FadeInView>
+              ))}
+            </View>
+          </View>
+        </FadeInView>
 
-            {/* ── Step 1 ──────────────────────────────────────────────────── */}
-            <FadeInView delay={80}>
-                <StepCard
-                    stepNum={1}
-                    prompt={STEP1_PROMPT}
-                />
-            </FadeInView>
-
-            {/* ── Step 2 ──────────────────────────────────────────────────── */}
-            <FadeInView delay={160}>
-                <StepCard
-                    stepNum={2}
-                    prompt={STEP2_PROMPT}
-                />
-            </FadeInView>
-
-            {/* ── Step 3 (instructions only) ──────────────────────────────── */}
-            <FadeInView delay={240}>
-                <View style={[styles.card, { borderColor: `${STEP_COLORS[2]}20` }]}>
-                    {/* Step header */}
-                    <View style={styles.cardHeader}>
-                        <View style={[styles.stepCircle, { backgroundColor: `${STEP_COLORS[2]}15`, borderColor: `${STEP_COLORS[2]}40` }]}>
-                            <Text style={[styles.stepNumber, { color: STEP_COLORS[2] }]}>3</Text>
-                        </View>
-                        <View style={{ flex: 1 }}>
-                            <Text style={[styles.stepLabel, { color: STEP_COLORS[2] }]}>STEP 3</Text>
-                            <Text style={styles.stepTitle}>{STEP_TITLES[2]}</Text>
-                            <Text style={styles.stepSubtitle}>{STEP_SUBTITLES[2]}</Text>
-                        </View>
-                    </View>
-
-                    {/* Where */}
-                    <View style={[styles.whereRow, { backgroundColor: `${STEP_COLORS[2]}08`, borderColor: `${STEP_COLORS[2]}15` }]}>
-                        <Text style={[styles.whereLabel, { color: `${STEP_COLORS[2]}80` }]}>WHERE  </Text>
-                        <Text style={[styles.whereValue, { color: `${STEP_COLORS[2]}CC` }]}>{STEP_WHERE[2]}</Text>
-                    </View>
-
-                    {/* Instructions */}
-                    <View style={styles.instructionsList}>
-                        {STEP3_INSTRUCTIONS.map((instruction, i) => (
-                            <View key={i} style={styles.instructionItem}>
-                                <View style={styles.instructionNumber}>
-                                    <Text style={styles.instructionNumberText}>{i + 1}</Text>
-                                </View>
-                                <Text style={styles.instructionText}>{instruction}</Text>
-                            </View>
-                        ))}
-                    </View>
-
-                    {/* Pro note */}
-                    <View style={[styles.tipBox, { backgroundColor: `${STEP_COLORS[2]}08`, borderColor: `${STEP_COLORS[2]}15` }]}>
-                        <Text style={[styles.tipText, { color: `${STEP_COLORS[2]}99` }]}>
-                            <Text style={{ fontWeight: '900' }}>💡 Note: </Text>
-                            if you have no personal textbooks, Gemini Notebook will use the uploaded sources to structure your curriculum — but your tasks will describe what to practice and understand, not what pages to read. The books shape the plan quality invisibly.
-                        </Text>
-                    </View>
-
-                    {/* What your plan will have */}
-                    <View style={styles.planPerks}>
-                        {[
-                            'Every task grounded in your real textbooks',
-                            'P0–P5 priorities for the Pivot Engine to manage',
-                            'Automatic recovery if you miss sessions',
-                            'XP and gamification on every task',
-                        ].map((perk) => (
-                            <View key={perk} style={styles.perkRow}>
-                                <View style={[styles.perkDot, { backgroundColor: STEP_COLORS[2] }]} />
-                                <Text style={styles.perkText}>{perk}</Text>
-                            </View>
-                        ))}
-                    </View>
-                </View>
-            </FadeInView>
-
-            {/* ── Import CTA ───────────────────────────────────────────────── */}
-            <FadeInView delay={320}>
-                <View style={styles.ctaSection}>
-                    <Text style={styles.ctaLabel}>AFTER GENERATING YOUR PLAN</Text>
-                    <TouchableOpacity
-                        onPress={() => {
-                            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
-                            router.push('/plan/import')
-                        }}
-                        activeOpacity={0.85}
-                        style={styles.ctaButton}
-                    >
-                        <Ionicons name="cloud-upload-outline" size={18} color={C.electricBlue} />
-                        <Text style={styles.ctaButtonText}>IMPORT JSON PLAN →</Text>
-                    </TouchableOpacity>
-                    <Text style={styles.ctaNote}>
-                        Paste the JSON from Gemini Notebook to create your plan instantly
-                    </Text>
-                </View>
-            </FadeInView>
-        </ScrollView>
-    )
+        {/* ── Import CTA ───────────────────────────────────────────────── */}
+        <FadeInView delay={320}>
+          <View style={styles.ctaSection}>
+            <Text style={[styles.ctaLabel, { color: colors.textMuted }]}>AFTER GENERATING YOUR PLAN</Text>
+            <TouchableOpacity
+              onPress={() => {
+                HapticsEngine.tier2.action();
+                router.push('/plan/import');
+              }}
+              activeOpacity={0.85}
+              style={[
+                styles.ctaButton,
+                {
+                  backgroundColor: `${colors.primary}18`,
+                  borderColor: colors.primary,
+                },
+              ]}
+            >
+              <Ionicons name="cloud-upload-outline" size={18} color={colors.primary} />
+              <Text style={[styles.ctaButtonText, { color: colors.primary }]}>
+                {(t('plan_import.title') || 'IMPORT PLAN JSON').toUpperCase()} →
+              </Text>
+            </TouchableOpacity>
+            <Text style={[styles.ctaNote, { color: colors.textMuted }]}>
+              {t('plan_import.subtitle') || 'Paste structured JSON curriculum from Gemini Notebook or AI tutors'}
+            </Text>
+          </View>
+        </FadeInView>
+      </ScrollView>
+    </View>
+  );
 }
 
 // ── StepCard component ───────────────────────────────────────────────────────
 
-function StepCard({ stepNum, prompt }: { stepNum: number; prompt: string }) {
-    const color = STEP_COLORS[stepNum - 1]
-    return (
-        <View style={[styles.card, { borderColor: `${color}20` }]}>
-            {/* Header */}
-            <View style={styles.cardHeader}>
-                <View style={[styles.stepCircle, { backgroundColor: `${color}15`, borderColor: `${color}40` }]}>
-                    <Text style={[styles.stepNumber, { color }]}>{stepNum}</Text>
-                </View>
-                <View style={{ flex: 1 }}>
-                    <Text style={[styles.stepLabel, { color }]}>STEP {stepNum}</Text>
-                    <Text style={styles.stepTitle}>{STEP_TITLES[stepNum - 1]}</Text>
-                    <Text style={styles.stepSubtitle}>{STEP_SUBTITLES[stepNum - 1]}</Text>
-                </View>
-            </View>
-
-            {/* Where */}
-            <View style={[styles.whereRow, { backgroundColor: `${color}08`, borderColor: `${color}15` }]}>
-                <Text style={[styles.whereLabel, { color: `${color}80` }]}>WHERE  </Text>
-                <Text style={[styles.whereValue, { color: `${color}CC` }]} numberOfLines={2}>{STEP_WHERE[stepNum - 1]}</Text>
-            </View>
-
-            {/* Prompt label + copy button */}
-            <View style={styles.promptHeader}>
-                <Text style={styles.promptLabel}>PROMPT</Text>
-                <CopyPromptButton text={prompt} stepNum={stepNum} />
-            </View>
-
-            {/* Prompt preview — scrollable */}
-            <View style={styles.promptBox}>
-                <ScrollView
-                    style={styles.promptScroll}
-                    nestedScrollEnabled
-                    showsVerticalScrollIndicator={false}
-                >
-                    <Text style={styles.promptText}>{prompt}</Text>
-                </ScrollView>
-                {/* Fade overlay */}
-                <View style={styles.promptFade} pointerEvents="none" />
-            </View>
-
-            {/* Tip */}
-            <View style={[styles.tipBox, { backgroundColor: `${color}06`, borderColor: `${color}12` }]}>
-                <Text style={styles.tipText}>
-                    <Text style={styles.tipBold}>After copying: </Text>
-                    {STEP_TIPS[stepNum - 1]}
-                </Text>
-            </View>
+function StepCard({
+  stepNum,
+  prompt,
+  title,
+  subtitle,
+  where,
+  tip,
+  color,
+  cardBg,
+  glassBorder,
+  primaryColor,
+  emeraldColor,
+}: {
+  stepNum: number;
+  prompt: string;
+  title: string;
+  subtitle: string;
+  where: string;
+  tip: string;
+  color: string;
+  cardBg: string;
+  glassBorder: string;
+  primaryColor: string;
+  emeraldColor: string;
+}) {
+  return (
+    <View style={[styles.card, { backgroundColor: cardBg, borderColor: `${color}25` }]}>
+      {/* Header */}
+      <View style={styles.cardHeader}>
+        <View style={[styles.stepCircle, { backgroundColor: `${color}18`, borderColor: `${color}40` }]}>
+          <Text style={[styles.stepNumber, { color }]}>{stepNum}</Text>
         </View>
-    )
+        <View style={{ flex: 1 }}>
+          <Text style={[styles.stepLabel, { color }]}>STEP {stepNum}</Text>
+          <Text style={styles.stepTitle}>{title}</Text>
+          <Text style={styles.stepSubtitle}>{subtitle}</Text>
+        </View>
+      </View>
+
+      {/* Where */}
+      <View style={[styles.whereRow, { backgroundColor: `${color}08`, borderColor: `${color}18` }]}>
+        <Text style={[styles.whereLabel, { color: `${color}99` }]}>WHERE </Text>
+        <Text style={[styles.whereValue, { color }]} numberOfLines={2}>{where}</Text>
+      </View>
+
+      {/* Prompt label + copy button */}
+      <View style={styles.promptHeader}>
+        <Text style={styles.promptLabel}>PROMPT</Text>
+        <CopyPromptButton
+          text={prompt}
+          stepNum={stepNum}
+          primaryColor={primaryColor}
+          emeraldColor={emeraldColor}
+        />
+      </View>
+
+      {/* Prompt preview — scrollable */}
+      <View style={[styles.promptBox, { borderColor: glassBorder }]}>
+        <ScrollView
+          style={styles.promptScroll}
+          nestedScrollEnabled
+          showsVerticalScrollIndicator={false}
+        >
+          <Text style={styles.promptText}>{prompt}</Text>
+        </ScrollView>
+        <View style={styles.promptFade} pointerEvents="none" />
+      </View>
+
+      {/* Tip */}
+      <View style={[styles.tipBox, { backgroundColor: `${color}06`, borderColor: `${color}15` }]}>
+        <Text style={styles.tipText}>
+          <Text style={[styles.tipBold, { color }]}>After copying: </Text>
+          {tip}
+        </Text>
+      </View>
+    </View>
+  );
 }
 
 // ── Styles ───────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: '#050508',
-    },
-    content: {
-        paddingHorizontal: 20,
-        paddingTop: 20,
-        paddingBottom: 80,
-        gap: 16,
-    },
-    // Header
-    proBadge: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 6,
-        paddingHorizontal: 12,
-        paddingVertical: 6,
-        borderRadius: 999,
-        backgroundColor: 'rgba(189, 0, 255, 0.1)',
-        borderWidth: 1,
-        borderColor: 'rgba(189, 0, 255, 0.2)',
-        alignSelf: 'flex-start',
-        marginBottom: 16,
-    },
-    proBadgeDot: {
-        width: 6,
-        height: 6,
-        borderRadius: 3,
-        backgroundColor: '#BD00FF',
-    },
-    proBadgeText: {
-        fontSize: 9,
-        fontWeight: '900',
-        letterSpacing: 2,
-        color: '#BD00FF',
-        textTransform: 'uppercase',
-    },
-    pageTitle: {
-        fontSize: 26,
-        fontWeight: '900',
-        color: '#FFFFFF',
-        letterSpacing: -0.5,
-        lineHeight: 32,
-        marginBottom: 10,
-    },
-    pageSubtitle: {
-        fontSize: 13,
-        color: '#9CA3AF',
-        lineHeight: 20,
-        marginBottom: 12,
-    },
-    aiNote: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        paddingHorizontal: 12,
-        paddingVertical: 8,
-        borderRadius: 12,
-        backgroundColor: 'rgba(255,255,255,0.03)',
-        borderWidth: 1,
-        borderColor: 'rgba(255,255,255,0.05)',
-        alignSelf: 'flex-start',
-        marginBottom: 8,
-    },
-    aiNoteLabel: {
-        fontSize: 10,
-        color: '#6B7280',
-    },
-    aiNoteValue: {
-        fontSize: 10,
-        fontWeight: '700',
-        color: '#D1D5DB',
-    },
-    // Cards
-    card: {
-        borderRadius: BorderRadius.xxl,
-        backgroundColor: '#141824CC',
-        borderWidth: 1,
-        padding: 20,
-        ...Shadows.card,
-    },
-    cardHeader: {
-        flexDirection: 'row',
-        gap: 14,
-        alignItems: 'flex-start',
-        marginBottom: 16,
-    },
-    stepCircle: {
-        width: 32,
-        height: 32,
-        borderRadius: 16,
-        borderWidth: 1,
-        alignItems: 'center',
-        justifyContent: 'center',
-        flexShrink: 0,
-    },
-    stepNumber: {
-        fontSize: 13,
-        fontWeight: '900',
-    },
-    stepLabel: {
-        fontSize: 9,
-        fontWeight: '900',
-        letterSpacing: 2,
-        textTransform: 'uppercase',
-        marginBottom: 2,
-    },
-    stepTitle: {
-        fontSize: 15,
-        fontWeight: '900',
-        color: '#FFFFFF',
-    },
-    stepSubtitle: {
-        fontSize: 11,
-        color: '#6B7280',
-        marginTop: 2,
-    },
-    // Where row
-    whereRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        paddingHorizontal: 12,
-        paddingVertical: 8,
-        borderRadius: 12,
-        borderWidth: 1,
-        marginBottom: 16,
-        flexWrap: 'wrap',
-    },
-    whereLabel: {
-        fontSize: 9,
-        fontWeight: '900',
-        letterSpacing: 1.5,
-        textTransform: 'uppercase',
-    },
-    whereValue: {
-        fontSize: 11,
-        fontWeight: '700',
-        flex: 1,
-    },
-    // Prompt
-    promptHeader: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        marginBottom: 8,
-    },
-    promptLabel: {
-        fontSize: 9,
-        fontWeight: '900',
-        color: '#4B5563',
-        letterSpacing: 2,
-        textTransform: 'uppercase',
-    },
-    copyBtn: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 5,
-        paddingHorizontal: 10,
-        paddingVertical: 6,
-        borderRadius: 10,
-        backgroundColor: 'rgba(0, 240, 255, 0.1)',
-        borderWidth: 1,
-        borderColor: 'rgba(0, 240, 255, 0.2)',
-    },
-    copyBtnText: {
-        fontSize: 9,
-        fontWeight: '900',
-        color: '#00F0FF',
-        letterSpacing: 1,
-        textTransform: 'uppercase',
-    },
-    copyHint: {
-        fontSize: 9,
-        color: '#4B5563',
-        marginTop: 4,
-        textAlign: 'right',
-    },
-    promptBox: {
-        height: 160,
-        borderRadius: 12,
-        backgroundColor: 'rgba(0,0,0,0.5)',
-        borderWidth: 1,
-        borderColor: 'rgba(255,255,255,0.05)',
-        overflow: 'hidden',
-        marginBottom: 14,
-    },
-    promptScroll: {
-        flex: 1,
-        padding: 12,
-    },
-    promptText: {
-        fontSize: 10,
-        color: '#6B7280',
-        lineHeight: 16,
-        fontFamily: 'Courier',
-    },
-    promptFade: {
-        position: 'absolute',
-        bottom: 0,
-        left: 0,
-        right: 0,
-        height: 32,
-        backgroundColor: 'transparent',
-    },
-    // Tip
-    tipBox: {
-        paddingHorizontal: 14,
-        paddingVertical: 10,
-        borderRadius: 12,
-        borderWidth: 1,
-    },
-    tipText: {
-        fontSize: 11,
-        color: '#9CA3AF',
-        lineHeight: 17,
-    },
-    tipBold: {
-        fontWeight: '900',
-        color: '#D1D5DB',
-    },
-    // Instructions (step 3)
-    instructionsList: {
-        gap: 10,
-        marginBottom: 14,
-    },
-    instructionItem: {
-        flexDirection: 'row',
-        gap: 10,
-        alignItems: 'flex-start',
-    },
-    instructionNumber: {
-        width: 22,
-        height: 22,
-        borderRadius: 8,
-        backgroundColor: 'rgba(255,255,255,0.04)',
-        borderWidth: 1,
-        borderColor: 'rgba(255,255,255,0.07)',
-        alignItems: 'center',
-        justifyContent: 'center',
-        flexShrink: 0,
-        marginTop: 1,
-    },
-    instructionNumberText: {
-        fontSize: 10,
-        fontWeight: '900',
-        color: '#6B7280',
-    },
-    instructionText: {
-        fontSize: 12,
-        color: '#D1D5DB',
-        lineHeight: 18,
-        flex: 1,
-    },
-    // Plan perks
-    planPerks: {
-        marginTop: 14,
-        gap: 6,
-    },
-    perkRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 8,
-    },
-    perkDot: {
-        width: 4,
-        height: 4,
-        borderRadius: 2,
-        opacity: 0.6,
-    },
-    perkText: {
-        fontSize: 11,
-        color: '#9CA3AF',
-    },
-    // CTA
-    ctaSection: {
-        alignItems: 'center',
-        paddingTop: 8,
-        paddingBottom: 16,
-    },
-    ctaLabel: {
-        fontSize: 9,
-        fontWeight: '900',
-        color: '#4B5563',
-        letterSpacing: 2,
-        textTransform: 'uppercase',
-        marginBottom: 12,
-    },
-    ctaButton: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 10,
-        width: '100%',
-        justifyContent: 'center',
-        paddingVertical: 16,
-        paddingHorizontal: 24,
-        borderRadius: BorderRadius.xxl,
-        backgroundColor: 'rgba(0, 240, 255, 0.08)',
-        borderWidth: 1,
-        borderColor: 'rgba(0, 240, 255, 0.2)',
-        ...Shadows.card,
-    },
-    ctaButtonText: {
-        fontSize: 13,
-        fontWeight: '900',
-        color: '#FFFFFF',
-        letterSpacing: 1.5,
-        textTransform: 'uppercase',
-    },
-    ctaNote: {
-        marginTop: 10,
-        fontSize: 11,
-        color: '#4B5563',
-        textAlign: 'center',
-        lineHeight: 16,
-        maxWidth: 280,
-    },
-})
+  ambientGlowTop: {
+    position: 'absolute',
+    top: -120,
+    right: -80,
+    width: 280,
+    height: 280,
+    borderRadius: 140,
+  },
+  ambientGlowBottom: {
+    position: 'absolute',
+    bottom: 40,
+    left: -100,
+    width: 300,
+    height: 300,
+    borderRadius: 150,
+  },
+  container: {
+    flex: 1,
+  },
+  content: {
+    paddingHorizontal: 20,
+    paddingTop: 20,
+    paddingBottom: 80,
+    gap: 16,
+  },
+  // Header
+  proBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 999,
+    borderWidth: 1,
+    alignSelf: 'flex-start',
+    marginBottom: 16,
+  },
+  proBadgeDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+  },
+  proBadgeText: {
+    fontSize: 9,
+    fontWeight: '900',
+    letterSpacing: 2,
+    textTransform: 'uppercase',
+  },
+  pageTitle: {
+    fontSize: 26,
+    fontWeight: '900',
+    color: '#FFFFFF',
+    letterSpacing: -0.5,
+    lineHeight: 32,
+    marginBottom: 10,
+  },
+  pageSubtitle: {
+    fontSize: 13,
+    lineHeight: 20,
+    marginBottom: 12,
+  },
+  aiNote: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 12,
+    borderWidth: 1,
+    alignSelf: 'flex-start',
+    marginBottom: 8,
+  },
+  aiNoteLabel: {
+    fontSize: 10,
+  },
+  aiNoteValue: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#D1D5DB',
+  },
+  // Cards
+  card: {
+    borderRadius: BorderRadius.xxl,
+    borderWidth: 1,
+    padding: 20,
+    ...Shadows.card,
+  },
+  cardHeader: {
+    flexDirection: 'row',
+    gap: 14,
+    alignItems: 'flex-start',
+    marginBottom: 16,
+  },
+  stepCircle: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0,
+  },
+  stepNumber: {
+    fontSize: 13,
+    fontWeight: '900',
+  },
+  stepLabel: {
+    fontSize: 9,
+    fontWeight: '900',
+    letterSpacing: 2,
+    textTransform: 'uppercase',
+    marginBottom: 2,
+  },
+  stepTitle: {
+    fontSize: 15,
+    fontWeight: '900',
+    color: '#FFFFFF',
+  },
+  stepSubtitle: {
+    fontSize: 11,
+    marginTop: 2,
+  },
+  // Where row
+  whereRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 12,
+    borderWidth: 1,
+    marginBottom: 16,
+    flexWrap: 'wrap',
+  },
+  whereLabel: {
+    fontSize: 9,
+    fontWeight: '900',
+    letterSpacing: 1.5,
+    textTransform: 'uppercase',
+  },
+  whereValue: {
+    fontSize: 11,
+    fontWeight: '700',
+    flex: 1,
+  },
+  // Prompt
+  promptHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  promptLabel: {
+    fontSize: 9,
+    fontWeight: '900',
+    color: '#8A92A6',
+    letterSpacing: 2,
+    textTransform: 'uppercase',
+  },
+  copyBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 10,
+    borderWidth: 1,
+  },
+  copyBtnText: {
+    fontSize: 9,
+    fontWeight: '900',
+    letterSpacing: 1,
+    textTransform: 'uppercase',
+  },
+  copyHint: {
+    fontSize: 9,
+    color: '#8A92A6',
+    marginTop: 4,
+    textAlign: 'right',
+  },
+  promptBox: {
+    height: 160,
+    borderRadius: 12,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    borderWidth: 1,
+    overflow: 'hidden',
+    marginBottom: 14,
+  },
+  promptScroll: {
+    flex: 1,
+    padding: 12,
+  },
+  promptText: {
+    fontSize: 10,
+    color: '#8A92A6',
+    lineHeight: 16,
+    fontFamily: 'Courier',
+  },
+  promptFade: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 32,
+    backgroundColor: 'transparent',
+  },
+  // Tip
+  tipBox: {
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 12,
+    borderWidth: 1,
+  },
+  tipText: {
+    fontSize: 11,
+    lineHeight: 17,
+  },
+  tipBold: {
+    fontWeight: '900',
+  },
+  // Instructions (step 3)
+  instructionsList: {
+    gap: 10,
+    marginBottom: 14,
+  },
+  instructionItem: {
+    flexDirection: 'row',
+    gap: 10,
+    alignItems: 'flex-start',
+  },
+  instructionNumber: {
+    width: 22,
+    height: 22,
+    borderRadius: 8,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0,
+    marginTop: 1,
+  },
+  instructionNumberText: {
+    fontSize: 10,
+    fontWeight: '900',
+  },
+  instructionText: {
+    fontSize: 12,
+    lineHeight: 18,
+    flex: 1,
+  },
+  // Plan perks
+  planPerks: {
+    marginTop: 14,
+    gap: 6,
+  },
+  perkRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  perkDot: {
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+    opacity: 0.8,
+  },
+  perkText: {
+    fontSize: 11,
+  },
+  // CTA
+  ctaSection: {
+    alignItems: 'center',
+    paddingTop: 8,
+    paddingBottom: 16,
+  },
+  ctaLabel: {
+    fontSize: 9,
+    fontWeight: '900',
+    letterSpacing: 2,
+    textTransform: 'uppercase',
+    marginBottom: 12,
+  },
+  ctaButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    width: '100%',
+    justifyContent: 'center',
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    borderRadius: BorderRadius.xxl,
+    borderWidth: 1,
+    ...Shadows.card,
+  },
+  ctaButtonText: {
+    fontSize: 13,
+    fontWeight: '900',
+    letterSpacing: 1.5,
+    textTransform: 'uppercase',
+  },
+  ctaNote: {
+    marginTop: 10,
+    fontSize: 11,
+    textAlign: 'center',
+    lineHeight: 16,
+    maxWidth: 280,
+  },
+});

@@ -1,21 +1,23 @@
 /* eslint-disable react-hooks/immutability */
-import React, { useCallback } from 'react';
+import React, { useCallback, useState, useEffect } from 'react';
 import { View, Text, Pressable, StyleSheet, type ViewStyle } from 'react-native';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withSpring,
 } from 'react-native-reanimated';
-import { triggerHaptic } from '../../utils/haptics';
-import { C, AnimationConfig, BorderRadius, Spacing, Typography } from '../../constants/theme';
+import { HapticsEngine } from '../../utils/HapticsEngine';
+import { useTheme } from '../../context/ThemeContext';
+import { AnimationConfig, BorderRadius, Spacing, Typography } from '../../constants/theme';
 
 /* ────────────────────────────────────────────────────────────────────────── */
 /*  SegmentedControl                                                         */
-/*  iOS-style segmented control with an animated sliding indicator.          */
+/*  iOS-style segmented control with an animated sliding spring indicator.   */
 /* ────────────────────────────────────────────────────────────────────────── */
 
 interface SegmentedControlProps {
-  segments: string[];
+  segments?: string[];
+  options?: string[];
   selectedIndex: number;
   onChange: (index: number) => void;
   style?: ViewStyle;
@@ -23,25 +25,27 @@ interface SegmentedControlProps {
 
 export function SegmentedControl({
   segments,
+  options,
   selectedIndex,
   onChange,
   style,
 }: SegmentedControlProps) {
-  const segmentCount = segments.length;
+  const { colors } = useTheme();
+  const items = segments ?? options ?? [];
+  const segmentCount = items.length;
 
   /* ─── Animated indicator position ───────────────────────────────────── */
-
   const indicatorTranslate = useSharedValue(selectedIndex);
+  const [containerWidth, setContainerWidth] = useState(0);
 
-  React.useEffect(() => {
+  useEffect(() => {
     indicatorTranslate.value = withSpring(
       selectedIndex,
-      AnimationConfig.spring.snappy,
+      AnimationConfig.spring.tabSpring,
     );
   }, [selectedIndex, indicatorTranslate]);
 
-  const [containerWidth, setContainerWidth] = React.useState(0);
-  const segmentWidth = containerWidth / segmentCount;
+  const segmentWidth = segmentCount > 0 ? containerWidth / segmentCount : 0;
 
   const indicatorStyle = useAnimatedStyle(() => ({
     transform: [
@@ -61,7 +65,7 @@ export function SegmentedControl({
   const handlePress = useCallback(
     (index: number) => {
       if (index !== selectedIndex) {
-        triggerHaptic.selection();
+        HapticsEngine.tier1.selection();
         onChange(index);
       }
     },
@@ -70,7 +74,14 @@ export function SegmentedControl({
 
   return (
     <View
-      style={[styles.container, style]}
+      style={[
+        styles.container,
+        {
+          backgroundColor: colors.background,
+          borderColor: colors.glassBorder,
+        },
+        style,
+      ]}
       onLayout={handleLayout}
     >
       {/* Sliding indicator */}
@@ -79,8 +90,10 @@ export function SegmentedControl({
           style={[
             styles.indicator,
             {
-              width: segmentWidth - 8, // account for container padding (Spacing.one = 4px on each side)
-              marginLeft: Spacing.one,
+              width: Math.max(0, segmentWidth - 6),
+              marginLeft: 3,
+              backgroundColor: colors.card,
+              borderColor: colors.glassBorder,
             },
             indicatorStyle,
           ]}
@@ -88,7 +101,7 @@ export function SegmentedControl({
       )}
 
       {/* Segment labels */}
-      {segments.map((label, index) => {
+      {items.map((label, index) => {
         const isActive = index === selectedIndex;
         return (
           <Pressable
@@ -101,7 +114,8 @@ export function SegmentedControl({
             <Text
               style={[
                 styles.segmentText,
-                isActive && styles.segmentTextActive,
+                { color: colors.inactive },
+                isActive && [styles.segmentTextActive, { color: colors.primary }],
               ]}
               numberOfLines={1}
             >
@@ -117,36 +131,38 @@ export function SegmentedControl({
 const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
-    backgroundColor: C.background, // Obsidian Background
     borderRadius: BorderRadius.xxl,
-    padding: Spacing.one,
+    padding: 3,
     borderWidth: 1,
-    borderColor: C.glassBorderSubtle,
     position: 'relative',
   },
   indicator: {
     position: 'absolute',
-    top: Spacing.one,
-    bottom: Spacing.one,
+    top: 3,
+    bottom: 3,
     left: 0,
-    backgroundColor: C.card, // Contrasting segment indicator
-    borderRadius: BorderRadius.xxl,
+    borderRadius: BorderRadius.xl,
+    borderWidth: 1,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 3,
   },
   segment: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: Spacing.two, // Standardised vertical padding (8px)
+    paddingVertical: Spacing.two,
     zIndex: 1,
-    minHeight: 44, // Touch target height
+    minHeight: 40,
   },
   segmentText: {
     ...Typography.overline,
-    fontWeight: '900',
-    color: C.inactive,
+    fontWeight: '800',
   },
   segmentTextActive: {
-    color: C.electricBlue,
+    fontWeight: '900',
   },
 });
 

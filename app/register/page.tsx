@@ -1,14 +1,15 @@
 'use client'
 
 import { useRouter, useSearchParams } from 'next/navigation'
-import { Mail, Lock, Eye, EyeOff, User, ArrowRight, Loader2 } from 'lucide-react'
+import { Mail, Lock, Eye, EyeOff, User, ArrowRight, Loader2, GraduationCap, BookOpenCheck, Globe } from 'lucide-react'
 import { haptics } from '@/utils/haptics'
 import { createClient } from '@/utils/supabase/client'
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
+import { useLanguage } from '@/components/language-provider'
+import { Locale, LANGUAGE_NAMES } from '@/utils/translations'
 
-// ─── Password Strength ───────────────────────────────────────────────────────
 type PasswordStrength = 'empty' | 'weak' | 'medium' | 'strong'
 
 function getPasswordStrength(pw: string): PasswordStrength {
@@ -19,15 +20,17 @@ function getPasswordStrength(pw: string): PasswordStrength {
     return 'weak'
 }
 
-const STRENGTH_CONFIG: Record<PasswordStrength, { label: string; color: string; width: string }> = {
-    empty:  { label: '',        color: 'bg-white/10',    width: 'w-0' },
-    weak:   { label: 'Weak',   color: 'bg-red-500',     width: 'w-1/3' },
-    medium: { label: 'Medium', color: 'bg-yellow-400',  width: 'w-2/3' },
-    strong: { label: 'Strong', color: 'bg-emerald-400', width: 'w-full' },
-}
-
 function PasswordStrengthBar({ strength }: { strength: PasswordStrength }) {
+    const { t } = useLanguage()
     if (strength === 'empty') return null
+
+    const STRENGTH_CONFIG: Record<PasswordStrength, { label: string; color: string; width: string }> = {
+        empty:  { label: '', color: 'bg-white/10', width: 'w-0' },
+        weak:   { label: t('auth.password_weak'), color: 'bg-red-500', width: 'w-1/3' },
+        medium: { label: t('auth.password_medium'), color: 'bg-yellow-400', width: 'w-2/3' },
+        strong: { label: t('auth.password_strong'), color: 'bg-emerald-400', width: 'w-full' },
+    }
+
     const cfg = STRENGTH_CONFIG[strength]
     return (
         <div className="mt-1.5 flex items-center gap-2">
@@ -46,7 +49,6 @@ function PasswordStrengthBar({ strength }: { strength: PasswordStrength }) {
     )
 }
 
-// ─── Error Toast ─────────────────────────────────────────────────────────────
 function ErrorToast({ message, onDismiss }: { message: string; onDismiss: () => void }) {
     useEffect(() => {
         const t = setTimeout(onDismiss, 6000)
@@ -69,7 +71,6 @@ function ErrorToast({ message, onDismiss }: { message: string; onDismiss: () => 
     )
 }
 
-// ─── Field Error ─────────────────────────────────────────────────────────────
 function FieldError({ msg }: { msg?: string }) {
     return (
         <AnimatePresence>
@@ -87,7 +88,6 @@ function FieldError({ msg }: { msg?: string }) {
     )
 }
 
-// ─── Validation ──────────────────────────────────────────────────────────────
 interface FormErrors {
     name?: string
     email?: string
@@ -95,34 +95,22 @@ interface FormErrors {
     confirm?: string
 }
 
-function validate(name: string, email: string, password: string, confirm: string): FormErrors {
-    const errors: FormErrors = {}
-    if (!name.trim() || name.trim().length < 2) errors.name = 'Full name must be at least 2 characters.'
-    if (!email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) errors.email = 'Enter a valid email address.'
-    if (!password) errors.password = 'Password is required.'
-    else if (password.length < 8) errors.password = 'Must be at least 8 characters.'
-    else if (!/\d/.test(password)) errors.password = 'Must contain at least one number.'
-    if (!confirm) errors.confirm = 'Please confirm your password.'
-    else if (confirm !== password) errors.confirm = 'Passwords do not match.'
-    return errors
-}
-
-// ─── Page ─────────────────────────────────────────────────────────────────────
 export default function RegisterPage() {
     const router = useRouter()
     const searchParams = useSearchParams()
     const urlMessage = searchParams.get('message')
+    const { t, locale, setLocale } = useLanguage()
 
     const [name, setName] = useState('')
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
     const [confirm, setConfirm] = useState('')
+    const [role, setRole] = useState<'student' | 'tutor'>('student')
     const [showPw, setShowPw] = useState(false)
     const [showConfirm, setShowConfirm] = useState(false)
     const [fieldErrors, setFieldErrors] = useState<FormErrors>({})
     const [toastMsg, setToastMsg] = useState<string | null>(urlMessage)
     const [loading, setLoading] = useState(false)
-    const [confirmationSent, setConfirmationSent] = useState(false)
 
     const strength = getPasswordStrength(password)
 
@@ -132,9 +120,20 @@ export default function RegisterPage() {
 
     const clearError = (key: keyof FormErrors) => setFieldErrors(p => ({ ...p, [key]: undefined }))
 
+    const validateForm = (n: string, e: string, p: string, c: string): FormErrors => {
+        const errors: FormErrors = {}
+        if (!n.trim() || n.trim().length < 2) errors.name = t('auth.err_name_short')
+        if (!e.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e)) errors.email = t('auth.err_email_invalid')
+        if (!p) errors.password = t('auth.err_password_short')
+        else if (p.length < 6) errors.password = t('auth.err_password_short')
+        if (!c) errors.confirm = t('auth.err_confirm_empty')
+        else if (c !== p) errors.confirm = t('auth.err_password_mismatch')
+        return errors
+    }
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
-        const errors = validate(name, email, password, confirm)
+        const errors = validateForm(name, email, password, confirm)
         if (Object.keys(errors).length > 0) {
             haptics.light()
             setFieldErrors(errors)
@@ -146,77 +145,32 @@ export default function RegisterPage() {
 
         try {
             const supabase = createClient()
-            const siteUrl = process.env.NEXT_PUBLIC_APP_URL ||
-                (typeof window !== 'undefined' ? window.location.origin : 'https://lifepivot.vercel.app')
             const { data, error } = await supabase.auth.signUp({
                 email: email.trim(),
                 password,
                 options: {
-                    data: { full_name: name.trim() },
-                    // Points the confirmation email to /auth/callback so
-                    // the session is properly created and onboarding is triggered.
-                    emailRedirectTo: `${siteUrl}/auth/callback`,
+                    data: { 
+                        full_name: name.trim(),
+                        role: role
+                    },
                 },
             })
             if (error) {
                 setToastMsg(error.message)
                 setLoading(false)
             } else if (data.session) {
-                // Auto-confirmed (e.g. email confirmation disabled in Supabase)
                 router.push('/onboarding')
             } else {
-                // Confirmation email sent
+                setToastMsg(t('auth.account_created'))
                 setLoading(false)
-                setConfirmationSent(true)
+                setTimeout(() => {
+                    router.push('/login')
+                }, 1500)
             }
         } catch {
             setToastMsg('Something went wrong. Please try again.')
             setLoading(false)
         }
-    }
-
-    // ── Email confirmation pending screen ────────────────────────────────────
-    if (confirmationSent) {
-        return (
-            <div className="flex min-h-[100dvh] flex-col items-center justify-center bg-black/50 p-4">
-                <div className="pointer-events-none absolute top-1/2 left-1/2 h-64 w-64 -translate-x-1/2 -translate-y-1/2 rounded-full bg-neon-violet opacity-20 blur-[100px]" />
-                <div className="pointer-events-none absolute top-1/2 left-1/2 h-48 w-48 -translate-x-1/3 -translate-y-1/3 rounded-full bg-electric-blue opacity-20 blur-[80px]" />
-
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.4, ease: 'easeOut' }}
-                    className="glass-card relative z-10 w-full max-w-md rounded-2xl p-8 shadow-2xl text-center flex flex-col items-center gap-5"
-                >
-                    <div className="h-16 w-16 rounded-2xl bg-gradient-to-tr from-neon-violet to-electric-blue flex items-center justify-center border border-white/10 shadow-[0_0_24px_rgba(var(--accent-rgb),0.3)]">
-                        <Mail className="w-7 h-7 text-white" />
-                    </div>
-
-                    <div className="flex flex-col gap-2">
-                        <h1 className="title-glow text-xl font-bold text-white">Check your inbox</h1>
-                        <p className="text-sm text-gray-400 leading-relaxed">
-                            We sent a confirmation link to{' '}
-                            <span className="text-electric-blue font-bold">{email}</span>
-                        </p>
-                        <p className="text-xs text-gray-500 leading-relaxed mt-1">
-                            Click the link in the email to activate your account and start your onboarding. The link expires in 24 hours.
-                        </p>
-                    </div>
-
-                    <div className="w-full border-t border-white/5 pt-4 flex flex-col gap-3">
-                        <p className="text-[11px] text-gray-600">
-                            Didn&apos;t receive it? Check your spam folder.
-                        </p>
-                        <button
-                            onClick={() => setConfirmationSent(false)}
-                            className="text-xs text-gray-500 hover:text-gray-300 transition-colors font-bold uppercase tracking-widest"
-                        >
-                            ← Back to registration
-                        </button>
-                    </div>
-                </motion.div>
-            </div>
-        )
     }
 
     return (
@@ -228,25 +182,72 @@ export default function RegisterPage() {
 
             <div className="glass-card relative z-10 w-full max-w-md rounded-2xl p-8 shadow-2xl">
 
+                {/* Language Picker */}
+                <div className="absolute top-4 right-4 flex items-center gap-1.5 bg-white/5 border border-white/5 rounded-xl px-2.5 py-1">
+                    <Globe className="w-3.5 h-3.5 text-gray-400" />
+                    <select
+                        value={locale}
+                        onChange={(e) => { haptics.light(); setLocale(e.target.value as Locale) }}
+                        className="bg-transparent text-gray-300 font-bold border-none outline-none cursor-pointer text-[11px] uppercase tracking-wider"
+                    >
+                        {Object.entries(LANGUAGE_NAMES).map(([code, langName]) => (
+                            <option key={code} value={code} className="bg-[#141824] text-white">{langName}</option>
+                        ))}
+                    </select>
+                </div>
+
                 {/* Header */}
-                <div className="mb-7 text-center">
-                    <div className="mx-auto mb-4 h-12 w-12 rounded-2xl bg-gradient-to-tr from-neon-violet to-electric-blue flex items-center justify-center border border-white/10 shadow-[0_0_20px_rgba(var(--violet-rgb),0.3)]">
+                <div className="mb-6 text-center pt-2">
+                    <div className="mx-auto mb-3 h-12 w-12 rounded-2xl bg-gradient-to-tr from-neon-violet to-electric-blue flex items-center justify-center border border-white/10 shadow-[0_0_20px_rgba(var(--violet-rgb),0.3)]">
                         <span className="text-xl font-black text-white">LP</span>
                     </div>
-                    <h1 className="title-glow text-2xl font-bold tracking-tight text-white mb-1.5">
-                        Create Your Account
+                    <h1 className="title-glow text-2xl font-bold tracking-tight text-white mb-1">
+                        {t('auth.create_account')}
                     </h1>
                     <p className="text-[10px] text-gray-500 uppercase tracking-[0.2em] font-black">
-                        Start your self-mastery journey
+                        {t('auth.join_platform')}
                     </p>
                 </div>
 
                 <form onSubmit={handleSubmit} className="flex flex-col gap-4" noValidate>
 
+                    {/* Role Selector (Student vs Tutor) */}
+                    <div className="flex flex-col gap-1.5">
+                        <label className="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1">
+                            {t('auth.account_type')}
+                        </label>
+                        <div className="grid grid-cols-2 gap-2">
+                            <button
+                                type="button"
+                                onClick={() => { haptics.light(); setRole('student') }}
+                                className={`flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl border text-xs font-bold transition-all ${
+                                    role === 'student'
+                                        ? 'bg-electric-blue/15 border-electric-blue text-white shadow-[0_0_12px_rgba(var(--accent-rgb),0.2)]'
+                                        : 'bg-white/[0.03] border-white/10 text-gray-400 hover:border-white/20'
+                                }`}
+                            >
+                                <GraduationCap className="w-4 h-4 text-electric-blue" />
+                                {t('auth.role_student')}
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => { haptics.light(); setRole('tutor') }}
+                                className={`flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl border text-xs font-bold transition-all ${
+                                    role === 'tutor'
+                                        ? 'bg-neon-violet/15 border-neon-violet text-white shadow-[0_0_12px_rgba(var(--violet-rgb),0.2)]'
+                                        : 'bg-white/[0.03] border-white/10 text-gray-400 hover:border-white/20'
+                                }`}
+                            >
+                                <BookOpenCheck className="w-4 h-4 text-neon-violet" />
+                                {t('auth.role_tutor')}
+                            </button>
+                        </div>
+                    </div>
+
                     {/* Full Name */}
                     <div className="flex flex-col gap-1.5">
                         <label className="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1" htmlFor="reg-name">
-                            Full Name
+                            {t('auth.full_name')}
                         </label>
                         <div className="relative">
                             <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-600 pointer-events-none" />
@@ -267,7 +268,7 @@ export default function RegisterPage() {
                     {/* Email */}
                     <div className="flex flex-col gap-1.5">
                         <label className="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1" htmlFor="reg-email">
-                            Email
+                            {t('auth.email')}
                         </label>
                         <div className="relative">
                             <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-600 pointer-events-none" />
@@ -277,7 +278,7 @@ export default function RegisterPage() {
                                 type="email"
                                 value={email}
                                 onChange={e => { setEmail(e.target.value); clearError('email') }}
-                                placeholder="astronaut@space.com"
+                                placeholder="yourname@domain.com"
                                 autoComplete="email"
                                 className={`glass w-full rounded-lg pl-10 pr-4 py-3 text-sm text-white placeholder-gray-500 focus:outline-none transition-all ${fieldErrors.email ? 'border-red-500/60 focus:ring-1 focus:ring-red-500/60' : 'focus:border-electric-blue focus:ring-1 focus:ring-electric-blue'}`}
                             />
@@ -288,7 +289,7 @@ export default function RegisterPage() {
                     {/* Password */}
                     <div className="flex flex-col gap-1.5">
                         <label className="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1" htmlFor="reg-password">
-                            Password
+                            {t('auth.password')}
                         </label>
                         <div className="relative">
                             <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-600 pointer-events-none" />
@@ -318,7 +319,7 @@ export default function RegisterPage() {
                     {/* Confirm Password */}
                     <div className="flex flex-col gap-1.5">
                         <label className="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1" htmlFor="reg-confirm">
-                            Confirm Password
+                            {t('auth.confirm_password')}
                         </label>
                         <div className="relative">
                             <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-600 pointer-events-none" />
@@ -354,13 +355,13 @@ export default function RegisterPage() {
                         id="register-btn"
                         type="submit"
                         disabled={loading}
-                        className="group relative mt-1 flex w-full justify-center items-center gap-2 overflow-hidden rounded-xl bg-gradient-to-r from-neon-violet/20 to-electric-blue/20 border border-neon-violet/20 px-4 py-3.5 text-sm font-black text-white transition-all hover:from-neon-violet/30 hover:to-electric-blue/30 hover:shadow-[0_0_20px_rgba(var(--violet-rgb),0.25)] active:scale-[0.98] disabled:opacity-60 min-h-[44px]"
+                        className="group relative mt-2 flex w-full justify-center items-center gap-2 overflow-hidden rounded-xl bg-gradient-to-r from-neon-violet/20 to-electric-blue/20 border border-neon-violet/20 px-4 py-3.5 text-sm font-black text-white transition-all hover:from-neon-violet/30 hover:to-electric-blue/30 hover:shadow-[0_0_20px_rgba(var(--violet-rgb),0.25)] active:scale-[0.98] disabled:opacity-60 min-h-[44px]"
                     >
                         {loading ? (
                             <Loader2 className="w-4 h-4 animate-spin" />
                         ) : (
                             <>
-                                <span className="relative z-10 font-black uppercase tracking-wider text-xs">Create Account</span>
+                                <span className="relative z-10 font-black uppercase tracking-wider text-xs">{t('auth.create_account')}</span>
                                 <ArrowRight className="w-3.5 h-3.5 relative z-10 group-hover:translate-x-0.5 transition-transform" />
                             </>
                         )}
@@ -370,9 +371,9 @@ export default function RegisterPage() {
                 {/* Sign in link */}
                 <div className="border-t border-white/5 pt-4 mt-4 text-center">
                     <p className="text-xs text-gray-500">
-                        Already have an account?{' '}
+                        {t('auth.have_account')}{' '}
                         <Link href="/login" onClick={() => haptics.light()} className="text-electric-blue font-bold hover:underline">
-                            Sign in
+                            {t('auth.login')}
                         </Link>
                     </p>
                 </div>

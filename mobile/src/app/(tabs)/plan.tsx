@@ -1,32 +1,37 @@
-import React, { useState } from 'react'
-import { View, Text, ScrollView, ActivityIndicator, Alert, TouchableOpacity } from 'react-native'
-import { useRouter, useFocusEffect } from 'expo-router'
-import { Ionicons } from '@expo/vector-icons'
-import { C, Shadows } from '../../constants/theme'
-import { FadeInView, GlassCard, GradientText, GlowBadge, PremiumButton, EmptyStateCTA, PlanSkeletonList } from '../../components/ui'
-import { supabase } from '../../utils/supabase'
-import { PlanGeneratorLoader } from '../../components/plan/PlanGeneratorLoader'
+import React, { useState, useMemo } from 'react';
+import { View, Text, ScrollView, Alert, TouchableOpacity, Platform } from 'react-native';
+import { useRouter, useFocusEffect } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { HapticsEngine } from '../../utils/HapticsEngine';
+import { useTheme } from '../../context/ThemeContext';
+import { useLanguage, translateGoalsArray } from '../../context/LanguageContext';
+import { FadeInView, GlassCard, GradientText, GlowBadge, PremiumButton, EmptyStateCTA, PlanSkeletonList } from '../../components/ui';
+import { supabase } from '../../utils/supabase';
 
 export default function PlanPortal() {
-    const router = useRouter()
-    const [activePlans, setActivePlans] = useState<any[]>([])
-    const [loading, setLoading] = useState(true)
-    const [userLevel, setUserLevel] = useState<number>(1)
-    const [isSubscribed, setIsSubscribed] = useState(false)
-    const [isGenerating, setIsGenerating] = useState(false)
-    const [generationError, setGenerationError] = useState<string | null>(null)
+    const router = useRouter();
+    const insets = useSafeAreaInsets();
+    const { colors } = useTheme();
+    const { t, locale } = useLanguage();
+    const [activePlans, setActivePlans] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [userLevel, setUserLevel] = useState<number>(1);
+    const [isSubscribed, setIsSubscribed] = useState(false);
+
+    const translatedPlans = useMemo(() => translateGoalsArray(activePlans, locale), [activePlans, locale]);
 
     const fetchActivePlans = async () => {
         try {
-            const { data: { user } } = await supabase.auth.getUser()
+            const { data: { user } } = await supabase.auth.getUser();
             if (user) {
                 const { data, error } = await supabase
                     .from('learning_goals')
                     .select('id, title, duration_days, created_at')
                     .eq('user_id', user.id)
-                    .order('created_at', { ascending: false })
+                    .order('created_at', { ascending: false });
                 if (data) {
-                    setActivePlans(data)
+                    setActivePlans(data);
                 }
 
                 // Fetch level and subscription status to handle progressive lock checks
@@ -34,27 +39,27 @@ export default function PlanPortal() {
                     .from('profiles')
                     .select('level, is_subscribed')
                     .eq('id', user.id)
-                    .single()
+                    .single();
                 if (profile) {
-                    setUserLevel(profile.level)
-                    setIsSubscribed(!!profile.is_subscribed)
+                    setUserLevel(profile.level);
+                    setIsSubscribed(!!profile.is_subscribed);
                 }
             }
         } catch (e) {
-            console.error('Error fetching plans:', e)
+            console.error('Error fetching plans:', e);
         } finally {
-            setLoading(false)
+            setLoading(false);
         }
-    }
+    };
 
     useFocusEffect(
         React.useCallback(() => {
-            fetchActivePlans()
+            fetchActivePlans();
         }, [])
-    )
+    );
 
     return (
-        <View style={{ flex: 1, backgroundColor: '#050508' }}>
+        <View style={{ flex: 1, backgroundColor: colors.background }}>
             {/* Background Ambient Glows */}
             <View
               pointerEvents="none"
@@ -65,7 +70,7 @@ export default function PlanPortal() {
                 width: 320,
                 height: 320,
                 borderRadius: 160,
-                backgroundColor: '#00F0FF',
+                backgroundColor: colors.primary,
                 opacity: 0.05,
               }}
             />
@@ -78,49 +83,56 @@ export default function PlanPortal() {
                 width: 320,
                 height: 320,
                 borderRadius: 160,
-                backgroundColor: '#BD00FF',
+                backgroundColor: colors.secondary,
                 opacity: 0.05,
               }}
             />
 
-            <ScrollView className="flex-1 px-5 pt-5">
+            <ScrollView
+                className="flex-1 px-5 pt-5"
+                contentContainerStyle={{
+                    paddingBottom: Platform.OS === 'ios' ? insets.bottom + 84 : 88,
+                }}
+                showsVerticalScrollIndicator={false}
+            >
                 {/* Header intro */}
-                <FadeInView delay={0} style={{ marginBottom: 28 }}>
+                <FadeInView delay={0} style={{ marginBottom: 20 }}>
                     <Text
                         style={{
                             fontSize: 10,
-                            color: C.electricBlue,
+                            color: colors.primary,
                             fontWeight: '900',
-                            letterSpacing: 3.5, // tracking-widest
+                            letterSpacing: 3.5,
                             textTransform: 'uppercase',
                             marginBottom: 4,
                         }}
                     >
-                        LEARNING PORTAL
+                        {t('nav.plan') || 'LEARNING PORTAL'}
                     </Text>
                     <GradientText
+                        colors={colors.primaryGradient}
                         style={{
                             fontSize: 24,
                             fontWeight: '900',
-                            letterSpacing: -0.5, // tracking-tight
+                            letterSpacing: -0.5,
                             textTransform: 'uppercase',
                         }}
                     >
-                        SYLLABUS CORE
+                        {t('creator.title') || 'SYLLABUS CORE'}
                     </GradientText>
                 </FadeInView>
 
             {/* CREATE PLAN CTA — ALWAYS VISIBLE */}
             <FadeInView delay={50} style={{ marginBottom: 12 }}>
                 <PremiumButton
-                    title="CREATE NEW PLAN +"
+                    title={t('creator.button_generate') || 'CREATE NEW PLAN +'}
                     onPress={() => router.push('/plan/create')}
                     variant="primary"
                 />
             </FadeInView>
 
             {/* Pro Curriculum Builder — secondary entry point */}
-            <FadeInView delay={80} style={{ marginBottom: 24 }}>
+            <FadeInView delay={80} style={{ marginBottom: 20 }}>
                 <TouchableOpacity
                     onPress={() => router.push('/plan/pro-curriculum')}
                     activeOpacity={0.8}
@@ -132,94 +144,90 @@ export default function PlanPortal() {
                         paddingVertical: 12,
                         paddingHorizontal: 20,
                         borderRadius: 20,
-                        backgroundColor: 'rgba(189, 0, 255, 0.06)',
+                        backgroundColor: `${colors.secondary}15`,
                         borderWidth: 1,
-                        borderColor: 'rgba(189, 0, 255, 0.15)',
+                        borderColor: `${colors.secondary}30`,
                     }}
                 >
-                    <Ionicons name="school-outline" size={15} color="#BD00FF" style={{ opacity: 0.8 }} />
+                    <Ionicons name="school-outline" size={15} color={colors.secondary} style={{ opacity: 0.9 }} />
                     <Text style={{
                         fontSize: 11,
                         fontWeight: '900',
-                        color: '#BD00FF',
-                        opacity: 0.8,
+                        color: colors.secondary,
                         letterSpacing: 1,
                         textTransform: 'uppercase',
                     }}>
-                        🎓 Professional Curriculum Builder
+                        🎓 {t('pro_curriculum.title') || 'Professional Curriculum Builder'}
                     </Text>
                 </TouchableOpacity>
             </FadeInView>
 
+            {/* Cohorts & Marketplace Shortcuts */}
+            <FadeInView delay={100} style={{ marginBottom: 14 }}>
+                <GlassCard
+                    onPress={() => router.push('/workspaces')}
+                    style={{
+                        padding: 16,
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        borderColor: colors.glassBorder,
+                    }}
+                >
+                    <View style={{ marginRight: 16, backgroundColor: `${colors.primary}15`, padding: 10, borderRadius: 12, borderWidth: 1, borderColor: `${colors.primary}30` }}>
+                        <Ionicons name="people" size={22} color={colors.primary} />
+                    </View>
+                    <View style={{ flex: 1, marginRight: 12 }}>
+                        <Text style={{ fontSize: 13, fontWeight: '900', color: '#FFFFFF', letterSpacing: 0.5, textTransform: 'uppercase' }}>
+                            {t('nav.cohorts') || 'STUDY COHORTS'}
+                        </Text>
+                        <Text style={{ fontSize: 10, color: colors.textMuted, marginTop: 2, textTransform: 'uppercase', letterSpacing: 0.5, lineHeight: 14 }}>
+                            {t('workspaces.subtitle') || 'JOIN STUDENT GROUPS, SYNC XP, AND SOLVE TUTOR TASKS'}
+                        </Text>
+                    </View>
+                    <Ionicons name="chevron-forward" size={18} color={colors.primary} />
+                </GlassCard>
+            </FadeInView>
 
-            {/* Link cards — LOCKED FOR NEW USERS (progressive reveal) */}
-            {userLevel >= 2 && (
-                <>
-                    <FadeInView delay={100} style={{ marginBottom: 16 }}>
-                        <GlassCard
-                            onPress={() => router.push('/workspaces')}
-                            style={{
-                                padding: 24,
-                                flexDirection: 'row',
-                                alignItems: 'center',
-                                justifyContent: 'space-between',
-                            }}
-                        >
-                            <View style={{ marginRight: 16, backgroundColor: 'rgba(0, 240, 255, 0.05)', padding: 12, borderRadius: 12, borderWidth: 1, borderColor: 'rgba(0, 240, 255, 0.15)' }}>
-                                <Ionicons name="people" size={26} color={C.electricBlue} />
-                            </View>
-                            <View style={{ flex: 1, marginRight: 12 }}>
-                                <Text style={{ fontSize: 14, fontWeight: '900', color: '#FFFFFF', letterSpacing: 1, textTransform: 'uppercase' }}>
-                                    STUDY COHORTS
-                                </Text>
-                                <Text style={{ fontSize: 10, color: C.textMuted, marginTop: 4, textTransform: 'uppercase', letterSpacing: 0.5, lineHeight: 14 }}>
-                                    JOIN STUDENT GROUPS, SYNC XP, AND SOLVE TUTOR TASKS
-                                </Text>
-                            </View>
-                            <Ionicons name="chevron-forward" size={18} color={C.electricBlue} />
-                        </GlassCard>
-                    </FadeInView>
-
-                    <FadeInView delay={200} style={{ marginBottom: 32 }}>
-                        <GlassCard
-                            onPress={() => router.push('/marketplace')}
-                            style={{
-                                padding: 24,
-                                flexDirection: 'row',
-                                alignItems: 'center',
-                                justifyContent: 'space-between',
-                            }}
-                        >
-                            <View style={{ marginRight: 16, backgroundColor: 'rgba(189, 0, 255, 0.05)', padding: 12, borderRadius: 12, borderWidth: 1, borderColor: 'rgba(189, 0, 255, 0.15)' }}>
-                                <Ionicons name="grid" size={26} color={C.neonViolet} />
-                            </View>
-                            <View style={{ flex: 1, marginRight: 12 }}>
-                                <Text style={{ fontSize: 14, fontWeight: '900', color: '#FFFFFF', letterSpacing: 1, textTransform: 'uppercase' }}>
-                                    PLAN MARKETPLACE
-                                </Text>
-                                <Text style={{ fontSize: 10, color: C.textMuted, marginTop: 4, textTransform: 'uppercase', letterSpacing: 0.5, lineHeight: 14 }}>
-                                    BROWSE, BUY, AND IMPORT COMMUNITY CHOSEN STUDY SCHEMAS
-                                </Text>
-                            </View>
-                            <Ionicons name="chevron-forward" size={18} color={C.neonViolet} />
-                        </GlassCard>
-                    </FadeInView>
-                </>
-            )}
+            <FadeInView delay={150} style={{ marginBottom: 20 }}>
+                <GlassCard
+                    onPress={() => router.push('/marketplace')}
+                    style={{
+                        padding: 16,
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        borderColor: colors.glassBorder,
+                    }}
+                >
+                    <View style={{ marginRight: 16, backgroundColor: `${colors.secondary}15`, padding: 10, borderRadius: 12, borderWidth: 1, borderColor: `${colors.secondary}30` }}>
+                        <Ionicons name="grid" size={22} color={colors.secondary} />
+                    </View>
+                    <View style={{ flex: 1, marginRight: 12 }}>
+                        <Text style={{ fontSize: 13, fontWeight: '900', color: '#FFFFFF', letterSpacing: 0.5, textTransform: 'uppercase' }}>
+                            {t('nav.marketplace') || 'PLAN MARKETPLACE'}
+                        </Text>
+                        <Text style={{ fontSize: 10, color: colors.textMuted, marginTop: 2, textTransform: 'uppercase', letterSpacing: 0.5, lineHeight: 14 }}>
+                            {t('marketplace.empty_desc') || 'BROWSE, BUY, AND IMPORT COMMUNITY CHOSEN STUDY SCHEMAS'}
+                        </Text>
+                    </View>
+                    <Ionicons name="chevron-forward" size={18} color={colors.secondary} />
+                </GlassCard>
+            </FadeInView>
 
             {/* Active Plans Section */}
-            <FadeInView delay={300} style={{ marginBottom: 60, marginTop: userLevel < 2 ? 16 : 0 }}>
+            <FadeInView delay={200} style={{ marginBottom: 60 }}>
                 <Text
                     style={{
                         fontSize: 10,
-                        color: C.electricBlue,
+                        color: colors.primary,
                         fontWeight: '900',
-                        letterSpacing: 3.5, // tracking-widest
+                        letterSpacing: 3.5,
                         textTransform: 'uppercase',
                         marginBottom: 12,
                     }}
                 >
-                    ACTIVE PERSONAL PLANS
+                    {t('dashboard.focus_session') || 'ACTIVE PERSONAL PLANS'}
                 </Text>
 
                 {loading ? (
@@ -227,15 +235,16 @@ export default function PlanPortal() {
                 ) : activePlans.length === 0 ? (
                     <EmptyStateCTA
                         iconName="calendar"
-                        title="No Active Plans Yet"
-                        description="Formulate an AI-driven learning curriculum directly matching your goal to begin tracking."
-                        buttonText="CREATE A PLAN"
+                        title={t('plan.no_focus_sessions') || 'No Active Plans Yet'}
+                        description={t('plan.interactive_roadmap') || 'Formulate an AI-driven learning curriculum directly matching your goal to begin tracking.'}
+                        buttonText={t('creator.button_generate') || 'CREATE A PLAN'}
                         onPress={() => router.push('/plan/create')}
                     />
                 ) : (
                     <View style={{ gap: 12 }}>
-                        {activePlans.map((plan, index) => {
+                        {translatedPlans.map((plan, index) => {
                             const isPlanLocked = !isSubscribed && index > 0;
+                            const createdDateStr = plan.created_at ? plan.created_at.split('T')[0] : '';
                             return (
                                 <GlassCard
                                     key={plan.id}
@@ -254,11 +263,12 @@ export default function PlanPortal() {
                                         router.push({ pathname: '/plan/[id]', params: { id: plan.id } });
                                     }}
                                     style={{
-                                        padding: 20,
+                                        padding: 18,
                                         flexDirection: 'row',
                                         alignItems: 'center',
                                         justifyContent: 'space-between',
                                         opacity: isPlanLocked ? 0.55 : 1,
+                                        borderColor: colors.glassBorder,
                                     }}
                                 >
                                     <View style={{ flex: 1, marginRight: 12 }}>
@@ -266,26 +276,22 @@ export default function PlanPortal() {
                                             {plan.title}
                                         </Text>
                                         <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 6 }}>
-                                            <GlowBadge label={`${plan.duration_days} DAYS`} colorScheme="blue" />
+                                            <GlowBadge label={`${plan.duration_days} ${t('plan.day_count', { day: '' }).trim() || 'DAYS'}`} colorScheme="blue" />
                                             {isPlanLocked ? (
                                                 <View style={{ flexDirection: 'row', alignItems: 'center', marginLeft: 8 }}>
-                                                    <Ionicons name="lock-closed" size={10} color="#BD00FF" />
-                                                    <Text style={{ fontSize: 9, color: '#BD00FF', marginLeft: 4, fontWeight: 'bold' }}>
+                                                    <Ionicons name="lock-closed" size={10} color={colors.secondary} />
+                                                    <Text style={{ fontSize: 9, color: colors.secondary, marginLeft: 4, fontWeight: 'bold' }}>
                                                         PRO REQUIRED
                                                     </Text>
                                                 </View>
                                             ) : (
-                                                <Text style={{ fontSize: 9, color: C.textDim, marginLeft: 8 }}>
-                                                    STARTED {new Date(plan.created_at).toLocaleDateString()}
+                                                <Text style={{ fontSize: 9, color: colors.textMuted, marginLeft: 8 }}>
+                                                    {t('plan.started_date', { date: createdDateStr }) || `STARTED ${createdDateStr}`}
                                                 </Text>
                                             )}
                                         </View>
                                     </View>
-                                    <Ionicons 
-                                        name={isPlanLocked ? "lock-closed" : "chevron-forward"} 
-                                        size={18} 
-                                        color={isPlanLocked ? "#BD00FF" : C.electricBlue} 
-                                    />
+                                    <Ionicons name="chevron-forward" size={18} color={colors.primary} />
                                 </GlassCard>
                             );
                         })}
@@ -293,15 +299,6 @@ export default function PlanPortal() {
                 )}
             </FadeInView>
             </ScrollView>
-
-            <PlanGeneratorLoader
-                visible={isGenerating}
-                error={generationError}
-                onDismiss={() => {
-                    setIsGenerating(false)
-                    setGenerationError(null)
-                }}
-            />
         </View>
-    )
+    );
 }

@@ -7,11 +7,13 @@ import Animated, {
   withTiming,
   FadeInLeft,
 } from 'react-native-reanimated';
-import { C, Spacing, BorderRadius, Typography } from '../../constants/theme';
+import { Spacing, BorderRadius, Typography } from '../../constants/theme';
 import { PremiumButton } from '../ui/PremiumButton';
 import { supabase } from '../../utils/supabase';
 import { API_BASE_URL } from '../../utils/api';
 import * as Haptics from 'expo-haptics';
+import { HapticsEngine } from '../../utils/HapticsEngine';
+import { useTheme } from '../../context/ThemeContext';
 
 interface StreamedTask {
   id: string;
@@ -23,6 +25,7 @@ interface StreamedTask {
 
 interface PlanGeneratorLoaderProps {
   visible: boolean;
+  error?: string | null;
   planParams?: {
     goal: string;
     level: string;
@@ -31,15 +34,15 @@ interface PlanGeneratorLoaderProps {
     userId: string;
   };
   onDismiss: () => void;
-  onSuccess: (planId: string) => void;
+  onSuccess?: (planId: string) => void;
 }
 
 const TICKER_MESSAGES = [
-  "Analyzing your goal...",
-  "Structuring your 30 days...",
-  "Balancing difficulty tiers...",
-  "Adding recovery days...",
-  "Almost ready..."
+  'Analyzing your goal...',
+  'Structuring your 30 days...',
+  'Balancing difficulty tiers...',
+  'Adding recovery days...',
+  'Almost ready...',
 ];
 
 function getPriorityStyles(priority: number) {
@@ -66,11 +69,12 @@ export const PlanGeneratorLoader = React.memo(function PlanGeneratorLoader({
   onDismiss,
   onSuccess,
 }: PlanGeneratorLoaderProps) {
+  const { colors } = useTheme();
   const [tickerIndex, setTickerIndex] = useState(0);
   const [errorText, setErrorText] = useState<string | null>(null);
   const [visibleTasks, setVisibleTasks] = useState<StreamedTask[]>([]);
   const [isReady, setIsReady] = useState(false);
-  
+
   const progressVal = useSharedValue(0);
   const scrollViewRef = useRef<ScrollView>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
@@ -94,7 +98,7 @@ export const PlanGeneratorLoader = React.memo(function PlanGeneratorLoader({
   // Handle stream fetching
   const runStream = useCallback(async () => {
     if (!planParams) return;
-    
+
     setErrorText(null);
     setIsReady(false);
     setVisibleTasks([]);
@@ -147,68 +151,55 @@ export const PlanGeneratorLoader = React.memo(function PlanGeneratorLoader({
         buffer = lines.pop() || '';
 
         for (const line of lines) {
-          const trimmedLine = line.trim();
-          if (!trimmedLine || !trimmedLine.startsWith('data: ')) continue;
+          const trimmed = line.trim();
+          if (!trimmed.startsWith('data:')) continue;
 
-          const payload = trimmedLine.slice(6).trim();
-          if (payload === '[DONE]') {
-            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-            progressVal.value = withTiming(1.0, { duration: 250 });
+          const dataStr = trimmed.replace(/^data:\s*/, '');
+          if (dataStr === '[DONE]') {
+            progressVal.value = withTiming(1, { duration: 400 });
+            HapticsEngine.tier3.success();
             setIsReady(true);
-            
-            // Wait 800ms, then call onSuccess
             setTimeout(() => {
-              onSuccess(planId);
+              if (planId && onSuccess) {
+                onSuccess(planId);
+              }
             }, 800);
             return;
           }
 
           try {
-            const data = JSON.parse(payload);
-            if (data.error) {
-              throw new Error(data.error);
-            }
-
-            if (data.planId) {
-              planId = data.planId;
-            } else {
-              // Task object
-              const newTask: StreamedTask = {
-                id: Math.random().toString(36).substring(2, 9),
-                title: data.title,
-                priority: data.priority,
-                day: data.day,
-                estimated_mins: data.estimated_mins,
-              };
-
-              setVisibleTasks((prev) => {
-                const next = [...prev, newTask];
-                if (next.length > 4) {
-                  return next.slice(next.length - 4);
+            const parsed = JSON.parse(dataStr);
+            if (parsed.type === 'start') {
+              planId = parsed.planId;
+            } else if (parsed.type === 'task') {
+              HapticsEngine.tier1.light();
+              setVisibleTasks((prev) => [...prev, parsed.task]);
+            } else if (parsed.type === 'done') {
+              progressVal.value = withTiming(1, { duration: 400 });
+              HapticsEngine.tier3.success();
+              setIsReady(true);
+              setTimeout(() => {
+                if (planId && onSuccess) {
+                  onSuccess(planId);
                 }
-                return next;
-              });
-
-              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-              scrollViewRef.current?.scrollToEnd({ animated: true });
+              }, 800);
+              return;
             }
-          } catch (e: any) {
-            if (e.message?.includes('failed') || e.message?.includes('Generation')) {
-              throw e;
-            }
+          } catch {
+            // Ignore parse errors on incomplete chunks
           }
         }
       }
     } catch (err: any) {
       if (err.name === 'AbortError') return;
-      console.error('Mobile plan generation stream failed:', err);
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      setErrorText(err.message || 'Something went wrong building your plan.');
+      console.error('Plan stream error:', err);
+      HapticsEngine.tier4.error();
+      setErrorText(err.message || 'Failed to generate plan. Please try again.');
     }
-  }, [planParams, progressVal, onSuccess]);
+  }, [planParams, onSuccess, progressVal]);
 
   useEffect(() => {
-    if (visible) {
+    if (visible && planParams) {
       runStream();
     } else {
       if (abortControllerRef.current) {
@@ -220,19 +211,29 @@ export const PlanGeneratorLoader = React.memo(function PlanGeneratorLoader({
         abortControllerRef.current.abort();
       }
     };
-  }, [visible, runStream]);
+  }, [visible, planParams, runStream]);
+
+  if (!visible) return null;
 
   return (
     <Modal
       transparent
       animationType="fade"
       visible={visible}
-      statusBarTranslucent
+      onRequestClose={onDismiss}
     >
-      <View style={styles.overlay}>
-        <View style={styles.container}>
-          {/* Logo */}
-          <Text style={styles.logoText}>L I F E P I V O T</Text>
+      <View style={[styles.overlay, { backgroundColor: colors.overlayBg }]}>
+        <View
+          style={[
+            styles.container,
+            {
+              backgroundColor: colors.cardElevated || colors.card,
+              borderColor: colors.glassBorderStrong || colors.glassBorder,
+            },
+          ]}
+        >
+          {/* LifePivot Logo / Monogram */}
+          <Text style={[styles.logoText, { color: colors.textMuted }]}>LIFEPIVOT AI ARCHITECT</Text>
 
           {errorText ? (
             <View style={styles.contentCenter}>
@@ -241,7 +242,7 @@ export const PlanGeneratorLoader = React.memo(function PlanGeneratorLoader({
               </View>
               <Text style={styles.title}>GENERATION FAILED</Text>
               <Text style={styles.errorText}>{errorText}</Text>
-              
+
               <View style={styles.buttonContainer}>
                 <PremiumButton
                   title="TRY AGAIN"
@@ -260,22 +261,28 @@ export const PlanGeneratorLoader = React.memo(function PlanGeneratorLoader({
           ) : (
             <View style={styles.contentCenter}>
               {/* Ticker text */}
-              <Text style={styles.tickerText}>
-                {isReady ? "YOUR PLAN IS READY" : TICKER_MESSAGES[tickerIndex]}
+              <Text style={[styles.tickerText, { color: colors.primary }]}>
+                {isReady ? 'YOUR PLAN IS READY' : TICKER_MESSAGES[tickerIndex]}
               </Text>
 
               {/* Progress bar */}
               <View style={styles.progressBarTrack}>
-                <Animated.View style={[styles.progressBarFill, progressStyle]} />
+                <Animated.View
+                  style={[
+                    styles.progressBarFill,
+                    { backgroundColor: colors.primary },
+                    progressStyle,
+                  ]}
+                />
               </View>
 
               {/* Label */}
-              <Text style={styles.label}>
-                {isReady ? "DONE" : "YOUR PLAN IS BEING BUILT"}
+              <Text style={[styles.label, { color: colors.textMuted }]}>
+                {isReady ? 'DONE' : 'YOUR PLAN IS BEING BUILT'}
               </Text>
 
-              {/* Streaming Tasks Area (ScrollView auto-scrolls to latest) */}
-              <View style={styles.streamContainer}>
+              {/* Streaming Tasks Area */}
+              <View style={[styles.streamContainer, { borderColor: colors.glassBorder }]}>
                 <ScrollView
                   ref={scrollViewRef}
                   contentContainerStyle={styles.scrollContent}
@@ -283,30 +290,30 @@ export const PlanGeneratorLoader = React.memo(function PlanGeneratorLoader({
                   onContentSizeChange={() => scrollViewRef.current?.scrollToEnd({ animated: true })}
                 >
                   {visibleTasks.map((t) => {
-                    const stylesStyles = getPriorityStyles(t.priority);
+                    const priorityStyle = getPriorityStyles(t.priority);
                     return (
                       <Animated.View
                         key={t.id}
                         entering={FadeInLeft}
-                        style={styles.taskCard}
+                        style={[styles.taskCard, { borderColor: colors.glassBorder }]}
                       >
                         {/* Dot */}
-                        <View style={[styles.dot, { backgroundColor: stylesStyles.dot }]} />
-                        
+                        <View style={[styles.dot, { backgroundColor: priorityStyle.dot }]} />
+
                         {/* Title and Badge */}
                         <View style={styles.taskContent}>
                           <Text numberOfLines={1} style={styles.taskTitle}>
                             {t.title}
                           </Text>
-                          <View style={[styles.badge, { backgroundColor: stylesStyles.badgeBg }]}>
-                            <Text style={[styles.badgeText, { color: stylesStyles.badgeText }]}>
-                              {stylesStyles.label}
+                          <View style={[styles.badge, { backgroundColor: priorityStyle.badgeBg }]}>
+                            <Text style={[styles.badgeText, { color: priorityStyle.badgeText }]}>
+                              {priorityStyle.label}
                             </Text>
                           </View>
                         </View>
 
                         {/* Day label */}
-                        <Text style={styles.dayLabel}>DAY {t.day}</Text>
+                        <Text style={[styles.dayLabel, { color: colors.textMuted }]}>DAY {t.day}</Text>
                       </Animated.View>
                     );
                   })}
@@ -323,7 +330,6 @@ export const PlanGeneratorLoader = React.memo(function PlanGeneratorLoader({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(5, 5, 8, 0.95)',
     justifyContent: 'center',
     alignItems: 'center',
     padding: Spacing.four,
@@ -331,9 +337,7 @@ const styles = StyleSheet.create({
   container: {
     padding: Spacing.five,
     borderRadius: BorderRadius.xxl,
-    backgroundColor: '#10121a',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.06)',
     width: '100%',
     maxWidth: 340,
     alignItems: 'center',
@@ -342,7 +346,6 @@ const styles = StyleSheet.create({
   logoText: {
     fontSize: 9,
     fontWeight: '900',
-    color: '#4B5563',
     letterSpacing: 4,
     marginBottom: Spacing.four,
   },
@@ -382,7 +385,6 @@ const styles = StyleSheet.create({
   },
   tickerText: {
     ...Typography.body,
-    color: '#00F0FF',
     fontWeight: '900',
     textAlign: 'center',
     textTransform: 'uppercase',
@@ -401,12 +403,10 @@ const styles = StyleSheet.create({
   progressBarFill: {
     height: '100%',
     borderRadius: 1.5,
-    backgroundColor: '#00F0FF',
   },
   label: {
     fontSize: 9,
     fontWeight: '900',
-    color: '#4B5563',
     letterSpacing: 2,
     marginTop: Spacing.two,
   },
@@ -415,7 +415,6 @@ const styles = StyleSheet.create({
     height: 260,
     marginTop: Spacing.four,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.04)',
     borderRadius: BorderRadius.xl,
     backgroundColor: 'rgba(255, 255, 255, 0.02)',
     overflow: 'hidden',
@@ -431,8 +430,7 @@ const styles = StyleSheet.create({
     padding: Spacing.two,
     backgroundColor: 'rgba(255, 255, 255, 0.04)',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.06)',
-    borderRadius: BorderRadius.large,
+    borderRadius: BorderRadius.lg,
     marginBottom: Spacing.two,
     width: '100%',
   },
@@ -465,7 +463,6 @@ const styles = StyleSheet.create({
   dayLabel: {
     fontSize: 9,
     fontWeight: '900',
-    color: '#4B5563',
   },
 });
 

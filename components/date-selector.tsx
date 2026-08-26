@@ -149,10 +149,10 @@ export function DateSelector({ selectedDate, onSelectDate }: DateSelectorProps) 
     }, [])
 
     return (
-        <div className="w-full py-4 flex flex-col gap-4 select-none overflow-hidden bg-transparent">
+        <div className="w-full py-2 flex flex-col gap-3 select-none overflow-hidden bg-transparent">
             {/* Header: Month & View All */}
-            <div className="flex justify-between items-center px-6">
-                <h2 className="text-lg font-bold text-white tracking-wide">
+            <div className="flex justify-between items-center px-4 sm:px-6">
+                <h2 className="text-base sm:text-lg font-black text-white tracking-wide capitalize">
                     {currentMonthLabel}
                 </h2>
 

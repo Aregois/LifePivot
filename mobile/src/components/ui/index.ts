@@ -12,5 +12,6 @@ export { ErrorStateCTA } from './ErrorStateCTA';
 export { Skeleton, PlanSkeletonList, WorkspaceSkeletonList } from './Skeleton';
 export { ToastProvider, toastController } from './Toast';
 export { FloatingXp } from './FloatingXp';
+export { GlassView } from './GlassView';
 
 

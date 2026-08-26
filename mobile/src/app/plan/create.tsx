@@ -1,469 +1,469 @@
-import React, { useState } from 'react'
+import React, { useState } from 'react';
 import {
-    View,
-    Text,
-    TextInput,
-    ScrollView,
-    StyleSheet,
-    TouchableOpacity,
-    Alert,
-    KeyboardAvoidingView,
-    Platform
-} from 'react-native'
-import { useRouter } from 'expo-router'
-import * as Haptics from 'expo-haptics'
-import { Ionicons } from '@expo/vector-icons'
-import { C, Shadows, BorderRadius, Spacing, Typography } from '../../constants/theme'
-import { FadeInView, GlassCard, PremiumButton, GradientText, GlowBadge, SegmentedControl } from '../../components/ui'
-import { apiRequest } from '../../utils/api'
-import { PlanGeneratorLoader } from '../../components/plan/PlanGeneratorLoader'
-import { scheduleDailyStudyReminder, requestNotificationPermissions } from '../../utils/notifications'
-import { supabase } from '../../utils/supabase'
-import { track } from '../../utils/analytics'
+  View,
+  Text,
+  TextInput,
+  ScrollView,
+  StyleSheet,
+  TouchableOpacity,
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+} from 'react-native';
+import { useRouter } from 'expo-router';
+import * as Haptics from 'expo-haptics';
+import { Ionicons } from '@expo/vector-icons';
+import { HapticsEngine } from '../../utils/HapticsEngine';
+import { useTheme } from '../../context/ThemeContext';
+import { useLanguage } from '../../context/LanguageContext';
+import { FadeInView, GlassCard, PremiumButton, SegmentedControl } from '../../components/ui';
+import { apiRequest } from '../../utils/api';
+import { PlanGeneratorLoader } from '../../components/plan/PlanGeneratorLoader';
+import { scheduleDailyStudyReminder, requestNotificationPermissions } from '../../utils/notifications';
+import { supabase } from '../../utils/supabase';
+import { track } from '../../utils/analytics';
+import { BorderRadius } from '../../constants/theme';
 
-const CATEGORIES = [
-    { id: 'Coding', label: 'Coding & CS', icon: 'code-slash' },
-    { id: 'Science', label: 'Science & Bio', icon: 'flask' },
-    { id: 'Math', label: 'Mathematics', icon: 'calculator' },
-    { id: 'Languages', label: 'Languages', icon: 'language' },
-    { id: 'Humanities', label: 'Humanities', icon: 'book' },
-    { id: 'Arts', label: 'Arts & Design', icon: 'color-palette' },
-    { id: 'Business', label: 'Business & Econ', icon: 'briefcase' },
-    { id: 'Music', label: 'Music & Audio', icon: 'musical-notes' },
-    { id: 'History', label: 'History & Lore', icon: 'document-text' },
-    { id: 'Social', label: 'Social Sciences', icon: 'people' },
-    { id: 'Health', label: 'Health & Fitness', icon: 'barbell' },
-    { id: 'Custom', label: 'Custom', icon: 'sparkles' }
-]
+const CATEGORY_IDS = [
+  { id: 'Coding', icon: 'code-slash' },
+  { id: 'Science', icon: 'flask' },
+  { id: 'Math', icon: 'calculator' },
+  { id: 'Languages', icon: 'language' },
+  { id: 'Humanities', icon: 'book' },
+  { id: 'Arts', icon: 'color-palette' },
+  { id: 'Business', icon: 'briefcase' },
+  { id: 'Music', icon: 'musical-notes' },
+  { id: 'History', icon: 'document-text' },
+  { id: 'Social', icon: 'people' },
+  { id: 'Health', icon: 'barbell' },
+  { id: 'Custom', icon: 'sparkles' },
+];
 
-const INTENTS = [
-    { id: 'Exam', label: 'Exam Prep', desc: 'Syllabus coverage & dense pre-exam review' },
-    { id: 'Level Up', label: 'Level Up', desc: 'Skill mastery loops with deep theory focus' },
-    { id: 'Intro', label: 'Curiosity', desc: 'Interest building with low-pressure progress' }
-]
-
-const DURATIONS = [7, 14, 30, 60]
+const DURATIONS = [7, 14, 30, 60];
 
 export default function CreatePlan() {
-    const router = useRouter()
-    const [title, setTitle] = useState('')
-    const [selectedCategory, setSelectedCategory] = useState('Coding')
-    const [selectedDuration, setSelectedDuration] = useState(30)
-    const [levelIndex, setLevelIndex] = useState(0) // 0 = Beginner, 1 = Intermediate, 2 = Advanced
-    const [selectedIntent, setSelectedIntent] = useState('Level Up')
-    const [dailyHours, setDailyHours] = useState(2)
+  const router = useRouter();
+  const { colors } = useTheme();
+  const { t } = useLanguage();
+  const [title, setTitle] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('Coding');
+  const [selectedDuration, setSelectedDuration] = useState(30);
+  const [levelIndex, setLevelIndex] = useState(0); // 0 = Beginner, 1 = Intermediate, 2 = Advanced
+  const [selectedIntent, setSelectedIntent] = useState('Level Up');
+  const [dailyHours, setDailyHours] = useState(2);
 
-    // Generation states
-    const [isGenerating, setIsGenerating] = useState(false)
-    const [planParams, setPlanParams] = useState<any>(null)
+  // Generation states
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [planParams, setPlanParams] = useState<any>(null);
 
-    const handleCreate = async () => {
-        const trimmedTitle = title.trim()
-        if (!trimmedTitle) {
-            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning)
-            Alert.alert('REQUIRED', 'Please input a goal or topic title to proceed.')
-            return
-        }
+  const intents = [
+    { id: 'Exam', label: t('creator.intent_exam'), desc: 'Syllabus coverage & dense pre-exam review' },
+    { id: 'Level Up', label: t('creator.intent_mastery'), desc: 'Skill mastery loops with deep theory focus' },
+    { id: 'Intro', label: t('creator.intent_intro'), desc: 'Interest building with low-pressure progress' },
+  ];
 
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
-
-        try {
-            const { data: { user } } = await supabase.auth.getUser()
-            if (!user) {
-                Alert.alert('ERROR', 'You must be logged in to create a plan.')
-                return
-            }
-
-            const levels = ['Beginner', 'Intermediate', 'Advanced']
-            const level = levels[levelIndex]
-
-            setPlanParams({
-                goal: trimmedTitle,
-                level: level,
-                dailyTime: dailyHours.toString() + ' hours',
-                style: selectedCategory,
-                userId: user.id
-            })
-            setIsGenerating(true)
-        } catch (err: any) {
-            console.error('Error initiating generation:', err)
-            Alert.alert('ERROR', 'Failed to initiate plan generation.')
-        }
+  const handleCreate = async () => {
+    const trimmedTitle = title.trim();
+    if (!trimmedTitle) {
+      HapticsEngine.tier4.warning();
+      Alert.alert(t('common.error') || 'REQUIRED', t('onboarding.q1_title') || 'Please input a goal or topic title to proceed.');
+      return;
     }
 
-    return (
-        <KeyboardAvoidingView
-            style={{ flex: 1, backgroundColor: '#050508' }}
-            behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-            keyboardVerticalOffset={Platform.OS === 'ios' ? 88 : 0}
-        >
-            {/* Ambient Background Glows */}
-            <View pointerEvents="none" style={styles.ambientGlowTop} />
-            <View pointerEvents="none" style={styles.ambientGlowBottom} />
+    HapticsEngine.tier2.action();
 
-            <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
-                {/* ── Category Chips Picker ── */}
-                <FadeInView delay={0} style={styles.section}>
-                    <Text style={styles.sectionLabel}>CHOOSE FOCUS FIELD</Text>
-                    <ScrollView
-                        horizontal
-                        showsHorizontalScrollIndicator={false}
-                        contentContainerStyle={styles.horizontalScroll}
-                    >
-                        {CATEGORIES.map((cat) => {
-                            const isSelected = cat.id === selectedCategory
-                            return (
-                                <TouchableOpacity
-                                    key={cat.id}
-                                    onPress={() => {
-                                        triggerSelectionHaptic()
-                                        setSelectedCategory(cat.id)
-                                    }}
-                                    style={[
-                                        styles.categoryChip,
-                                        isSelected && styles.categoryChipSelected
-                                    ]}
-                                >
-                                    <Ionicons
-                                        name={cat.icon as any}
-                                        size={14}
-                                        color={isSelected ? '#00F0FF' : '#5A6178'}
-                                        style={{ marginRight: 6 }}
-                                    />
-                                    <Text style={[styles.categoryText, isSelected && styles.categoryTextActive]}>
-                                        {cat.label}
-                                    </Text>
-                                </TouchableOpacity>
-                            )
-                        })}
-                    </ScrollView>
-                </FadeInView>
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        Alert.alert(t('common.error') || 'ERROR', 'You must be logged in to create a plan.');
+        return;
+      }
 
-                {/* ── Topic / Goal Title ── */}
-                <FadeInView delay={100} style={styles.section}>
-                    <Text style={styles.sectionLabel}>DEFINE STUDY TOPIC / GOAL</Text>
-                    <GlassCard style={styles.inputContainer}>
-                        <TextInput
-                            value={title}
-                            onChangeText={setTitle}
-                            placeholder="e.g. Master React Native and Advanced Systems Design"
-                            placeholderTextColor={C.placeholder}
-                            style={styles.textInput}
-                        />
-                    </GlassCard>
-                </FadeInView>
+      const levels = ['Beginner', 'Intermediate', 'Advanced'];
+      const level = levels[levelIndex];
 
-                {/* ── Duration ── */}
-                <FadeInView delay={150} style={styles.section}>
-                    <Text style={styles.sectionLabel}>PLAN DURATION (DAYS)</Text>
-                    <View style={styles.durationRow}>
-                        {DURATIONS.map((dur) => {
-                            const isSelected = dur === selectedDuration
-                            return (
-                                <TouchableOpacity
-                                    key={dur}
-                                    onPress={() => {
-                                        triggerSelectionHaptic()
-                                        setSelectedDuration(dur)
-                                    }}
-                                    style={[
-                                        styles.durationButton,
-                                        isSelected && styles.durationButtonSelected
-                                    ]}
-                                >
-                                    <Text style={[styles.durationText, isSelected && styles.durationTextActive]}>
-                                        {dur}D
-                                    </Text>
-                                </TouchableOpacity>
-                            )
-                        })}
-                    </View>
-                </FadeInView>
+      setPlanParams({
+        goal: trimmedTitle,
+        level: level,
+        dailyTime: dailyHours.toString() + ' hours',
+        style: selectedCategory,
+        userId: user.id,
+      });
+      setIsGenerating(true);
+    } catch (err: any) {
+      console.error('Error initiating generation:', err);
+      Alert.alert(t('common.error') || 'ERROR', 'Failed to initiate plan generation.');
+    }
+  };
 
-                {/* ── Level ── */}
-                <FadeInView delay={200} style={styles.section}>
-                    <Text style={styles.sectionLabel}>CURRICULUM LEVEL</Text>
-                    <SegmentedControl
-                        segments={['BEGINNER', 'INTERMEDIATE', 'ADVANCED']}
-                        selectedIndex={levelIndex}
-                        onChange={setLevelIndex}
-                    />
-                </FadeInView>
+  return (
+    <KeyboardAvoidingView
+      style={{ flex: 1, backgroundColor: colors.background }}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 88 : 0}
+    >
+      {/* Ambient Background Glows */}
+      <View
+        pointerEvents="none"
+        style={[
+          styles.ambientGlowTop,
+          { backgroundColor: colors.primary, opacity: 0.05 },
+        ]}
+      />
+      <View
+        pointerEvents="none"
+        style={[
+          styles.ambientGlowBottom,
+          { backgroundColor: colors.secondary, opacity: 0.04 },
+        ]}
+      />
 
-                {/* ── Mission Intent ── */}
-                <FadeInView delay={250} style={styles.section}>
-                    <Text style={styles.sectionLabel}>MISSION INTENT Archetype</Text>
-                    <View style={{ gap: 10 }}>
-                        {INTENTS.map((intent) => {
-                            const isSelected = intent.id === selectedIntent
-                            return (
-                                <GlassCard
-                                    key={intent.id}
-                                    onPress={() => {
-                                        triggerSelectionHaptic()
-                                        setSelectedIntent(intent.id)
-                                    }}
-                                    style={[
-                                        styles.intentCard,
-                                        isSelected && styles.intentCardSelected
-                                    ]}
-                                >
-                                    <View style={styles.intentHeader}>
-                                        <Text style={[styles.intentTitle, isSelected && styles.intentTextActive]}>
-                                            {intent.label.toUpperCase()}
-                                        </Text>
-                                        {isSelected && <Ionicons name="checkmark-circle" size={16} color="#00F0FF" />}
-                                    </View>
-                                    <Text style={styles.intentDesc}>{intent.desc}</Text>
-                                </GlassCard>
-                            )
-                        })}
-                    </View>
-                </FadeInView>
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
+        {/* ── Category Chips Picker ── */}
+        <FadeInView delay={0} style={styles.section}>
+          <Text style={[styles.sectionLabel, { color: colors.primary }]}>{t('creator.subtitle')}</Text>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.horizontalScroll}
+          >
+            {CATEGORY_IDS.map((cat) => {
+              const isSelected = cat.id === selectedCategory;
+              const categoryName = t(`categories.${cat.id}.name`) || cat.id;
+              return (
+                <TouchableOpacity
+                  key={cat.id}
+                  onPress={() => {
+                    HapticsEngine.tier1.selection();
+                    setSelectedCategory(cat.id);
+                  }}
+                  style={[
+                    styles.categoryChip,
+                    {
+                      borderColor: isSelected ? colors.primary : colors.glassBorder,
+                      backgroundColor: isSelected ? `${colors.primary}18` : 'rgba(255, 255, 255, 0.03)',
+                    },
+                  ]}
+                  activeOpacity={0.7}
+                >
+                  <Ionicons
+                    name={cat.icon as any}
+                    size={14}
+                    color={isSelected ? colors.primary : colors.textMuted}
+                    style={{ marginRight: 6 }}
+                  />
+                  <Text
+                    style={[
+                      styles.categoryText,
+                      { color: isSelected ? colors.primary : colors.textSecondary },
+                    ]}
+                  >
+                    {categoryName}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
+        </FadeInView>
 
-                {/* ── Commitment Budget ── */}
-                <FadeInView delay={300} style={styles.section}>
-                    <Text style={styles.sectionLabel}>DAILY STUDY BUDGET</Text>
-                    <View style={styles.hoursRow}>
-                        {[1, 2, 3, 4, 5, 6].map((hour) => {
-                            const isSelected = hour === dailyHours
-                            return (
-                                <TouchableOpacity
-                                    key={hour}
-                                    onPress={() => {
-                                        triggerSelectionHaptic()
-                                        setDailyHours(hour)
-                                    }}
-                                    style={[
-                                        styles.hourChip,
-                                        isSelected && styles.hourChipSelected
-                                    ]}
-                                >
-                                    <Text style={[styles.hourChipText, isSelected && styles.hourChipTextActive]}>
-                                        {hour}H
-                                    </Text>
-                                </TouchableOpacity>
-                            )
-                        })}
-                    </View>
-                </FadeInView>
-
-                {/* ── Generate Action Button ── */}
-                <FadeInView delay={350} style={{ marginTop: 24, marginBottom: 40 }}>
-                    <PremiumButton
-                        title="GENERATE PERSONAL SYLLABUS"
-                        onPress={handleCreate}
-                        variant="primary"
-                    />
-                </FadeInView>
-            </ScrollView>
-
-            <PlanGeneratorLoader
-                visible={isGenerating}
-                planParams={planParams}
-                onDismiss={() => {
-                    setIsGenerating(false)
-                }}
-                onSuccess={async (goalId) => {
-                    setIsGenerating(false)
-                    try {
-                        const granted = await requestNotificationPermissions()
-                        if (granted) {
-                            const todayStr = new Date().toISOString().split('T')[0]
-                            const { count } = await supabase
-                                .from('tasks')
-                                .select('*', { count: 'exact', head: true })
-                                .eq('goal_id', goalId)
-                                .eq('due_date', todayStr)
-
-                            const taskCount = count || 0
-                            await scheduleDailyStudyReminder(title.trim(), 1, taskCount, 8, 0)
-                        }
-                    } catch (notiErr) {
-                        console.warn('Failed to register notifications:', notiErr)
-                    }
-
-                    const levels = ['Beginner', 'Intermediate', 'Advanced']
-                    const level = levels[levelIndex]
-                    track('plan_created', {
-                        duration: selectedDuration,
-                        difficulty: level
-                    })
-
-                    router.replace({
-                        pathname: '/plan/[id]',
-                        params: { id: goalId }
-                    })
-                }}
+        {/* ── Topic / Goal Title ── */}
+        <FadeInView delay={100} style={styles.section}>
+          <Text style={[styles.sectionLabel, { color: colors.primary }]}>{t('creator.objective')}</Text>
+          <GlassCard style={[styles.inputContainer, { borderColor: colors.glassBorder }]}>
+            <TextInput
+              value={title}
+              onChangeText={setTitle}
+              placeholder="e.g. Master Quantum Mechanics & Systems Design"
+              placeholderTextColor={colors.placeholder}
+              style={[styles.textInput, { color: colors.textPrimary }]}
             />
-        </KeyboardAvoidingView>
-    )
-}
+          </GlassCard>
+        </FadeInView>
 
-const triggerSelectionHaptic = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+        {/* ── Duration ── */}
+        <FadeInView delay={150} style={styles.section}>
+          <Text style={[styles.sectionLabel, { color: colors.primary }]}>{t('creator.duration')}</Text>
+          <View style={styles.durationRow}>
+            {DURATIONS.map((dur) => {
+              const isSelected = dur === selectedDuration;
+              return (
+                <TouchableOpacity
+                  key={dur}
+                  onPress={() => {
+                    HapticsEngine.tier1.selection();
+                    setSelectedDuration(dur);
+                  }}
+                  style={[
+                    styles.durationButton,
+                    {
+                      borderColor: isSelected ? colors.primary : colors.glassBorder,
+                      backgroundColor: isSelected ? `${colors.primary}18` : 'rgba(255, 255, 255, 0.03)',
+                    },
+                  ]}
+                  activeOpacity={0.7}
+                >
+                  <Text
+                    style={[
+                      styles.durationText,
+                      { color: isSelected ? colors.primary : colors.textMuted },
+                    ]}
+                  >
+                    {dur}D
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        </FadeInView>
+
+        {/* ── Level ── */}
+        <FadeInView delay={200} style={styles.section}>
+          <Text style={[styles.sectionLabel, { color: colors.primary }]}>{t('creator.initial_level')}</Text>
+          <SegmentedControl
+            segments={[t('marketplace.beginner'), t('marketplace.intermediate'), t('marketplace.advanced')]}
+            selectedIndex={levelIndex}
+            onChange={setLevelIndex}
+          />
+        </FadeInView>
+
+        {/* ── Mission Intent ── */}
+        <FadeInView delay={250} style={styles.section}>
+          <Text style={[styles.sectionLabel, { color: colors.primary }]}>{t('creator.intent')}</Text>
+          <View style={{ gap: 10 }}>
+            {intents.map((intent) => {
+              const isSelected = intent.id === selectedIntent;
+              return (
+                <GlassCard
+                  key={intent.id}
+                  onPress={() => {
+                    HapticsEngine.tier1.selection();
+                    setSelectedIntent(intent.id);
+                  }}
+                  style={[
+                    styles.intentCard,
+                    {
+                      borderColor: isSelected ? colors.primary : colors.glassBorder,
+                      backgroundColor: isSelected ? `${colors.primary}12` : colors.card,
+                    },
+                  ]}
+                >
+                  <View style={styles.intentHeader}>
+                    <Text
+                      style={[
+                        styles.intentTitle,
+                        isSelected && { color: colors.primary },
+                      ]}
+                    >
+                      {intent.label.toUpperCase()}
+                    </Text>
+                    {isSelected && <Ionicons name="checkmark-circle" size={16} color={colors.primary} />}
+                  </View>
+                  <Text style={[styles.intentDesc, { color: colors.textSecondary }]}>{intent.desc}</Text>
+                </GlassCard>
+              );
+            })}
+          </View>
+        </FadeInView>
+
+        {/* ── Commitment Budget ── */}
+        <FadeInView delay={300} style={styles.section}>
+          <Text style={[styles.sectionLabel, { color: colors.primary }]}>{t('creator.daily_limit')}</Text>
+          <View style={styles.hoursRow}>
+            {[1, 2, 3, 4, 5, 6].map((hour) => {
+              const isSelected = hour === dailyHours;
+              return (
+                <TouchableOpacity
+                  key={hour}
+                  onPress={() => {
+                    HapticsEngine.tier1.selection();
+                    setDailyHours(hour);
+                  }}
+                  style={[
+                    styles.hourChip,
+                    {
+                      borderColor: isSelected ? colors.secondary : colors.glassBorder,
+                      backgroundColor: isSelected ? `${colors.secondary}18` : 'rgba(255, 255, 255, 0.03)',
+                    },
+                  ]}
+                  activeOpacity={0.7}
+                >
+                  <Text
+                    style={[
+                      styles.hourChipText,
+                      { color: isSelected ? colors.secondary : colors.textMuted },
+                    ]}
+                  >
+                    {hour}H
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        </FadeInView>
+
+        {/* ── Generate Action Button ── */}
+        <FadeInView delay={350} style={{ marginTop: 24, marginBottom: 40 }}>
+          <PremiumButton
+            title={t('creator.button_generate')}
+            onPress={handleCreate}
+            variant="primary"
+          />
+        </FadeInView>
+      </ScrollView>
+
+      <PlanGeneratorLoader
+        visible={isGenerating}
+        planParams={planParams}
+        onDismiss={() => {
+          setIsGenerating(false);
+        }}
+        onSuccess={async (goalId) => {
+          setIsGenerating(false);
+          try {
+            const granted = await requestNotificationPermissions();
+            if (granted) {
+              const todayStr = new Date().toISOString().split('T')[0];
+              const { count } = await supabase
+                .from('tasks')
+                .select('*', { count: 'exact', head: true })
+                .eq('goal_id', goalId)
+                .eq('due_date', todayStr);
+
+              const taskCount = count || 0;
+              await scheduleDailyStudyReminder(title.trim(), 1, taskCount, 8, 0);
+            }
+          } catch (notiErr) {
+            console.warn('Failed to register notifications:', notiErr);
+          }
+
+          const levels = ['Beginner', 'Intermediate', 'Advanced'];
+          const level = levels[levelIndex];
+          track('plan_created', {
+            duration: selectedDuration,
+            difficulty: level,
+          });
+
+          router.replace({
+            pathname: '/plan/[id]',
+            params: { id: goalId },
+          });
+        }}
+      />
+    </KeyboardAvoidingView>
+  );
 }
 
 const styles = StyleSheet.create({
-    scrollContent: {
-        padding: 20,
-        paddingBottom: 60,
-        gap: 20
-    },
-    ambientGlowTop: {
-        position: 'absolute',
-        top: -100,
-        right: -100,
-        width: 320,
-        height: 320,
-        borderRadius: 160,
-        backgroundColor: '#00F0FF',
-        opacity: 0.04
-    },
-    ambientGlowBottom: {
-        position: 'absolute',
-        bottom: 120,
-        left: -100,
-        width: 320,
-        height: 320,
-        borderRadius: 160,
-        backgroundColor: '#BD00FF',
-        opacity: 0.04
-    },
-    section: {
-        gap: 8
-    },
-    sectionLabel: {
-        fontSize: 9,
-        fontWeight: '900',
-        color: C.electricBlue,
-        letterSpacing: 1.5,
-        textTransform: 'uppercase',
-        paddingLeft: 4
-    },
-    horizontalScroll: {
-        paddingVertical: 4,
-        gap: 8
-    },
-    categoryChip: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        paddingHorizontal: 14,
-        paddingVertical: 10,
-        backgroundColor: 'rgba(255, 255, 255, 0.02)',
-        borderWidth: 1,
-        borderColor: 'rgba(255, 255, 255, 0.06)',
-        borderRadius: BorderRadius.xxl
-    },
-    categoryChipSelected: {
-        backgroundColor: 'rgba(0, 240, 255, 0.05)',
-        borderColor: 'rgba(0, 240, 255, 0.25)',
-        ...Shadows.glowSmall('#00F0FF', 0.15)
-    },
-    categoryText: {
-        fontSize: 11,
-        fontWeight: '800',
-        color: '#5A6178',
-        textTransform: 'uppercase',
-        letterSpacing: 0.5
-    },
-    categoryTextActive: {
-        color: '#00F0FF'
-    },
-    inputContainer: {
-        paddingHorizontal: 16,
-        paddingVertical: 14
-    },
-    textInput: {
-        color: '#FFFFFF',
-        fontWeight: '600',
-        fontSize: 13,
-        padding: 0
-    },
-    durationRow: {
-        flexDirection: 'row',
-        gap: 10
-    },
-    durationButton: {
-        flex: 1,
-        alignItems: 'center',
-        justifyContent: 'center',
-        paddingVertical: 12,
-        backgroundColor: 'rgba(255, 255, 255, 0.02)',
-        borderWidth: 1,
-        borderColor: 'rgba(255, 255, 255, 0.06)',
-        borderRadius: BorderRadius.xl
-    },
-    durationButtonSelected: {
-        backgroundColor: 'rgba(0, 240, 255, 0.05)',
-        borderColor: 'rgba(0, 240, 255, 0.25)'
-    },
-    durationText: {
-        fontSize: 12,
-        fontWeight: '900',
-        color: C.textDim,
-        letterSpacing: 0.5
-    },
-    durationTextActive: {
-        color: '#00F0FF'
-    },
-    intentCard: {
-        padding: 16,
-        borderWidth: 1,
-        borderColor: 'transparent'
-    },
-    intentCardSelected: {
-        backgroundColor: 'rgba(0, 240, 255, 0.02)',
-        borderColor: 'rgba(0, 240, 255, 0.15)'
-    },
-    intentHeader: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: 4
-    },
-    intentTitle: {
-        fontSize: 11,
-        fontWeight: '900',
-        color: '#FFFFFF',
-        letterSpacing: 1
-    },
-    intentTextActive: {
-        color: '#00F0FF'
-    },
-    intentDesc: {
-        fontSize: 9,
-        color: C.textMuted,
-        lineHeight: 13,
-        fontWeight: '700',
-        textTransform: 'uppercase',
-        letterSpacing: 0.5
-    },
-    hoursRow: {
-        flexDirection: 'row',
-        gap: 8
-    },
-    hourChip: {
-        flex: 1,
-        alignItems: 'center',
-        justifyContent: 'center',
-        paddingVertical: 12,
-        backgroundColor: 'rgba(255, 255, 255, 0.02)',
-        borderWidth: 1,
-        borderColor: 'rgba(255, 255, 255, 0.06)',
-        borderRadius: BorderRadius.xl
-    },
-    hourChipSelected: {
-        backgroundColor: 'rgba(0, 240, 255, 0.05)',
-        borderColor: 'rgba(0, 240, 255, 0.25)'
-    },
-    hourChipText: {
-        fontSize: 12,
-        fontWeight: '900',
-        color: C.textDim,
-        letterSpacing: 0.5
-    },
-    hourChipTextActive: {
-        color: '#00F0FF'
-    }
-})
+  ambientGlowTop: {
+    position: 'absolute',
+    top: -120,
+    right: -80,
+    width: 280,
+    height: 280,
+    borderRadius: 140,
+  },
+  ambientGlowBottom: {
+    position: 'absolute',
+    bottom: 40,
+    left: -100,
+    width: 300,
+    height: 300,
+    borderRadius: 150,
+  },
+  scrollContent: {
+    paddingHorizontal: 20,
+    paddingTop: 16,
+    paddingBottom: 40,
+    gap: 20,
+  },
+  section: {
+    gap: 8,
+  },
+  sectionLabel: {
+    fontSize: 10,
+    fontWeight: '900',
+    letterSpacing: 1.5,
+    textTransform: 'uppercase',
+    marginBottom: 2,
+  },
+  horizontalScroll: {
+    gap: 8,
+    paddingVertical: 4,
+  },
+  categoryChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: BorderRadius.full,
+    borderWidth: 1,
+  },
+  categoryText: {
+    fontSize: 11,
+    fontWeight: '800',
+  },
+  inputContainer: {
+    padding: 4,
+  },
+  textInput: {
+    fontSize: 13,
+    fontWeight: '600',
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+  },
+  durationRow: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  durationButton: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: BorderRadius.md,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  durationText: {
+    fontSize: 12,
+    fontWeight: '900',
+  },
+  intentCard: {
+    padding: 14,
+    borderWidth: 1,
+  },
+  intentHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  intentTitle: {
+    fontSize: 11,
+    fontWeight: '900',
+    color: '#FFFFFF',
+    letterSpacing: 0.5,
+  },
+  intentDesc: {
+    fontSize: 11,
+    lineHeight: 16,
+  },
+  hoursRow: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  hourChip: {
+    flex: 1,
+    paddingVertical: 10,
+    borderRadius: BorderRadius.md,
+    borderWidth: 1,
+    alignItems: 'center',
+  },
+  hourChipText: {
+    fontSize: 11,
+    fontWeight: '900',
+  },
+});

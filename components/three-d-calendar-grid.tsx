@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useState, useMemo, useEffect, useTransition, useRef } from 'react'
 import { motion } from 'framer-motion'
@@ -6,7 +6,6 @@ import { ChevronLeft, ChevronRight, AlertTriangle, Heart, Flame, Check, Clock } 
 import { useRouter } from 'next/navigation'
 
 import { haptics } from '@/utils/haptics'
-import { isIOS } from '@/utils/platform'
 
 import { CalendarDrawer } from './calendar-drawer'
 import type { Task } from '@/utils/types'
@@ -43,9 +42,7 @@ export function ThreeDCalendarGrid({
 
     const [currentMonth, setCurrentMonth] = useState(() => new Date())
     const [mounted, setMounted] = useState(false)
-    const [isIOSDevice, setIsIOSDevice] = useState(false)
     const [isDesktop, setIsDesktop] = useState(false)
-    const [is3D, setIs3D] = useState(false)
     const router = useRouter()
     const [pivotPending, startPivotTransition] = useTransition()
 
@@ -65,7 +62,6 @@ export function ThreeDCalendarGrid({
 
     useEffect(() => {
         setMounted(true)
-        setIsIOSDevice(isIOS())
         setIsDesktop(window.innerWidth >= 1024)
 
         const handleResize = () => {
@@ -105,14 +101,24 @@ export function ThreeDCalendarGrid({
         }
     }, [localTasks])
 
+    const tasksByDateMap = useMemo(() => {
+        const map = new Map<string, Task[]>()
+        localTasks.forEach(t => {
+            if (!t.due_date) return
+            if (!map.has(t.due_date)) map.set(t.due_date, [])
+            map.get(t.due_date)!.push(t)
+        })
+        return map
+    }, [localTasks])
+
     const drawerTasks = useMemo(() => {
-        return localTasks.filter(t => t.due_date === drawerDate)
-    }, [localTasks, drawerDate])
+        return tasksByDateMap.get(drawerDate) || []
+    }, [tasksByDateMap, drawerDate])
 
     const todayStr = getLocalDateString()
     const todaysTasks = useMemo(() => {
-        return localTasks.filter(t => t.due_date === todayStr)
-    }, [localTasks, todayStr])
+        return tasksByDateMap.get(todayStr) || []
+    }, [tasksByDateMap, todayStr])
 
     const firstMissedTask = useMemo(() => {
         return localTasks.find(t => t.status === 'pending' && t.due_date < todayStr)
@@ -310,7 +316,7 @@ export function ThreeDCalendarGrid({
                              const isMissed = missedDatesSet.has(day.fullDate)
 
                              // Group tasks for this day
-                             const dayTasks = localTasks.filter(t => t.due_date === day.fullDate)
+                             const dayTasks = tasksByDateMap.get(day.fullDate) || []
 
                              const dayBg = 'hover:bg-white/[0.02]'
                              let borderClass = 'border-white/5'
@@ -490,118 +496,112 @@ export function ThreeDCalendarGrid({
 
     return (
         <>
-            <div className="w-full h-full flex flex-col perspective-1000 overflow-hidden">
-            <div className="flex flex-col gap-6 mb-8 md:mb-16 px-4 md:px-8">
-                <div className="flex items-center justify-between">
-                    <h2 className={`${isIOSDevice ? 'text-xl' : 'text-3xl'} md:text-6xl font-black text-white tracking-tighter uppercase italic truncate mr-4 drop-shadow-2xl`}>
-                        {monthYear}
-                    </h2>
-                    <div className="flex gap-2 md:gap-4 shrink-0 items-center">
-                        <button 
-                                onClick={() => { haptics.light(); setIs3D(prev => !prev) }}
-                                className={`glass px-3.5 py-2.5 rounded-xl text-[9px] font-black uppercase tracking-wider transition-all border shrink-0 active:scale-95 ${
-                                    is3D 
-                                        ? 'bg-electric-blue/15 border-electric-blue/30 text-electric-blue shadow-[0_0_15px_rgba(var(--accent-rgb),0.15)]' 
-                                        : 'bg-black/20 border-white/5 text-gray-500 hover:text-gray-300'
-                                }`}
-                            >
-                                {t('plan.mode_3d')}: {is3D ? 'ON' : 'OFF'}
-                            </button>
-                        <button onClick={goToPrevMonth}
-                            className="glass p-3 md:p-6 rounded-xl md:rounded-[2rem] hover:bg-white/10 transition-all border border-white/5 active:scale-90 duration-200">
-                            <ChevronLeft className="w-6 h-6 md:w-10 md:h-10 text-white" />
-                        </button>
-                        <button onClick={goToNextMonth}
-                            className="glass p-3 md:p-6 rounded-xl md:rounded-[2rem] hover:bg-white/10 transition-all border border-white/5 active:scale-90 duration-200">
-                            <ChevronRight className="w-6 h-6 md:w-10 md:h-10 text-white" />
-                        </button>
-                    </div>
-                </div>
-                <div className="w-20 h-1 bg-gradient-to-r from-electric-blue to-transparent rounded-full opacity-60" />
-            </div>
-
+            {/* Mobile flat calendar — same quality as desktop */}
             <div
-                className="grid grid-cols-7 gap-2 md:gap-6 px-4 md:px-8 flex-1 transform-style-3d no-scrollbar pb-[calc(2.5rem+env(safe-area-inset-bottom))] md:pb-20"
-                style={is3D ? { transform: 'rotateX(8deg)' } : {}}
+                className="w-full flex-1 flex flex-col overflow-hidden select-none"
                 onTouchStart={handleTouchStart}
                 onTouchEnd={handleTouchEnd}
             >
-                {weekdays.map((day, i) => (
-                    <div key={i} className="text-center text-[10px] md:text-xs font-black text-electric-blue uppercase tracking-[0.2em] opacity-40 mb-2 md:mb-4">
-                        {day}
+                {/* Header */}
+                <div className="flex items-center justify-between px-4 pb-4 pt-2 shrink-0">
+                    <h2 className="text-xl font-black text-white tracking-tight uppercase truncate mr-2">
+                        {monthYear}
+                    </h2>
+                    <div className="flex items-center gap-2 shrink-0">
+                        <button onClick={goToPrevMonth}
+                            className="p-2.5 rounded-xl bg-white/5 border border-white/10 active:scale-90 transition-all">
+                            <ChevronLeft className="w-5 h-5 text-white" />
+                        </button>
+                        <button onClick={goToNextMonth}
+                            className="p-2.5 rounded-xl bg-white/5 border border-white/10 active:scale-90 transition-all">
+                            <ChevronRight className="w-5 h-5 text-white" />
+                        </button>
                     </div>
-                ))}
+                </div>
 
-                {daysInMonth.map((day, idx) => {
-                    if (!day) return <div key={`empty-${idx}`} />
+                {/* Weekday headers */}
+                <div className="grid grid-cols-7 border-b border-white/5 bg-[#1C2033]/20 shrink-0">
+                    {weekdays.map((day) => (
+                        <div key={day} className="py-2 text-center text-[9px] font-black text-electric-blue uppercase tracking-widest opacity-40">
+                            {day}
+                        </div>
+                    ))}
+                </div>
 
-                    const isPending = activeDatesSet.has(day.fullDate)
-                    const isCompleted = completedDatesSet.has(day.fullDate)
-                    const isMissed = missedDatesSet.has(day.fullDate)
-
-                    let statusClasses = 'border-white/5 bg-white/[0.02]'
-                    let glowColor = ''
-                    let glowHex = ''
-
-                    if (isPending) {
-                        statusClasses = 'border-electric-blue/30 bg-electric-blue/10 shadow-[0_0_15px_rgba(var(--accent-rgb),0.2)]'
-                        glowColor = 'bg-electric-blue'
-                        glowHex = '#00F0FF'
-                    } else if (isCompleted) {
-                        statusClasses = 'border-emerald-500/30 bg-emerald-500/10 shadow-[0_0_15px_rgba(16,185,129,0.2)]'
-                        glowColor = 'bg-emerald-500'
-                        glowHex = '#10b981'
-                    } else if (isMissed) {
-                        statusClasses = 'border-rose-500/20 bg-rose-500/5 grayscale-[0.8] opacity-60'
-                        glowColor = 'bg-rose-500'
-                        glowHex = '#f43f5e'
-                    }
-
-                    return (
-                        <motion.div
-                            key={day.fullDate}
-                            whileHover={isDesktop ? {
-                                scale: 1.05,
-                                translateZ: 20,
-                                backgroundColor: 'rgba(255,255,255,0.08)'
-                            } : undefined}
-                            whileTap={{ scale: 0.95 }}
-                            onClick={() => handleDateClick(day.fullDate)}
-                            className={`
-                                relative aspect-square rounded-xl md:rounded-[2rem] glass-card flex flex-col items-center justify-center cursor-pointer transition-all duration-300 border active:scale-95
-                                ${statusClasses}
-                                ${day.isToday ? 'ring-2 ring-electric-blue/40 ring-offset-1 ring-offset-transparent outline outline-1 md:outline-2 outline-white/30 outline-offset-1 md:outline-offset-4' : ''}
-                            `}
-                        >
-                            <span className={`text-sm md:text-lg font-black tracking-tighter ${isPending || isCompleted ? 'text-white' : day.isToday ? 'text-electric-blue' : 'text-gray-500'}`}>
-                                {day.day}
-                            </span>
-
-                            {(isPending || isCompleted || isMissed) && (
-                                <div
-                                    className={`absolute bottom-2 md:bottom-4 w-1.5 md:w-2 h-1.5 md:h-2 rounded-full ${glowColor}`}
-                                    style={{ boxShadow: `0 0 6px ${glowHex}` }}
-                                />
-                            )}
-                        </motion.div>
-                    )
-                })}
-            </div>
-
-            {/* Today quick-return button */}
-            {(currentMonth.getMonth() !== new Date().getMonth() || currentMonth.getFullYear() !== new Date().getFullYear()) && (
-                <button
-                    onClick={() => {
-                        haptics.light()
-                        setCurrentMonth(new Date())
-                    }}
-                    className="absolute bottom-20 left-1/2 -translate-x-1/2 px-4 py-2 rounded-full bg-electric-blue text-white text-sm font-medium shadow-lg z-10 active:scale-95 transition-transform"
-                    style={{ marginBottom: 'env(safe-area-inset-bottom, 0px)' }}
+                {/* Day grid */}
+                <div
+                    className="flex-1 grid grid-cols-7 gap-0.5 mt-0.5 overflow-y-auto no-scrollbar px-1 pb-[calc(2.5rem+env(safe-area-inset-bottom))]"
+                    style={{ gridTemplateRows: `repeat(${numRows}, minmax(80px, 1fr))` }}
                 >
-                    {t('plan.today')}
-                </button>
-            )}
+                    {daysInMonth.map((day, idx) => {
+                        if (!day) return <div key={`empty-${idx}`} className="border border-transparent p-1 min-h-[80px]" />
 
+                        const isPending = activeDatesSet.has(day.fullDate)
+                        const isCompleted = completedDatesSet.has(day.fullDate)
+                        const isMissed = missedDatesSet.has(day.fullDate)
+                        const dayTasks = tasksByDateMap.get(day.fullDate) || []
+
+                        let borderClass = 'border-white/5'
+                        if (day.isToday) {
+                            borderClass = 'border-electric-blue/40 ring-1 ring-electric-blue/20 bg-electric-blue/[0.02]'
+                        }
+
+                        return (
+                            <div
+                                key={day.fullDate}
+                                onClick={() => handleDateClick(day.fullDate)}
+                                className={`border ${borderClass} p-1.5 min-h-[80px] flex flex-col gap-0.5 transition-all hover:bg-white/[0.02] cursor-pointer rounded-lg`}
+                            >
+                                <div className="flex justify-between items-start mb-0.5">
+                                    <span className={`text-[12px] font-black leading-none ${day.isToday ? 'text-electric-blue' : isPending ? 'text-white' : 'text-gray-500'}`}>
+                                        {day.day}
+                                    </span>
+                                    {day.isToday && (
+                                        <span className="text-[6px] font-black text-electric-blue uppercase tracking-wider bg-electric-blue/10 px-1 py-0.5 rounded">
+                                            {t('plan.today')}
+                                        </span>
+                                    )}
+                                </div>
+
+                                {/* Task pills */}
+                                <div className="flex-1 flex flex-col gap-0.5 overflow-hidden">
+                                    {dayTasks.slice(0, 2).map((task) => {
+                                        const isDone = task.status === 'completed'
+                                        const isOverdue = task.status === 'pending' && task.due_date < getLocalDateString()
+                                        let pillColor = 'bg-[#1C2033] border-l-2 border-electric-blue text-electric-blue'
+                                        if (isDone) pillColor = 'bg-emerald-500/10 border-l-2 border-emerald-500 text-emerald-400'
+                                        else if (isOverdue) pillColor = 'bg-rose-500/10 border-l-2 border-rose-500 text-rose-400'
+
+                                        return (
+                                            <div
+                                                key={task.id}
+                                                className={`px-1 py-0.5 rounded text-[8px] font-bold truncate ${pillColor}`}
+                                            >
+                                                {task.title}
+                                            </div>
+                                        )
+                                    })}
+                                    {dayTasks.length > 2 && (
+                                        <div className="text-[7px] font-black text-gray-500 uppercase tracking-widest pl-1">
+                                            +{dayTasks.length - 2} {t('plan.more_tasks').replace('{count}', '').replace('more', '').trim() || 'more'}
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        )
+                    })}
+                </div>
+
+                {/* Today quick-return button */}
+                {(currentMonth.getMonth() !== new Date().getMonth() || currentMonth.getFullYear() !== new Date().getFullYear()) && (
+                    <button
+                        onClick={() => { haptics.light(); setCurrentMonth(new Date()) }}
+                        className="absolute bottom-24 left-1/2 -translate-x-1/2 px-4 py-2 rounded-full bg-electric-blue text-white text-sm font-bold shadow-lg z-10 active:scale-95 transition-transform"
+                        style={{ marginBottom: 'env(safe-area-inset-bottom, 0px)' }}
+                    >
+                        {t('plan.today')}
+                    </button>
+                )}
             </div>
 
             <CalendarDrawer

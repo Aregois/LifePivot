@@ -1,15 +1,7 @@
-﻿'use client'
+'use client'
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react'
 import type { Task } from '@/utils/types'
-
-export interface WagerState {
-    amount: number
-    startStreak: number
-    targetStreak: number
-    daysRemaining: number
-    startDate: string
-}
 
 interface EconomyContextType {
     tokens: number
@@ -19,8 +11,9 @@ interface EconomyContextType {
     level: number
     avatarId: string
     activeChatTask: Task | null
+    globalFocusTask: Task | null
+    globalFocusGoalTitle: string
     showMobileChat: boolean
-    wager: WagerState | null
     setTokens: (tokens: number | ((prev: number) => number)) => void
     setGems: (gems: number | ((prev: number) => number)) => void
     setVoidDays: (voidDays: number | ((prev: number) => number)) => void
@@ -28,8 +21,8 @@ interface EconomyContextType {
     setLevel: (level: number | ((prev: number) => number)) => void
     setAvatarId: (avatarId: string) => void
     setActiveChatTask: (task: Task | null) => void
+    setGlobalFocusTask: (task: Task | null, goalTitle?: string) => void
     setShowMobileChat: (show: boolean) => void
-    setWager: (wager: WagerState | null) => void
 }
 
 const EconomyContext = createContext<EconomyContextType | undefined>(undefined)
@@ -60,8 +53,14 @@ export function EconomyProvider({
     const [level, setLevel] = useState(initialLevel)
     const [avatarId, setAvatarIdState] = useState('avatar_owl')
     const [activeChatTask, setActiveChatTask] = useState<Task | null>(initialChatTask)
+    const [globalFocusTask, setGlobalFocusTaskState] = useState<Task | null>(null)
+    const [globalFocusGoalTitle, setGlobalFocusGoalTitle] = useState('Today\'s Focus')
     const [showMobileChat, setShowMobileChat] = useState(false)
-    const [wager, setWagerState] = useState<WagerState | null>(null)
+
+    const setGlobalFocusTask = (task: Task | null, goalTitle?: string) => {
+        setGlobalFocusTaskState(task)
+        if (goalTitle) setGlobalFocusGoalTitle(goalTitle)
+    }
 
     useEffect(() => {
         setTokens(initialTokens)
@@ -86,29 +85,11 @@ export function EconomyProvider({
     useEffect(() => {
         const saved = localStorage.getItem('lifepivot_equipped_avatar') || 'avatar_owl'
         setAvatarIdState(saved)
-        
-        const savedWager = localStorage.getItem('lifepivot_active_wager')
-        if (savedWager) {
-            try {
-                setWagerState(JSON.parse(savedWager))
-            } catch (e) {
-                console.error('Failed to parse wager from localStorage', e)
-            }
-        }
     }, [])
 
     const setAvatarId = (next: string) => {
         setAvatarIdState(next)
         localStorage.setItem('lifepivot_equipped_avatar', next)
-    }
-
-    const setWager = (next: WagerState | null) => {
-        setWagerState(next)
-        if (next) {
-            localStorage.setItem('lifepivot_active_wager', JSON.stringify(next))
-        } else {
-            localStorage.removeItem('lifepivot_active_wager')
-        }
     }
 
     return (
@@ -120,8 +101,9 @@ export function EconomyProvider({
             level, 
             avatarId, 
             activeChatTask,
+            globalFocusTask,
+            globalFocusGoalTitle,
             showMobileChat,
-            wager,
             setTokens, 
             setGems, 
             setVoidDays, 
@@ -129,8 +111,8 @@ export function EconomyProvider({
             setLevel, 
             setAvatarId,
             setActiveChatTask,
-            setShowMobileChat,
-            setWager
+            setGlobalFocusTask,
+            setShowMobileChat
         }}>
             {children}
         </EconomyContext.Provider>

@@ -1,14 +1,18 @@
 import React, { useState } from 'react'
-import { View, Text, TextInput, Switch, ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView } from 'react-native'
+import { View, Text, TextInput, Switch, KeyboardAvoidingView, Platform, ScrollView } from 'react-native'
 import { useRouter } from 'expo-router'
 import * as Haptics from 'expo-haptics'
-import { LinearGradient } from 'expo-linear-gradient'
+import { HapticsEngine } from '../../utils/HapticsEngine'
 import { useCreateWorkspace } from '../../hooks/useWorkspaces'
-import { C, Gradients, Shadows } from '../../constants/theme'
+import { C } from '../../constants/theme'
 import { FadeInView, GlassCard, PremiumButton } from '../../components/ui'
+import { useLanguage } from '../../context/LanguageContext'
+import { useTheme } from '../../context/ThemeContext'
 
 export default function CreateWorkspace() {
     const router = useRouter()
+    const { colors } = useTheme()
+    const { t } = useLanguage()
     const { mutate: createWS, isPending } = useCreateWorkspace()
     const [name, setName] = useState('')
     const [isPremium, setIsPremium] = useState(false)
@@ -20,12 +24,12 @@ export default function CreateWorkspace() {
     const handleCreate = () => {
         const trimmedName = name.trim()
         if (!trimmedName) {
-            setError('Cohort name is required')
-            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error)
+            setError(t('workspaces.create_name_required'))
+            HapticsEngine.tier4.error()
             return
         }
 
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
+        HapticsEngine.tier2.action()
         setError(null)
         createWS(
             {
@@ -35,19 +39,19 @@ export default function CreateWorkspace() {
             },
             {
                 onSuccess: () => {
-                    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
+                    HapticsEngine.tier3.success()
                     router.back() // Go back to workspaces listing
                 },
                 onError: (err) => {
-                    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error)
-                    setError(err.message || 'Failed to create cohort')
+                    HapticsEngine.tier4.error()
+                    setError(err.message || t('workspaces.create_failed'))
                 }
             }
         )
     }
 
     return (
-        <View style={{ flex: 1, backgroundColor: '#050508' }}>
+        <View style={{ flex: 1, backgroundColor: colors.background }}>
             {/* Background Ambient Glows */}
             <View
               pointerEvents="none"
@@ -58,7 +62,7 @@ export default function CreateWorkspace() {
                 width: 320,
                 height: 320,
                 borderRadius: 160,
-                backgroundColor: '#00F0FF',
+                backgroundColor: colors.primary,
                 opacity: 0.05,
               }}
             />
@@ -71,7 +75,7 @@ export default function CreateWorkspace() {
                 width: 320,
                 height: 320,
                 borderRadius: 160,
-                backgroundColor: '#BD00FF',
+                backgroundColor: colors.secondary,
                 opacity: 0.05,
               }}
             />
@@ -82,22 +86,22 @@ export default function CreateWorkspace() {
             >
                 <ScrollView contentContainerStyle={{ padding: 24, paddingTop: 32 }}>
                     <FadeInView delay={0}>
-                        <GlassCard style={{ padding: 20, marginBottom: 24 }}>
+                        <GlassCard style={{ padding: 20, marginBottom: 24, borderColor: colors.glassBorder }}>
                             {/* Cohort Name */}
-                            <Text style={{ fontSize: 10, color: C.electricBlue, fontWeight: '900', letterSpacing: 3.5, textTransform: 'uppercase', marginBottom: 8 }}>
-                                COHORT TITLE
+                            <Text style={{ fontSize: 10, color: colors.primary, fontWeight: '900', letterSpacing: 3.5, textTransform: 'uppercase', marginBottom: 8 }}>
+                                {t('workspaces.create_title')}
                             </Text>
                             <TextInput
                                 value={name}
                                 onChangeText={setName}
-                                placeholder="e.g. Next.js Masters Group"
-                                placeholderTextColor={C.placeholder}
+                                placeholder={t('workspaces.create_placeholder')}
+                                placeholderTextColor={colors.placeholder}
                                 onFocus={() => setNameFocused(true)}
                                 onBlur={() => setNameFocused(false)}
                                 style={{
-                                    backgroundColor: 'rgba(5, 5, 8, 0.6)',
+                                    backgroundColor: colors.card,
                                     borderWidth: 1,
-                                    borderColor: nameFocused ? C.electricBlue : C.glassBorder,
+                                    borderColor: nameFocused ? colors.primary : colors.glassBorder,
                                     borderRadius: 12,
                                     paddingHorizontal: 16,
                                     paddingVertical: 14,
@@ -111,12 +115,13 @@ export default function CreateWorkspace() {
                             {/* Switch Row */}
                             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                                 <View style={{ flex: 1, marginRight: 16 }}>
-                                    <Text style={{ fontSize: 10, color: C.electricBlue, fontWeight: '900', letterSpacing: 3.5, textTransform: 'uppercase' }}>
-                                        PREMIUM ACCESS
+                                    <Text style={{ fontSize: 10, color: colors.primary, fontWeight: '900', letterSpacing: 3.5, textTransform: 'uppercase' }}>
+                                        {t('workspaces.create_premium_label')}
                                     </Text>
-                                    <Text style={{ fontSize: 9, color: C.textMuted, marginTop: 4, textTransform: 'uppercase', letterSpacing: 0.5, lineHeight: 13 }}>
-                                        MEMBERS PAY TOKENS TO ENROLL
+                                    <Text style={{ fontSize: 9, color: colors.textMuted, marginTop: 4, textTransform: 'uppercase', letterSpacing: 0.5, lineHeight: 13 }}>
+                                        {t('workspaces.create_premium_desc')}
                                     </Text>
+
                                 </View>
                                 <Switch
                                     value={isPremium}
@@ -136,7 +141,7 @@ export default function CreateWorkspace() {
                         <FadeInView delay={100}>
                             <GlassCard style={{ padding: 20, marginBottom: 24 }}>
                                 <Text style={{ fontSize: 10, color: C.electricBlue, fontWeight: '900', letterSpacing: 3.5, textTransform: 'uppercase', marginBottom: 8 }}>
-                                    TOKEN COST TO JOIN
+                                    {t('workspaces.create_token_cost')}
                                 </Text>
                                 <TextInput
                                     value={tokenCost}
@@ -172,7 +177,7 @@ export default function CreateWorkspace() {
 
                     <FadeInView delay={150}>
                         <PremiumButton
-                            title="CREATE COHORT"
+                            title={t('workspaces.create_button')}
                             onPress={handleCreate}
                             variant="primary"
                             loading={isPending}

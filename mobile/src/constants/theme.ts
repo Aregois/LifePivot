@@ -145,29 +145,58 @@ export const Typography = {
   title: {
     fontSize: 18,
     fontWeight: '800' as const,
-    letterSpacing: 0.5,
+    letterSpacing: 0.2,
     textTransform: 'uppercase' as const,
+  },
+  headline: {
+    fontSize: 16,
+    fontWeight: '700' as const,
+    lineHeight: 22,
+    letterSpacing: -0.2,
   },
   body: {
     fontSize: 14,
     fontWeight: '400' as const,
-    lineHeight: 20,
+    lineHeight: 21,
+    letterSpacing: -0.1,
+  },
+  bodyBold: {
+    fontSize: 14,
+    fontWeight: '600' as const,
+    lineHeight: 21,
+    letterSpacing: -0.1,
+  },
+  callout: {
+    fontSize: 13,
+    fontWeight: '500' as const,
+    lineHeight: 18,
+    letterSpacing: -0.1,
+  },
+  subhead: {
+    fontSize: 12,
+    fontWeight: '400' as const,
+    lineHeight: 16,
+  },
+  footnote: {
+    fontSize: 11,
+    fontWeight: '400' as const,
+    lineHeight: 15,
   },
   caption: {
     fontSize: 11,
-    fontWeight: '400' as const,
+    fontWeight: '500' as const,
     lineHeight: 16,
   },
   label: {
     fontSize: 10,
     fontWeight: '900' as const,
-    letterSpacing: 2,
+    letterSpacing: 1.5,
     textTransform: 'uppercase' as const,
   },
   overline: {
     fontSize: 9,
-    fontWeight: '700' as const,
-    letterSpacing: 1.5,
+    fontWeight: '800' as const,
+    letterSpacing: 1.2,
     textTransform: 'uppercase' as const,
   },
 } as const;
@@ -207,32 +236,37 @@ export const IconSize = {
 
 export const ComponentHeight = {
   button: 56,
+  buttonSmall: 40,
   input: 56,
   badge: 28,
   tab: 48,
+  sheetHandle: 5,
 } as const;
 
 /* ─── Animation ───────────────────────────────────────────────────────── */
 
 export const AnimationConfig = {
-  /** Spring configs for react-native-reanimated */
+  /** Spring configs for react-native-reanimated conforming to Apple HIG */
   spring: {
-    gentle: { damping: 15, stiffness: 120, mass: 0.8 },
+    gentle: { damping: 18, stiffness: 140, mass: 0.9 },
     bouncy: { damping: 12, stiffness: 180, mass: 0.6 },
-    snappy: { damping: 20, stiffness: 300, mass: 0.5 },
+    snappy: { damping: 22, stiffness: 320, mass: 0.5 },
+    scalePress: { damping: 20, stiffness: 360, mass: 0.4 },
+    sheetSpring: { damping: 24, stiffness: 220, mass: 0.8 },
+    tabSpring: { damping: 20, stiffness: 280, mass: 0.5 },
   },
   /** Timing durations in ms */
   duration: {
-    fast: 200,
-    normal: 350,
-    slow: 600,
-    entrance: 650,
+    fast: 180,
+    normal: 300,
+    slow: 550,
+    entrance: 600,
   },
   /** Stagger delay between list items */
-  stagger: 80,
+  stagger: 60,
 } as const;
 
-/* ─── Platform ────────────────────────────────────────────────────────── */
+/* ─── Platform & Insets ────────────────────────────────────────────────── */
 
 export const BottomTabInset = Platform.select({ ios: 50, android: 80 }) ?? 0;
 export const MaxContentWidth = 800;

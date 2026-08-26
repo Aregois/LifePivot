@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useEffect, useState } from 'react'
 import { usePathname } from 'next/navigation'
@@ -14,13 +14,14 @@ import type { Task } from '@/utils/types'
 import { OnboardingTour } from '@/components/onboarding-tour'
 import { getLocalDateString } from '@/utils/date-utils'
 import { MissedSessionOverlay } from '@/components/missed-session-overlay'
+import { FocusModeOverlay } from '@/components/focus-mode-overlay'
 
 export function AuthenticatedLayoutClient({
     children,
 }: {
     children: React.ReactNode
 }) {
-    const { level, xp, showMobileChat, setShowMobileChat, activeChatTask, setActiveChatTask } = useEconomy()
+    const { level, xp, showMobileChat, setShowMobileChat, activeChatTask, setActiveChatTask, globalFocusTask, globalFocusGoalTitle, setGlobalFocusTask, setTokens } = useEconomy()
     const pathname = usePathname()
     const isCalendar = pathname === '/calendar'
     const [overdueGoalId, setOverdueGoalId] = useState<string | null>(null)
@@ -28,28 +29,28 @@ export function AuthenticatedLayoutClient({
     const isAdvancedRoute = pathname.startsWith('/marketplace') || pathname.startsWith('/shop') || pathname.startsWith('/workspaces')
     const isRouteLocked = level < 2 && isAdvancedRoute
 
-    // Check for overdue tasks client-side to trigger the MissedSessionOverlay
+    // Consolidated Layout Initialization Effect (Batch active task & overdue check)
     useEffect(() => {
         const supabase = createClient()
         const todayStr = getLocalDateString()
-        supabase.from('tasks')
-            .select('goal_id')
-            .eq('status', 'pending')
-            .lt('due_date', todayStr)
-            .limit(1)
-            .then(({ data }) => {
-                if (data && data.length > 0) {
-                    setOverdueGoalId(data[0].goal_id)
-                } else {
-                    setOverdueGoalId(null)
-                }
-            })
-    }, [pathname])
 
-    // Query a default active chat task if none selected (for both mobile and desktop views)
-    useEffect(() => {
+        // 1. Overdue task check (session-guarded)
+        if (!sessionStorage.getItem('lifepivot_missed_shown')) {
+            supabase.from('tasks')
+                .select('goal_id')
+                .eq('status', 'pending')
+                .lt('due_date', todayStr)
+                .limit(1)
+                .then(({ data }) => {
+                    if (data && data.length > 0) {
+                        setOverdueGoalId(data[0].goal_id)
+                        sessionStorage.setItem('lifepivot_missed_shown', '1')
+                    }
+                })
+        }
+
+        // 2. Active chat task prefetch (if missing)
         if (!activeChatTask) {
-            const supabase = createClient()
             supabase.from('tasks')
                 .select('*')
                 .eq('status', 'pending')
@@ -61,7 +62,7 @@ export function AuthenticatedLayoutClient({
                     }
                 })
         }
-    }, [activeChatTask, setActiveChatTask])
+    }, []) // Run once on mount
 
     return (
         <div className={`min-h-[100dvh] bg-[#050508] relative w-full overflow-x-clip md:max-w-none md:mx-0 flex flex-col md:pl-64 md:pb-0 ${isCalendar ? '' : 'lg:pr-80'}`} style={{ paddingBottom: 'max(6rem, calc(6rem + env(safe-area-inset-bottom)))' }}>
@@ -126,6 +127,16 @@ export function AuthenticatedLayoutClient({
 
             {/* Bottom Nav Bar (Mobile only) */}
             <BottomNav />
+
+            {/* Global Active Task Focus Session Overlay */}
+            {globalFocusTask && (
+                <FocusModeOverlay 
+                    task={globalFocusTask} 
+                    goalTitle={globalFocusGoalTitle} 
+                    onClose={() => setGlobalFocusTask(null)} 
+                    onOptimisticTokenUpdate={(delta) => setTokens(prev => Math.max(0, prev + delta))}
+                />
+            )}
 
             {/* Mobile Socratic Chat Modal Overlay */}
             {showMobileChat && (

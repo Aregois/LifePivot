@@ -1,11 +1,13 @@
-﻿'use client'
+'use client'
 
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/utils/supabase/client'
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { haptics } from '@/utils/haptics'
-import { ArrowRight, Loader2 } from 'lucide-react'
+import { ArrowRight, Loader2, Globe } from 'lucide-react'
+import { useLanguage } from '@/components/language-provider'
+import { Locale, LANGUAGE_NAMES } from '@/utils/translations'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface OnboardingState {
@@ -93,6 +95,7 @@ function ChoiceCard({
 // ─── Page ─────────────────────────────────────────────────────────────────────
 export default function OnboardingPage() {
     const router = useRouter()
+    const { t, locale, setLocale } = useLanguage()
     const [step, setStep] = useState(1)
     const [saving, setSaving] = useState(false)
     const [checking, setChecking] = useState(true)
@@ -199,6 +202,25 @@ export default function OnboardingPage() {
 
             <div className="glass-card relative z-10 w-full max-w-md rounded-2xl p-7 shadow-2xl">
 
+                {/* Language Picker */}
+                <div className="flex justify-between items-center mb-6">
+                    <span className="text-[10px] font-black text-electric-blue uppercase tracking-widest">
+                        {t('onboarding.step_progress', { current: step, total: TOTAL })}
+                    </span>
+                    <div className="flex items-center gap-1 bg-white/5 border border-white/5 rounded-xl px-2.5 py-1">
+                        <Globe className="w-3.5 h-3.5 text-gray-400" />
+                        <select
+                            value={locale}
+                            onChange={(e) => { haptics.light(); setLocale(e.target.value as Locale) }}
+                            className="bg-transparent text-gray-300 font-bold border-none outline-none cursor-pointer text-[11px] uppercase tracking-wider"
+                        >
+                            {Object.entries(LANGUAGE_NAMES).map(([code, langName]) => (
+                                <option key={code} value={code} className="bg-[#141824] text-white">{langName}</option>
+                            ))}
+                        </select>
+                    </div>
+                </div>
+
                 <StepIndicator current={step} total={TOTAL} />
 
                 <AnimatePresence mode="wait" custom={slideDir}>
@@ -215,19 +237,19 @@ export default function OnboardingPage() {
                             className="flex flex-col gap-5"
                         >
                             <div>
-                                <h2 className="text-xl font-bold text-white mb-1.5">What do you want to learn?</h2>
-                                <p className="text-xs text-gray-500 leading-relaxed">Be specific — the more detail, the better your plan</p>
+                                <h2 className="text-xl font-bold text-white mb-1.5">{t('onboarding.q1_title')}</h2>
+                                <p className="text-xs text-gray-500 leading-relaxed">{t('onboarding.q1_sub')}</p>
                             </div>
                             <textarea
                                 id="onboarding-goal"
                                 value={answers.goal}
                                 onChange={e => setAnswers(a => ({ ...a, goal: e.target.value }))}
-                                placeholder="e.g. Python, Spanish, Guitar..."
+                                placeholder="e.g. Python, Spanish, Quantum Mechanics..."
                                 rows={3}
                                 className="glass w-full rounded-xl px-4 py-3.5 text-sm text-white placeholder-gray-500 focus:border-electric-blue focus:outline-none focus:ring-1 focus:ring-electric-blue transition-all resize-none"
                             />
                             {answers.goal.trim().length > 0 && answers.goal.trim().length < 3 && (
-                                <p className="text-[11px] text-red-400 -mt-2 ml-1">Please be a bit more specific (min. 3 characters).</p>
+                                <p className="text-[11px] text-red-400 -mt-2 ml-1">Please enter at least 3 characters.</p>
                             )}
                         </motion.div>
                     )}
@@ -245,14 +267,14 @@ export default function OnboardingPage() {
                             className="flex flex-col gap-4"
                         >
                             <div>
-                                <h2 className="text-xl font-bold text-white mb-1.5">What is your current level?</h2>
-                                <p className="text-xs text-gray-500 leading-relaxed">We&apos;ll calibrate the difficulty of your plan</p>
+                                <h2 className="text-xl font-bold text-white mb-1.5">{t('onboarding.q2_title')}</h2>
+                                <p className="text-xs text-gray-500 leading-relaxed">{t('onboarding.q2_sub')}</p>
                             </div>
                             <div className="flex flex-col gap-3">
                                 {[
-                                    { emoji: '🌱', label: 'Beginner', sub: 'Starting from scratch' },
-                                    { emoji: '📈', label: 'Intermediate', sub: 'I know the basics' },
-                                    { emoji: '🔥', label: 'Advanced', sub: 'I want to go deeper' },
+                                    { emoji: '🌱', label: t('onboarding.q2_beginner'), sub: t('onboarding.q2_beginner_sub') },
+                                    { emoji: '📈', label: t('onboarding.q2_intermediate'), sub: t('onboarding.q2_intermediate_sub') },
+                                    { emoji: '🔥', label: t('onboarding.q2_advanced'), sub: t('onboarding.q2_advanced_sub') },
                                 ].map(opt => (
                                     <ChoiceCard
                                         key={opt.label}
@@ -280,15 +302,14 @@ export default function OnboardingPage() {
                             className="flex flex-col gap-4"
                         >
                             <div>
-                                <h2 className="text-xl font-bold text-white mb-1.5">How much time can you study per day?</h2>
-                                <p className="text-xs text-gray-500 leading-relaxed">We&apos;ll structure sessions around your schedule</p>
+                                <h2 className="text-xl font-bold text-white mb-1.5">{t('onboarding.q3_title')}</h2>
+                                <p className="text-xs text-gray-500 leading-relaxed">{t('onboarding.q3_sub')}</p>
                             </div>
                             <div className="flex flex-col gap-3">
                                 {[
-                                    { emoji: '⚡', label: '15–30 min', sub: 'Quick sessions' },
-                                    { emoji: '📚', label: '30–60 min', sub: 'Focused learning' },
-                                    { emoji: '🚀', label: '1–2 hours', sub: 'Serious progress' },
-                                    { emoji: '💪', label: '2+ hours', sub: 'Full commitment' },
+                                    { emoji: '⚡', label: t('onboarding.q3_time1'), sub: t('onboarding.q3_time1_sub') },
+                                    { emoji: '📚', label: t('onboarding.q3_time2'), sub: t('onboarding.q3_time2_sub') },
+                                    { emoji: '🚀', label: t('onboarding.q3_time3'), sub: t('onboarding.q3_time3_sub') },
                                 ].map(opt => (
                                     <ChoiceCard
                                         key={opt.label}
@@ -316,14 +337,14 @@ export default function OnboardingPage() {
                             className="flex flex-col gap-4"
                         >
                             <div>
-                                <h2 className="text-xl font-bold text-white mb-1.5">How do you learn best?</h2>
-                                <p className="text-xs text-gray-500 leading-relaxed">Your plan will emphasise your preferred style</p>
+                                <h2 className="text-xl font-bold text-white mb-1.5">{t('onboarding.q4_title')}</h2>
+                                <p className="text-xs text-gray-500 leading-relaxed">{t('onboarding.q4_sub')}</p>
                             </div>
                             <div className="flex flex-col gap-3">
                                 {[
-                                    { emoji: '👁️', label: 'Visual', sub: 'Diagrams and examples' },
-                                    { emoji: '📖', label: 'Reading', sub: 'Text and explanations' },
-                                    { emoji: '🛠️', label: 'Practice', sub: 'Doing and building' },
+                                    { emoji: '📖', label: t('onboarding.q4_style1'), sub: t('onboarding.q4_style1_sub') },
+                                    { emoji: '🛠️', label: t('onboarding.q4_style2'), sub: t('onboarding.q4_style2_sub') },
+                                    { emoji: '⚖️', label: t('onboarding.q4_style3'), sub: t('onboarding.q4_style3_sub') },
                                 ].map(opt => (
                                     <ChoiceCard
                                         key={opt.label}
@@ -363,7 +384,7 @@ export default function OnboardingPage() {
                             <Loader2 className="w-4 h-4 animate-spin" />
                         ) : (
                             <>
-                                <span>{step < TOTAL ? 'Continue' : 'Build My Plan'}</span>
+                                <span>{step < TOTAL ? t('onboarding.btn_continue') : t('onboarding.btn_finish')}</span>
                                 <ArrowRight className="w-3.5 h-3.5" />
                             </>
                         )}

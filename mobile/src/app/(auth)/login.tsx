@@ -8,9 +8,11 @@ import FadeInView from '../../components/ui/FadeInView'
 import { GlassCard } from '../../components/ui/GlassCard'
 import { PremiumButton } from '../../components/ui/PremiumButton'
 import { GradientText } from '../../components/ui/GradientText'
+import { useLanguage } from '../../context/LanguageContext'
 
 export default function Login() {
     const router = useRouter()
+    const { t } = useLanguage()
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
     const [loading, setLoading] = useState(false)
@@ -21,7 +23,7 @@ export default function Login() {
         const trimmedEmail = email.trim()
         const trimmedPassword = password.trim()
         if (!trimmedEmail || !trimmedPassword) {
-            Alert.alert('ERROR', 'Please fill in all fields')
+            Alert.alert(t('common.error') || 'ERROR', t('auth.err_confirm_empty') || 'Please fill in all fields')
             return
         }
 
@@ -33,7 +35,7 @@ export default function Login() {
         setLoading(false)
 
         if (error) {
-            Alert.alert('SIGN IN FAILED', error.message)
+            Alert.alert(t('common.error') || 'SIGN IN FAILED', error.message)
         } else {
             router.replace('/(tabs)')
         }
@@ -63,7 +65,7 @@ export default function Login() {
                         className="blur-3xl"
                     />
                     <Image
-                        source={require('../../assets/images/logo.png')}
+                        source={require('../../../assets/images/logo.png')}
                         style={{ width: 80, height: 60, marginBottom: 12 }}
                         resizeMode="contain"
                     />
@@ -76,16 +78,10 @@ export default function Login() {
                             marginBottom: 16,
                         }}
                     >
-                        LIFEPIVOT
+                        {t('auth.title')}
                     </GradientText>
                     <Text style={{ fontSize: 24, fontWeight: '900', color: '#FFFFFF', letterSpacing: 0.5, textTransform: 'uppercase', textAlign: 'center' }}>
-                        Plan your goals.
-                    </Text>
-                    <Text style={{ fontSize: 24, fontWeight: '900', color: '#FFFFFF', letterSpacing: 0.5, textTransform: 'uppercase', textAlign: 'center' }}>
-                        Track your habits.
-                    </Text>
-                    <Text style={{ fontSize: 13, fontWeight: '800', color: C.electricBlue, letterSpacing: 1, textTransform: 'uppercase', marginTop: 12, textAlign: 'center' }}>
-                        Build your future one day at a time.
+                        {t('auth.subtitle')}
                     </Text>
                 </FadeInView>
 
@@ -103,7 +99,7 @@ export default function Login() {
                                 marginBottom: 8,
                             }}
                         >
-                            EMAIL ADDRESS
+                            {t('auth.email')}
                         </Text>
                         <TextInput
                             value={email}
@@ -140,7 +136,7 @@ export default function Login() {
                                 marginBottom: 8,
                             }}
                         >
-                            PASSWORD
+                            {t('auth.password')}
                         </Text>
                         <TextInput
                             value={password}
@@ -170,7 +166,7 @@ export default function Login() {
                 {/* ── CTA ── */}
                 <FadeInView delay={300} style={{ marginTop: 28 }}>
                     <PremiumButton
-                        title="SIGN IN"
+                        title={t('auth.login')}
                         onPress={handleLogin}
                         variant="primary"
                         loading={loading}
@@ -190,7 +186,7 @@ export default function Login() {
                                 marginRight: 6,
                             }}
                         >
-                            NEW TO LIFEPIVOT?
+                            {t('auth.no_account')}
                         </Text>
                         <TouchableOpacity onPress={() => router.push('/(auth)/signup')}>
                             <Text
@@ -202,7 +198,7 @@ export default function Login() {
                                     letterSpacing: 1.5,
                                 }}
                             >
-                                SIGN UP
+                                {t('auth.signup')}
                             </Text>
                         </TouchableOpacity>
                     </View>

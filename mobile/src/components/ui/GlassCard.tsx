@@ -1,13 +1,14 @@
 /* eslint-disable react-hooks/immutability */
 import React, { useCallback } from 'react';
-import { Pressable, type ViewStyle, type StyleProp } from 'react-native';
+import { Pressable, type ViewStyle, type StyleProp, StyleSheet, View } from 'react-native';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withSpring,
 } from 'react-native-reanimated';
-import * as Haptics from 'expo-haptics';
-import { Shadows, BorderRadius, Spacing } from '../../constants/theme';
+import { HapticsEngine } from '../../utils/HapticsEngine';
+import { useTheme } from '../../context/ThemeContext';
+import { Shadows, BorderRadius, Spacing, AnimationConfig } from '../../constants/theme';
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
@@ -17,42 +18,53 @@ interface GlassCardProps {
   style?: StyleProp<ViewStyle>;
   padded?: boolean;
   elevated?: boolean;
+  glowColor?: string;
+  activeOpacity?: number;
+  disabled?: boolean;
 }
 
+/**
+ * GlassCard: Premium interactive obsidian glass card with Reanimated 4 spring scale physics.
+ */
 export function GlassCard({
   children,
   onPress,
   style,
   padded = true,
   elevated = false,
+  glowColor,
+  disabled = false,
 }: GlassCardProps) {
+  const { colors } = useTheme();
   const scale = useSharedValue(1);
 
-  const animatedStyle = useAnimatedStyle(() => ({
+  const animatedScale = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],
   }));
 
   const handlePressIn = useCallback(() => {
-    scale.value = withSpring(0.97, { damping: 20, stiffness: 300 });
-  }, [scale]);
+    if (disabled || !onPress) return;
+    scale.value = withSpring(0.975, AnimationConfig.spring.scalePress);
+  }, [disabled, onPress, scale]);
 
   const handlePressOut = useCallback(() => {
-    scale.value = withSpring(1, { damping: 15, stiffness: 120 });
-  }, [scale]);
+    if (disabled || !onPress) return;
+    scale.value = withSpring(1, AnimationConfig.spring.bouncy);
+  }, [disabled, onPress, scale]);
 
   const handlePress = useCallback(() => {
-    if (onPress) {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-      onPress();
-    }
-  }, [onPress]);
+    if (disabled || !onPress) return;
+    HapticsEngine.tier1.light();
+    onPress();
+  }, [disabled, onPress]);
 
   const cardStyle: ViewStyle = {
-    backgroundColor: 'rgba(255, 255, 255, 0.03)',
+    backgroundColor: colors.card,
     borderRadius: BorderRadius.xxl,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
+    borderColor: colors.glassBorder,
     ...(elevated ? Shadows.elevated : Shadows.card),
+    ...(glowColor && Shadows.glowSmall(glowColor, 0.2)),
     ...(padded && { padding: Spacing.four }),
   };
 
@@ -62,7 +74,8 @@ export function GlassCard({
         onPress={handlePress}
         onPressIn={handlePressIn}
         onPressOut={handlePressOut}
-        style={[cardStyle, animatedStyle, style]}
+        disabled={disabled}
+        style={[cardStyle, animatedScale, style]}
       >
         {children}
       </AnimatedPressable>
@@ -70,9 +83,9 @@ export function GlassCard({
   }
 
   return (
-    <Animated.View style={[cardStyle, style]}>
+    <View style={[cardStyle, style]}>
       {children}
-    </Animated.View>
+    </View>
   );
 }
 

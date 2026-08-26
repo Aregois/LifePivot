@@ -1,17 +1,13 @@
-﻿'use client'
+'use client'
 
 import { useState, useEffect, useTransition, ComponentType } from 'react'
-import { Coins, Zap, Sparkles, ShieldCheck, Loader2, Crown, Palette, Music, RotateCcw, Flame, ShoppingCart, Rocket, ExternalLink } from 'lucide-react'
+import { Coins, Zap, Sparkles, ShieldCheck, Loader2, Crown, Palette, Music, RotateCcw, ShoppingCart, Rocket, ExternalLink } from 'lucide-react'
 import { useLanguage } from './language-provider'
 import { useEconomy } from './economy-provider'
-import { verifyShopPurchase, purchaseCustomization, placeWagerServer, rewardWagerServer } from '@/app/actions'
-import { createClient } from '@/utils/supabase/client'
+import { verifyShopPurchase, purchaseCustomization } from '@/app/actions'
 import { haptics } from '@/utils/haptics'
 import { motion, AnimatePresence } from 'framer-motion'
 import { EarnTokensCard } from './earn-tokens-card'
-
-
-
 
 interface ShopItem {
     id: string
@@ -27,19 +23,13 @@ interface ShopItem {
 
 export function ShopClient() {
     const { t } = useLanguage()
-    const { tokens, setTokens, setVoidDays, wager, setWager } = useEconomy()
+    const { tokens, setTokens, setVoidDays } = useEconomy()
     const [isPending, startTransition] = useTransition()
     const [purchaseError, setPurchaseError] = useState<string | null>(null)
     const [purchaseSuccess, setPurchaseSuccess] = useState<string | null>(null)
     const [unlockedItems, setUnlockedItems] = useState<string[]>([])
     const [mounted, setMounted] = useState(false)
     const [voidPlacementModal, setVoidPlacementModal] = useState(false)
-
-    // Wager States
-    const [currentStreak, setCurrentStreak] = useState(0)
-    const [wagerAmount, setWagerAmount] = useState(20)
-    const [confirmingWager, setConfirmingWager] = useState(false)
-    const [wagerError, setWagerError] = useState<string | null>(null)
 
     // Token pack purchase state
     const [tokenPackPending, setTokenPackPending] = useState<string | null>(null)
@@ -112,111 +102,17 @@ export function ShopClient() {
     }
 
     useEffect(() => {
-        const titles = JSON.parse(localStorage.getItem('lifepivot_unlocked_titles') || '["title_scholar"]')
-        const frames = JSON.parse(localStorage.getItem('lifepivot_unlocked_frames') || '["frame_standard"]')
-        const sounds = JSON.parse(localStorage.getItem('lifepivot_unlocked_soundscapes') || '["none", "space", "rain", "binaural"]')
-
-        // Fetch current streak
-        const supabase = createClient()
-        const fetchData = async () => {
-            try {
-                const { data } = await supabase.from('profiles')
-                    .select('current_streak')
-                    .single()
-                if (data) {
-                    setCurrentStreak(data.current_streak ?? 0)
-                }
-            } catch {
-                // ignore errors
-            } finally {
-                setUnlockedItems([...titles, ...frames, ...sounds])
-                setMounted(true)
-            }
+        try {
+            const titles = JSON.parse(localStorage.getItem('lifepivot_unlocked_titles') || '["title_scholar"]')
+            const frames = JSON.parse(localStorage.getItem('lifepivot_unlocked_frames') || '["frame_standard"]')
+            const sounds = JSON.parse(localStorage.getItem('lifepivot_unlocked_soundscapes') || '["none", "space", "rain", "binaural"]')
+            setUnlockedItems([...titles, ...frames, ...sounds])
+        } catch {
+            setUnlockedItems(['title_scholar', 'frame_standard', 'none', 'space', 'rain', 'binaural'])
+        } finally {
+            setMounted(true)
         }
-        fetchData()
     }, [])
-
-
-    const wagerResolution = (() => {
-        if (!wager || !mounted) return null
-
-        const now = new Date()
-        const startDate = new Date(wager.startDate)
-        const elapsedDays = (now.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)
-        const daysLeft = Math.max(0, 7 - elapsedDays)
-        const maxPossibleStreak = currentStreak + Math.ceil(daysLeft)
-
-        if (currentStreak >= wager.targetStreak) {
-            return 'won'
-        } else if (maxPossibleStreak < wager.targetStreak || (currentStreak === 0 && elapsedDays > 0.05)) {
-            return 'lost'
-        } else {
-            return 'active'
-        }
-    })()
-
-    const handlePlaceWager = async () => {
-        if (tokens < wagerAmount) {
-            haptics.error()
-            setWagerError("Insufficient tokens")
-            setTimeout(() => setWagerError(null), 3000)
-            return
-        }
-
-        haptics.medium()
-        
-        startTransition(async () => {
-            const res = await placeWagerServer(wagerAmount)
-            if (res.error) {
-                haptics.error()
-                setWagerError(res.error)
-                setTimeout(() => setWagerError(null), 3000)
-                return
-            }
-
-            // Success
-            haptics.medium()
-            setTokens(res.newTokens ?? (tokens - wagerAmount))
-            setWager({
-                amount: wagerAmount,
-                startStreak: currentStreak,
-                targetStreak: currentStreak + 7,
-                daysRemaining: 7,
-                startDate: new Date().toISOString()
-            })
-            setConfirmingWager(false)
-            setPurchaseSuccess(t('shop.wager_success_placed').replace('{amount}', wagerAmount.toString()).replace('{target}', (currentStreak + 7).toString()))
-            setTimeout(() => setPurchaseSuccess(null), 5000)
-        })
-    }
-
-    const handleClaimWager = async () => {
-        if (!wager) return
-
-        haptics.medium()
-        startTransition(async () => {
-            const rewardAmount = wager.amount * 2
-            const res = await rewardWagerServer(rewardAmount)
-            if (res.error) {
-                haptics.error()
-                setWagerError(res.error)
-                setTimeout(() => setWagerError(null), 3000)
-                return
-            }
-
-            haptics.medium()
-            setTokens(res.newTokens ?? (tokens + rewardAmount))
-            setWager(null)
-            setPurchaseSuccess(t('shop.wager_reward_claimed').replace('{amount}', rewardAmount.toString()))
-            setTimeout(() => setPurchaseSuccess(null), 5000)
-        })
-    }
-
-    const handleDismissWager = () => {
-        haptics.light()
-        setWager(null)
-    }
-
 
     const shopItems: ShopItem[] = [
         {
@@ -546,137 +442,6 @@ export function ShopClient() {
                     Secure one-time payment via Stripe. No subscription required.
                 </p>
             </div>
-
-            {/* Wager consistency widget */}
-            {mounted && (
-                <div className="bg-[#141824] border border-white/5 p-6 rounded-[2.2rem] shadow-xl relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-6">
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-neon-violet/5 rounded-full blur-[40px] pointer-events-none" />
-                    
-                    {!wager ? (
-                        /* No wager active: show setup form */
-                        <div className="flex-1 flex flex-col gap-3">
-                            <div className="flex items-center gap-2">
-                                <div className="h-8 w-8 bg-neon-violet/10 border border-neon-violet/25 flex items-center justify-center rounded-xl text-neon-violet">
-                                    <Flame className="h-4 w-4" />
-                                </div>
-                                <span className="text-[10px] font-black text-neon-violet uppercase tracking-widest">{t('shop.wager_title') || 'Streak Wager'}</span>
-                            </div>
-                            <h3 className="text-white font-extrabold text-base">{t('shop.wager_challenge') || 'Streak Wager Challenge'}</h3>
-                            <p className="text-gray-400 text-xs leading-relaxed max-w-xl">
-                                {t('shop.wager_desc') || 'Bet your Gems on your daily consistency. Reach a 7-day streak target to double your gems!'}
-                            </p>
-                            
-                            {/* Bet selection */}
-                            <div className="flex flex-col sm:flex-row sm:items-center gap-4 mt-2">
-                                <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Select Bet Amount:</span>
-                                <div className="flex gap-2">
-                                    {[20, 50, 100].map(amount => (
-                                        <button
-                                            key={amount}
-                                            type="button"
-                                            onClick={() => { haptics.light(); setWagerAmount(amount) }}
-                                            className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all ${
-                                                wagerAmount === amount
-                                                    ? 'bg-neon-violet/15 text-neon-violet border border-neon-violet/25'
-                                                    : 'bg-[#0B0D17] text-gray-500 border border-white/5 hover:text-gray-300'
-                                            }`}
-                                        >
-                                            {amount} Tokens
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
-                        </div>
-                    ) : (
-                        /* Wager active: show progress & status */
-                        <div className="flex-1 flex flex-col gap-3">
-                            <div className="flex items-center gap-2">
-                                <div className="h-8 w-8 bg-emerald-500/10 border border-emerald-500/25 flex items-center justify-center rounded-xl text-emerald-400">
-                                    <Flame className="h-4 w-4" />
-                                </div>
-                                <span className="text-[10px] font-black text-emerald-400 uppercase tracking-widest">
-                                    {wagerResolution === 'won' ? 'Wager Completed!' : 'Active Consistency Wager'}
-                                </span>
-                            </div>
-                            <h3 className="text-white font-extrabold text-base">
-                                {wagerResolution === 'won' ? 'Double Reward Claimable' : `Consistency Target: ${wager.targetStreak} Days`}
-                            </h3>
-                            <p className="text-gray-400 text-xs leading-relaxed max-w-xl">
-                                {wagerResolution === 'won'
-                                    ? t('shop.won_desc')?.replace('{target}', wager.targetStreak.toString()) || `Amazing job! You reached your target streak of ${wager.targetStreak} days. Your bet paid off!`
-                                    : wagerResolution === 'lost'
-                                        ? `Streak broken! You bet ${wager.amount} tokens but did not reach the target.`
-                                        : `Maintain your focus streak. Reach a ${wager.targetStreak}-day streak to double your tokens bet. Current Streak: ${currentStreak}/${wager.targetStreak} Days.`
-                                }
-                            </p>
-                            
-                            {/* Progress bar */}
-                            {wagerResolution === 'active' && (
-                                <div className="w-full max-w-md space-y-1.5 mt-1">
-                                    <div className="flex items-center justify-between text-[9px] font-black uppercase text-gray-500 tracking-wider">
-                                        <span>Streak Progress</span>
-                                        <span className="text-emerald-400">{currentStreak} / {wager.targetStreak} Days</span>
-                                    </div>
-                                    <div className="w-full h-2 bg-[#0B0D17] rounded-full overflow-hidden border border-white/5">
-                                        <div
-                                            className="h-full bg-gradient-to-r from-emerald-400 to-teal-500 rounded-full transition-all duration-1000"
-                                            style={{ width: `${Math.min(100, Math.max(0, ((currentStreak - wager.startStreak) / 7) * 100))}%` }}
-                                        />
-                                    </div>
-                                </div>
-                            )}
-
-                            <div className="bg-[#0B0D17]/40 border border-white/5 px-4 py-2.5 rounded-xl flex items-center justify-between text-[10px] font-black uppercase tracking-wider text-gray-400 mt-2 max-w-md">
-                                <span>Tokens Locked: {wager.amount}</span>
-                                <span className="text-emerald-400 font-extrabold flex items-center gap-1">
-                                    Claim Reward: <Coins className="w-3.5 h-3.5 inline text-emerald-400" /> {wager.amount * 2}
-                                </span>
-                            </div>
-                        </div>
-                    )}
-
-                    {/* CTA Actions */}
-                    <div className="w-full md:w-auto shrink-0 flex flex-col gap-2">
-                        {wagerError && (
-                            <p className="text-[10px] text-red-400 font-bold text-center bg-red-500/5 py-2 border border-red-500/10 rounded-xl max-w-[200px]">
-                                {wagerError}
-                            </p>
-                        )}
-                        
-                        {!wager ? (
-                            <button
-                                onClick={handlePlaceWager}
-                                disabled={isPending}
-                                className="px-6 py-4 rounded-xl bg-neon-violet text-white hover:scale-[1.02] active:scale-95 transition-all font-black text-xs uppercase tracking-wider shadow-[0_0_20px_rgba(var(--violet-rgb),0.25)] flex items-center justify-center gap-1.5"
-                            >
-                                {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Confirm Wager'}
-                            </button>
-                        ) : wagerResolution === 'won' ? (
-                            <button
-                                onClick={handleClaimWager}
-                                disabled={isPending}
-                                className="px-6 py-4 rounded-xl bg-emerald-500 text-black hover:scale-[1.02] active:scale-95 transition-all font-black text-xs uppercase tracking-wider shadow-[0_0_20px_rgba(16,185,129,0.3)] flex items-center justify-center gap-1.5 animate-bounce"
-                            >
-                                {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Claim Double Reward'}
-                            </button>
-                        ) : wagerResolution === 'lost' ? (
-                            <button
-                                onClick={handleDismissWager}
-                                className="px-6 py-4 rounded-xl bg-white/5 border border-white/10 text-white font-black text-xs uppercase tracking-wider hover:bg-white/10 transition-all flex items-center justify-center"
-                            >
-                                Acknowledge Loss
-                            </button>
-                        ) : (
-                            <button
-                                disabled
-                                className="px-6 py-4 rounded-xl bg-white/5 border border-white/10 text-gray-500 font-black text-xs uppercase tracking-wider flex items-center justify-center cursor-not-allowed"
-                            >
-                                Active Challenge
-                            </button>
-                        )}
-                    </div>
-                </div>
-            )}
 
             {/* Notification center */}
             <div className="min-h-[40px] relative z-20">

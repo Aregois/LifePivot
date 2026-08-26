@@ -1,4 +1,4 @@
-﻿import { createClient } from '@/utils/supabase/server'
+import { createClient } from '@/utils/supabase/server'
 import { getLocalDateString } from '@/utils/date-utils'
 import { DashboardClient } from '@/components/dashboard-client'
 
@@ -11,7 +11,7 @@ export default async function Home() {
   // Performance Optimization: Fetch all user goals but select only the minimal columns from tasks
   // (excluding subtasks, notes, resources, reflections, drill_data) to reduce data payload size.
   // Limit to 10 goals max to prevent massive arrays under free/pro tier.
-  const [{ data: goals }, { data: profile }, { count: dueCardsCount }] = await Promise.all([
+  const [{ data: goals }, { data: profile }] = await Promise.all([
     supabase
       .from('learning_goals')
       .select(`
@@ -25,12 +25,7 @@ export default async function Home() {
       .from('profiles')
       .select('xp, level, current_streak, streak_shields_count, is_subscribed')
       .eq('id', user.id)
-      .single(),
-    supabase
-      .from('flashcards')
-      .select('*', { count: 'exact', head: true })
-      .eq('user_id', user.id)
-      .lte('next_review', new Date().toISOString())
+      .single()
   ])
 
   const username = user?.email?.split('@')[0] || 'Pathseeker'
@@ -39,7 +34,6 @@ export default async function Home() {
     <DashboardClient
       username={username}
       profile={profile}
-      dueCardsCount={dueCardsCount ?? 0}
       goals={goals || []}
       todayStr={getLocalDateString()}
     />

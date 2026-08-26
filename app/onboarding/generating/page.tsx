@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/utils/supabase/client'
@@ -6,15 +6,8 @@ import { useEffect, useState, useRef, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { haptics } from '@/utils/haptics'
 import { RefreshCw, SkipForward } from 'lucide-react'
-
-// ─── Ticker messages ──────────────────────────────────────────────────────────
-const TICKER_MESSAGES = [
-    'Analyzing your goal...',
-    'Structuring your 30 days...',
-    'Balancing difficulty tiers...',
-    'Adding recovery days...',
-    'Almost ready...',
-]
+import { useLanguage } from '@/components/language-provider'
+import { translateTaskTitle } from '@/utils/translations'
 
 // ─── Animated TextTicker ──────────────────────────────────────────────────────
 interface TextTickerProps {
@@ -23,20 +16,26 @@ interface TextTickerProps {
 }
 
 function TextTicker({ isReady, isError }: TextTickerProps) {
+    const { t } = useLanguage()
+    const tickerMessages = [
+        t('creator.generating'),
+        t('onboarding.generating_sub'),
+        t('creator.commitment_desc'),
+    ]
     const [index, setIndex] = useState(0)
 
     useEffect(() => {
         if (isReady || isError) return
         const interval = setInterval(() => {
-            setIndex(i => (i + 1) % TICKER_MESSAGES.length)
-        }, 1800)
+            setIndex(i => (i + 1) % tickerMessages.length)
+        }, 2200)
         return () => clearInterval(interval)
-    }, [isReady, isError])
+    }, [isReady, isError, tickerMessages.length])
 
     const getMessage = () => {
-        if (isError) return 'Generation failed'
-        if (isReady) return 'Your plan is ready'
-        return TICKER_MESSAGES[index]
+        if (isError) return t('common.error')
+        if (isReady) return t('common.ready')
+        return tickerMessages[index]
     }
 
     return (
@@ -48,7 +47,7 @@ function TextTicker({ isReady, isError }: TextTickerProps) {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -10 }}
                     transition={{ duration: 0.35, ease: 'easeInOut' }}
-                    className="text-sm text-gray-400 font-medium text-center"
+                    className="text-sm text-gray-400 font-medium text-center truncate max-w-xs"
                 >
                     {getMessage()}
                 </motion.p>
@@ -58,7 +57,7 @@ function TextTicker({ isReady, isError }: TextTickerProps) {
 }
 
 // ─── Task priority styling helper ──────────────────────────────────────────────
-function getPriorityStyles(priority: number) {
+function getPriorityStyles(priority: number, t: (k: string) => string) {
     switch (priority) {
         case 5:
             return {
@@ -95,208 +94,173 @@ function getPriorityStyles(priority: number) {
             return {
                 dot: 'bg-gray-600 shadow-[0_0_5px_rgba(156,163,175,0.3)]',
                 badge: 'bg-gray-800 text-gray-400 border border-gray-700/50',
-                text: 'Rest day'
+                text: t('plan.void_day') || 'Rest day'
             }
     }
 }
 
-// ─── Streamed Task interface ───────────────────────────────────────────────────
-interface StreamedTask {
+interface StreamTask {
     id: string
+    day: number
     title: string
     priority: number
-    day: number
-    estimated_mins: number
+    subject: string
 }
 
-// ─── Page component ────────────────────────────────────────────────────────────
-type PageState = 'generating' | 'ready' | 'error'
+type PageState = 'streaming' | 'ready' | 'error'
 
 export default function GeneratingPage() {
     const router = useRouter()
-    const [pageState, setPageState] = useState<PageState>('generating')
-    const [errorMsg, setErrorMsg] = useState('')
-    const [progress, setProgress] = useState(0)
-    const [visibleTasks, setVisibleTasks] = useState<StreamedTask[]>([])
-    const abortControllerRef = useRef<AbortController | null>(null)
-    const hasFired = useRef(false)
+    const { t, locale } = useLanguage()
 
-    // Progress bar auto increment (0% to 95% over ~12s)
-    useEffect(() => {
-        if (pageState !== 'generating') return
-        const startTime = Date.now()
-        const duration = 12000 // 12 seconds
-        const interval = setInterval(() => {
-            const elapsed = Date.now() - startTime
-            const ratio = Math.min(elapsed / duration, 1)
-            const currentProgress = ratio * 95
-            setProgress(prev => {
-                if (prev >= 95) return prev
-                return currentProgress
-            })
-        }, 100)
-        return () => clearInterval(interval)
-    }, [pageState])
+    const [pageState, setPageState] = useState<PageState>('streaming')
+    const [visibleTasks, setVisibleTasks] = useState<StreamTask[]>([])
+    const [progress, setProgress] = useState(0)
+    const [errorMsg, setErrorMsg] = useState<string | null>(null)
+
+    const abortRef = useRef<AbortController | null>(null)
+    const hasStartedRef = useRef(false)
 
     const startStream = useCallback(async () => {
-        setPageState('generating')
-        setErrorMsg('')
-        setProgress(0)
+        setPageState('streaming')
         setVisibleTasks([])
+        setProgress(0)
+        setErrorMsg(null)
 
-        if (abortControllerRef.current) {
-            abortControllerRef.current.abort()
-        }
-        const abortController = new AbortController()
-        abortControllerRef.current = abortController
+        if (abortRef.current) abortRef.current.abort()
+        abortRef.current = new AbortController()
 
         try {
             const supabase = createClient()
             const { data: { user } } = await supabase.auth.getUser()
-            if (!user) {
-                router.replace('/login')
-                return
-            }
+            if (!user) { router.replace('/login'); return }
 
-            // Fetch the onboarding profile data
             const { data: profile } = await supabase
                 .from('profiles')
                 .select('onboarding_goal, onboarding_level, onboarding_daily_time, onboarding_style')
                 .eq('id', user.id)
                 .single()
 
-            if (!profile?.onboarding_goal) {
-                router.replace('/')
-                return
-            }
+            const goal = profile?.onboarding_goal || 'Master Web Development'
+            const level = profile?.onboarding_level || 'Beginner'
+            const dailyTime = profile?.onboarding_daily_time || '1 Hour'
+            const style = profile?.onboarding_style || 'Coding'
 
-            const res = await fetch('/api/plans/generate', {
+            const res = await fetch('/api/plan/generate', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    goal: profile.onboarding_goal,
-                    level: profile.onboarding_level,
-                    dailyTime: profile.onboarding_daily_time,
-                    style: profile.onboarding_style,
-                    userId: user.id
-                }),
-                signal: abortController.signal
+                body: JSON.stringify({ goal, level, dailyTime, style, userId: user.id }),
+                signal: abortRef.current.signal,
             })
 
             if (!res.ok) {
-                const body = await res.json().catch(() => ({}))
-                throw new Error(body.error || `Server error ${res.status}`)
+                const errData = await res.json().catch(() => ({}))
+                throw new Error(errData.error || 'Failed to initialize curriculum stream.')
             }
 
             const reader = res.body?.getReader()
-            if (!reader) {
-                throw new Error('Readable stream not supported')
-            }
+            if (!reader) throw new Error('Response body is not readable.')
 
             const decoder = new TextDecoder()
             let buffer = ''
-            let planId = ''
+            let taskCount = 0
 
             while (true) {
                 const { done, value } = await reader.read()
                 if (done) break
 
                 buffer += decoder.decode(value, { stream: true })
-                const lines = buffer.split('\n')
+                const lines = buffer.split('\n\n')
                 buffer = lines.pop() || ''
 
                 for (const line of lines) {
-                    const trimmedLine = line.trim()
-                    if (!trimmedLine || !trimmedLine.startsWith('data: ')) continue
+                    if (line.startsWith('data: ')) {
+                        try {
+                            const data = JSON.parse(line.replace('data: ', ''))
 
-                    const payload = trimmedLine.slice(6).trim()
-                    if (payload === '[DONE]') {
-                        haptics.medium()
-                        setProgress(100)
-                        setPageState('ready')
-                        
-                        // Wait 800ms, then navigate to /plan
-                        setTimeout(() => {
-                            router.push('/plan')
-                        }, 800)
-                        return
-                    }
-
-                    try {
-                        const data = JSON.parse(payload)
-                        if (data.error) {
-                            throw new Error(data.error)
-                        }
-
-                        if (data.planId) {
-                            planId = data.planId
-                        } else {
-                            // Valid task object streamed in
-                            const newTask: StreamedTask = {
-                                id: Math.random().toString(36).substring(2, 9),
-                                title: data.title,
-                                priority: data.priority,
-                                day: data.day,
-                                estimated_mins: data.estimated_mins
-                            }
-                            
-                            setVisibleTasks(prev => {
-                                const next = [...prev, newTask]
-                                if (next.length > 4) {
-                                    return next.slice(next.length - 4)
+                            if (data.type === 'TASK') {
+                                taskCount++
+                                const newTask: StreamTask = {
+                                    id: `${data.task.day}-${data.task.title}`,
+                                    day: data.task.day,
+                                    title: data.task.title,
+                                    priority: data.task.priority,
+                                    subject: data.task.subject,
                                 }
-                                return next
-                            })
-                            haptics.light()
-                        }
-                    } catch (e: any) {
-                        if (e.message?.includes('failed') || e.message?.includes('Generation')) {
-                            throw e
+                                setVisibleTasks(prev => [...prev.slice(-3), newTask])
+                                setProgress(Math.min(95, Math.round((taskCount / 30) * 100)))
+                                haptics.light()
+                            } else if (data.type === 'DONE') {
+                                setProgress(100)
+                                setPageState('ready')
+                                haptics.medium()
+                                setTimeout(() => {
+                                    router.push('/')
+                                }, 1500)
+                                return
+                            } else if (data.type === 'ERROR') {
+                                throw new Error(data.error || 'Plan generation failed.')
+                            }
+                        } catch (parseErr: any) {
+                            if (parseErr.name !== 'AbortError') {
+                                console.warn('Stream chunk parse error:', parseErr)
+                            }
                         }
                     }
                 }
             }
 
+            setProgress(100)
+            setPageState('ready')
+            setTimeout(() => {
+                router.push('/')
+            }, 1500)
         } catch (err: any) {
-            if (err.name === 'AbortError') return
-            console.error('Plan generation failed:', err)
-            setErrorMsg(err.message || 'Something went wrong.')
-            setPageState('error')
+            if (err.name !== 'AbortError') {
+                console.error('Plan generation failed:', err)
+                setErrorMsg(err.message || 'Plan generation was interrupted.')
+                setPageState('error')
+                haptics.error()
+            }
         }
     }, [router])
 
     useEffect(() => {
-        if (hasFired.current) return
-        hasFired.current = true
-        startStream()
-
+        if (!hasStartedRef.current) {
+            hasStartedRef.current = true
+            startStream()
+        }
         return () => {
-            if (abortControllerRef.current) {
-                abortControllerRef.current.abort()
-            }
+            if (abortRef.current) abortRef.current.abort()
         }
     }, [startStream])
 
     return (
-        <div className="flex min-h-[100dvh] flex-col items-center justify-center bg-black/50 p-6 relative overflow-hidden">
-            {/* Ambient glow */}
-            <div className="pointer-events-none absolute top-1/2 left-1/2 h-72 w-72 -translate-x-1/2 -translate-y-1/2 rounded-full bg-neon-violet opacity-20 blur-[120px]" />
-            <div className="pointer-events-none absolute top-1/3 left-1/2 h-56 w-56 -translate-x-1/3 rounded-full bg-electric-blue opacity-20 blur-[90px]" />
+        <div className="flex min-h-[100dvh] flex-col items-center justify-center bg-black/50 p-4">
 
-            {/* Logo: L I F E P I V O T (small, letter-spaced, muted) */}
-            <div className="absolute top-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1 opacity-60">
-                <span className="text-[10px] font-black text-gray-500 uppercase tracking-[0.4em] select-none">L I F E P I V O T</span>
-            </div>
+            {/* Ambient glow */}
+            <div className="pointer-events-none absolute top-1/2 left-1/2 h-72 w-72 -translate-x-1/2 -translate-y-1/2 rounded-full bg-neon-violet opacity-15 blur-[120px]" />
+            <div className="pointer-events-none absolute top-1/3 left-1/2 h-56 w-56 -translate-x-1/3 rounded-full bg-electric-blue opacity-15 blur-[90px]" />
 
             <AnimatePresence mode="wait">
                 {pageState !== 'error' ? (
                     <motion.div
-                        key="generating-ui"
-                        initial={{ opacity: 0, y: 16 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -16 }}
-                        className="relative z-10 flex flex-col items-center gap-6 w-full max-w-sm mt-8"
+                        key="streaming-card"
+                        initial={{ opacity: 0, scale: 0.97 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.97 }}
+                        className="relative z-10 glass-card rounded-2xl p-7 w-full max-w-sm flex flex-col items-center text-center gap-6 border border-white/5 bg-[#141824]/80"
                     >
+                        {/* Header */}
+                        <div>
+                            <h2 className="title-glow text-xl font-bold tracking-tight text-white mb-1">
+                                {t('onboarding.generating_title')}
+                            </h2>
+                            <p className="text-[10px] text-gray-500 uppercase tracking-[0.2em] font-black">
+                                {t('auth.subtitle')}
+                            </p>
+                        </div>
+
                         {/* Ticker message */}
                         <TextTicker isReady={pageState === 'ready'} isError={false} />
 
@@ -308,20 +272,21 @@ export default function GeneratingPage() {
                             />
                         </div>
 
-                        {/* Label: small muted text */}
+                        {/* Label */}
                         <p className="text-[11px] font-bold text-gray-500 uppercase tracking-widest select-none">
-                            {pageState === 'ready' ? 'Done' : 'Your plan is being built'}
+                            {pageState === 'ready' ? t('common.done') : t('creator.generating')}
                         </p>
 
-                        {/* Tasks Stream Area (maximum 4 cards visible at once) */}
+                        {/* Tasks Stream Area */}
                         <div className="w-full flex flex-col gap-2.5 min-h-[290px] h-[290px] justify-end overflow-hidden py-1 relative">
                             <AnimatePresence initial={false} mode="popLayout">
-                                {visibleTasks.map((t) => {
-                                    const styles = getPriorityStyles(t.priority)
+                                {visibleTasks.map((taskItem) => {
+                                    const styles = getPriorityStyles(taskItem.priority, t)
+                                    const localizedTitle = translateTaskTitle(taskItem.title, locale)
                                     return (
                                         <motion.div
                                             layout
-                                            key={t.id}
+                                            key={taskItem.id}
                                             initial={{ opacity: 0, x: -30 }}
                                             animate={{ opacity: 1, x: 0 }}
                                             exit={{ opacity: 0, y: -45 }}
@@ -332,7 +297,7 @@ export default function GeneratingPage() {
                                             <div className={`w-2 h-2 rounded-full shrink-0 ${styles.dot}`} />
 
                                             <div className="flex-1 min-w-0">
-                                                <p className="text-xs font-bold text-white truncate">{t.title}</p>
+                                                <p className="text-xs font-bold text-white truncate">{localizedTitle}</p>
                                                 <div className="flex items-center gap-2 mt-1">
                                                     <span className={`text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-md ${styles.badge}`}>
                                                         {styles.text}
@@ -341,7 +306,7 @@ export default function GeneratingPage() {
                                             </div>
 
                                             <span className="text-[10px] text-gray-500 font-black tracking-widest uppercase shrink-0">
-                                                Day {t.day}
+                                                {t('dashboard.day')} {taskItem.day}
                                             </span>
                                         </motion.div>
                                     )
@@ -363,7 +328,7 @@ export default function GeneratingPage() {
                                 <span className="text-red-400 font-black text-lg">!</span>
                             </div>
                             <div>
-                                <p className="text-sm font-bold text-white">Generation failed</p>
+                                <p className="text-sm font-bold text-white">{t('common.error')}</p>
                                 <p className="text-xs text-gray-500 mt-0.5">Something went wrong building your plan.</p>
                             </div>
                         </div>
@@ -381,15 +346,15 @@ export default function GeneratingPage() {
                                 className="flex items-center justify-center gap-2 w-full rounded-xl bg-gradient-to-r from-electric-blue/20 to-neon-violet/20 border border-electric-blue/20 px-4 py-3.5 text-xs font-black text-white uppercase tracking-widest hover:from-electric-blue/30 hover:to-neon-violet/30 transition-all active:scale-[0.98] min-h-[44px]"
                             >
                                 <RefreshCw className="w-3.5 h-3.5" />
-                                Try Again
+                                {t('plan_import.btn_retry')}
                             </button>
                             <button
                                 id="generating-skip-btn"
-                                onClick={() => { haptics.light(); router.push('/dashboard') }}
+                                onClick={() => { haptics.light(); router.push('/') }}
                                 className="flex items-center justify-center gap-2 w-full rounded-xl border border-white/10 bg-transparent px-4 py-3.5 text-xs font-black text-gray-400 uppercase tracking-widest hover:bg-white/5 hover:text-white transition-all active:scale-[0.98] min-h-[44px]"
                             >
                                 <SkipForward className="w-3.5 h-3.5" />
-                                Skip for now
+                                {t('common.skip') || 'Skip'}
                             </button>
                         </div>
                     </motion.div>

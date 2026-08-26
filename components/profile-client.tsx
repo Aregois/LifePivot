@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useState, useEffect, useTransition } from 'react'
 import { 
@@ -14,11 +14,8 @@ import { AvatarIcon, AVATAR_LIST } from './avatar-icons'
 import { getLocalDateString } from '@/utils/date-utils'
 import { SubscribeModal } from './subscribe-modal'
 import { useSearchParams } from 'next/navigation'
-import { FlashcardsDeck } from './flashcards-deck'
-import { RecallPit } from './recall-pit'
 import { useLanguage } from '@/components/language-provider'
 import { LANGUAGE_NAMES } from '@/utils/translations'
-import { PathseekerLeagues } from './pathseeker-leagues'
 
 const GEM_REWARD: Record<number, number> = { 0: 0, 1: 1, 2: 1, 3: 1, 4: 2, 5: 3 }
 
@@ -53,10 +50,9 @@ interface ProfileClientProps {
     isSubscribed?: boolean
 }
 
-type TabType = 'mastery' | 'flashcards' | 'cosmetics' | 'settings' | 'recall-pit' | 'leagues'
+type TabType = 'mastery' | 'cosmetics' | 'settings'
 type AccentType = 'blue' | 'violet' | 'green' | 'sunset'
 type PersonaType = 'feynman' | 'socrates' | 'stoic'
-type SoundscapeType = 'none' | 'space' | 'rain' | 'binaural' | 'cafe' | 'greenhouse'
 
 const TITLE_NAMES: Record<string, string> = {
     title_scholar: 'Scholar',
@@ -102,7 +98,7 @@ export function ProfileClient({
 
     useEffect(() => {
         const t = searchParams.get('tab') as TabType
-        if (t && ['mastery', 'flashcards', 'cosmetics', 'settings', 'recall-pit', 'leagues'].includes(t)) {
+        if (t && ['mastery', 'cosmetics', 'settings'].includes(t)) {
             setActiveTab(t)
         }
     }, [searchParams])
@@ -142,7 +138,6 @@ export function ProfileClient({
     const [accent, setAccent] = useState<AccentType>('blue')
     const [duration, setDuration] = useState<number>(30)
     const [persona, setPersona] = useState<PersonaType>('feynman')
-    const [soundscape, setSoundscape] = useState<SoundscapeType>('none')
     const [hapticsEnabled, setHapticsEnabled] = useState<boolean>(true)
 
     // Cosmetics states
@@ -190,7 +185,6 @@ export function ProfileClient({
         setAccent((localStorage.getItem('lifepivot_accent') as AccentType) || 'blue')
         setDuration(Number(localStorage.getItem('lifepivot_duration') || 30))
         setPersona((localStorage.getItem('lifepivot_persona') as PersonaType) || 'feynman')
-        setSoundscape((localStorage.getItem('lifepivot_soundscape') as SoundscapeType) || 'none')
         setHapticsEnabled(localStorage.getItem('lifepivot_haptics') !== 'false')
         setMindfulModeEnabled(localStorage.getItem('lifepivot_mindful_mode') === 'true')
 
@@ -252,12 +246,6 @@ export function ProfileClient({
         if (hapticsEnabled) webHaptics.light()
         setPersona(nextPersona)
         localStorage.setItem('lifepivot_persona', nextPersona)
-    }
-
-    const handleSoundscapeChange = (nextSoundscape: SoundscapeType) => {
-        if (hapticsEnabled) webHaptics.light()
-        setSoundscape(nextSoundscape)
-        localStorage.setItem('lifepivot_soundscape', nextSoundscape)
     }
 
     const handleHapticsToggle = () => {
@@ -442,7 +430,17 @@ export function ProfileClient({
                     <Award className="h-4 w-4" />
                     {t('profile.tab_mastery')}
                 </button>
-                {/* Tabs hidden: flashcards, recall-pit, leagues, cosmetics */}
+                <button
+                    onClick={() => { if (hapticsEnabled) webHaptics.light(); setActiveTab('cosmetics') }}
+                    className={`flex-1 min-w-[90px] py-3 px-4 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 ${
+                        activeTab === 'cosmetics' 
+                            ? 'bg-[#1C2033] text-white shadow-lg' 
+                            : 'text-gray-500 hover:text-gray-300'
+                    }`}
+                >
+                    <Palette className="h-4 w-4" />
+                    {t('profile.theme_accent') || 'Cosmetics'}
+                </button>
                 <button
                     onClick={() => { if (hapticsEnabled) webHaptics.light(); setActiveTab('settings') }}
                     className={`flex-1 min-w-[90px] py-3 px-4 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 ${
@@ -455,8 +453,6 @@ export function ProfileClient({
                     {t('profile.tab_settings')}
                 </button>
             </div>
-
-            {/* Tab contents hidden: flashcards, recall-pit, leagues */}
 
             {/* TAB CONTENT: MASTERY */}
             {activeTab === 'mastery' && (
@@ -904,24 +900,6 @@ export function ProfileClient({
                             </div>
                         </div>
 
-                        {/* Preferred Soundscape */}
-                        <div>
-                            <div className="flex items-center justify-between">
-                                <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">{t('profile.default_sound')}</p>
-                                <select 
-                                    value={soundscape} 
-                                    onChange={(e) => handleSoundscapeChange(e.target.value as SoundscapeType)}
-                                    className="bg-[#0c0e17] border border-white/10 text-xs rounded-xl px-2.5 py-1.5 focus:outline-none text-gray-300 font-bold"
-                                >
-                                    <option value="none">{t('focus.sound_mute')}</option>
-                                    <option value="space">{t('focus.sound_space')}</option>
-                                    <option value="rain">{t('focus.sound_rain')}</option>
-                                    <option value="binaural">{t('focus.sound_binaural')}</option>
-                                    <option value="cafe">{t('focus.sound_cafe')}</option>
-                                    <option value="greenhouse">{t('focus.sound_greenhouse')}</option>
-                                </select>
-                            </div>
-                        </div>
                     </div>
 
                     {/* System Controls Group */}

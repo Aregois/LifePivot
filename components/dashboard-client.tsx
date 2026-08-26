@@ -1,20 +1,16 @@
 'use client'
 
 import { useState, useMemo, useEffect } from 'react'
-import { Sparkles, Calendar, Zap, LayoutDashboard, Flame, TrendingUp, BookOpen } from 'lucide-react'
+import { Sparkles, Calendar, Zap, LayoutDashboard, TrendingUp } from 'lucide-react'
 import Link from 'next/link'
-import { CircadianChests } from '@/components/circadian-chests'
 import { ReactiveAvatar } from '@/components/reactive-avatar'
-import { SocraticCheckpointBattle } from '@/components/socratic-checkpoint-battle'
 import { ClientGreeting } from '@/components/client-greeting'
 import { useLanguage } from '@/components/language-provider'
 import { translateGoal } from '@/utils/translations'
-import { checkCheckpointBattleDue } from '@/app/actions'
 
 interface DashboardClientProps {
   username: string
   profile: any
-  dueCardsCount: number
   goals: any[]
   todayStr: string
 }
@@ -22,7 +18,6 @@ interface DashboardClientProps {
 export function DashboardClient({
   username,
   profile,
-  dueCardsCount,
   goals,
   todayStr
 }: DashboardClientProps) {
@@ -30,7 +25,6 @@ export function DashboardClient({
 
   const [activeGoalId, setActiveGoalId] = useState<string | null>(null)
   const [isMounted, setIsMounted] = useState(false)
-  const [checkpointBattle, setCheckpointBattle] = useState<any>(null)
 
   // Hydration Guard: Load active plan from localStorage safely after mount
   useEffect(() => {
@@ -91,24 +85,6 @@ export function DashboardClient({
     }
   }, [activeGoal, todayStr, profile?.current_streak])
 
-  // Fetch Socratic Checkpoint Battle dynamically for the active goal on mount/change
-  useEffect(() => {
-    if (activeGoal?.id) {
-      checkCheckpointBattleDue(activeGoal.id).then(battleCheck => {
-        if (battleCheck.due) {
-          setCheckpointBattle(battleCheck)
-        } else {
-          setCheckpointBattle(null)
-        }
-      }).catch(e => {
-        console.error('Failed to check checkpoint battle due:', e)
-        setCheckpointBattle(null)
-      })
-    } else {
-      setCheckpointBattle(null)
-    }
-  }, [activeGoal?.id])
-
   const userLevel = profile?.level ?? 1
   let levelTitleLocalized = t('dashboard.level_titles.pathseeker')
   if (userLevel >= 11) levelTitleLocalized = t('dashboard.level_titles.grandmaster')
@@ -118,13 +94,6 @@ export function DashboardClient({
 
   return (
     <div className="flex flex-col gap-5 sm:gap-6 lg:gap-8 py-4 flex-1 w-full max-w-7xl mx-auto">
-      {checkpointBattle && translatedGoalData && (
-        <SocraticCheckpointBattle
-          goalId={translatedGoalData.id}
-          wallDate={checkpointBattle.date}
-          wallLabel={checkpointBattle.label}
-        />
-      )}
       {/* Hero Welcome Section */}
       <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#1A1F36] to-[#0B0D17] border border-white/5 p-5 sm:p-8 lg:p-12 shadow-2xl shrink-0">
         <div className="absolute top-0 right-0 p-6 lg:p-10 opacity-20 pointer-events-none">
@@ -200,15 +169,15 @@ export function DashboardClient({
           <div className="w-16 h-16 rounded-2xl bg-electric-blue/10 flex items-center justify-center border border-electric-blue/20 mb-6 shadow-[0_0_15px_rgba(var(--accent-rgb),0.1)]">
             <Zap className="h-8 w-8 text-electric-blue" />
           </div>
-          <h2 className="text-xl font-black text-white uppercase tracking-wider mb-2">Next Checkpoint</h2>
+          <h2 className="text-xl font-black text-white uppercase tracking-wider mb-2">{t('dashboard.next_checkpoint')}</h2>
           <p className="text-gray-400 text-sm max-w-md leading-relaxed mb-6">
-            Complete your first study milestone to unlock your dashboard.
+            {t('dashboard.next_checkpoint_desc')}
           </p>
 
           {/* Progress Bar towards Level 2 (1000 XP) */}
           <div className="w-full max-w-sm mb-8 bg-white/[0.02] p-4 rounded-2xl border border-white/5">
             <div className="flex justify-between items-baseline mb-2">
-              <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Progress to Level 2</span>
+              <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{t('marketplace.progress_level', { level: 2 })}</span>
               <span className="text-xs font-black text-electric-blue">{profile?.xp ?? 0} / 1000 XP</span>
             </div>
             <div className="w-full bg-[#0B0D17] h-2 rounded-full overflow-hidden border border-white/5 shadow-inner">
@@ -223,7 +192,7 @@ export function DashboardClient({
             href="/plan"
             className="px-6 py-3.5 rounded-xl border border-electric-blue/30 text-electric-blue bg-electric-blue/5 font-black text-xs tracking-widest uppercase hover:bg-electric-blue hover:text-black transition-all duration-300 shadow-[0_0_15px_rgba(var(--accent-rgb),0.08)] active:scale-95 animate-pulse"
           >
-            Go to Plan Portal
+            {t('dashboard.go_plan_portal')}
           </Link>
         </div>
       ) : (
@@ -337,7 +306,7 @@ export function DashboardClient({
             )}
           </div>
 
-          {/* Right Column: Quick Actions & Streak Wager */}
+          {/* Right Column: Quick Actions */}
           <div className="xl:col-span-1 flex flex-col gap-6">
             <div className="p-6 rounded-3xl bg-[#141824]/60 border border-white/5 glass-card">
               <h3 className="text-xs font-black text-gray-500 uppercase tracking-widest mb-4">{t('dashboard.quick_actions')}</h3>
@@ -354,8 +323,6 @@ export function DashboardClient({
                 </Link>
               </div>
             </div>
-
-            <CircadianChests />
           </div>
         </div>
       )}

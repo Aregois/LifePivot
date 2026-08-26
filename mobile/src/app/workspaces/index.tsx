@@ -8,9 +8,14 @@ import { useWorkspaces, useJoinWorkspace, Workspace } from '../../hooks/useWorks
 import { supabase } from '../../utils/supabase'
 import { C, Gradients, Shadows } from '../../constants/theme'
 import { FadeInView, GlassCard, SegmentedControl, AvatarMonogram, GlowBadge, PremiumButton, EmptyStateCTA, WorkspaceSkeletonList, AnimatedProgressBar } from '../../components/ui'
+import { useLanguage } from '../../context/LanguageContext'
+import { useTheme } from '../../context/ThemeContext'
+import { HapticsEngine } from '../../utils/HapticsEngine'
 
 export default function WorkspacesIndex() {
     const router = useRouter()
+    const { colors } = useTheme()
+    const { t } = useLanguage()
     const { data, isLoading, refetch } = useWorkspaces()
     const { mutate: joinWorkspace, isPending: isJoining } = useJoinWorkspace()
     const [activeTabIndex, setActiveTabIndex] = useState(0) // 0: joined, 1: discover
@@ -75,23 +80,33 @@ export default function WorkspacesIndex() {
                                 ringColor={C.amber}
                             />
                             <View style={{ marginLeft: 12, flex: 1 }}>
-                                <Text style={{ fontSize: 13, fontWeight: '900', color: '#FFFFFF', letterSpacing: 0.5, textTransform: 'uppercase' }} numberOfLines={1}>
+                                <Text
+                                    style={{ fontSize: 13, fontWeight: '900', color: '#FFFFFF', letterSpacing: 0.5, textTransform: 'uppercase' }}
+                                    numberOfLines={1}
+                                    adjustsFontSizeToFit
+                                    minimumFontScale={0.8}
+                                >
                                     {item.name}
                                 </Text>
-                                <Text style={{ fontSize: 9, color: C.textDim, marginTop: 4, letterSpacing: 1, textTransform: 'uppercase' }}>
-                                    {item.isCreator ? 'OWNED BY YOU' : `CREATOR: ${item.creator_id.slice(0, 8)}`}
+                                <Text
+                                    style={{ fontSize: 9, color: C.textDim, marginTop: 4, letterSpacing: 1, textTransform: 'uppercase' }}
+                                    numberOfLines={1}
+                                    adjustsFontSizeToFit
+                                    minimumFontScale={0.8}
+                                >
+                                    {item.isCreator ? t('workspaces.owned_by_you') : t('workspaces.creator', { creator: item.creator_id.slice(0, 8) })}
                                 </Text>
                             </View>
                         </View>
                         {item.is_premium && (
-                            <GlowBadge label={`${item.token_cost} tokens`} colorScheme="amber" glow />
+                            <GlowBadge label={t('marketplace.tokens', { count: item.token_cost })} colorScheme="amber" glow />
                         )}
                     </View>
 
                     <View style={{ marginTop: 6 }}>
                         {canEnter ? (
                             <PremiumButton
-                                title="ENTER HUB"
+                                title={t('workspaces.enter_hub')}
                                 onPress={() => {
                                     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
                                     router.push(`/workspaces/${item.id}`)
@@ -101,7 +116,7 @@ export default function WorkspacesIndex() {
                             />
                         ) : (
                             <PremiumButton
-                                title={item.is_premium ? `JOIN FOR ${item.token_cost} TOKENS` : 'JOIN COHORT'}
+                                title={item.is_premium ? t('workspaces.join_for_tokens', { count: item.token_cost }) : t('workspaces.join_cohort')}
                                 onPress={() => handleJoin(item.id)}
                                 variant="primary"
                                 disabled={isJoining}
@@ -117,22 +132,24 @@ export default function WorkspacesIndex() {
 
     if (!loadingLevel && userLevel < 2) {
         return (
-            <View style={{ flex: 1, backgroundColor: '#050508', justifyContent: 'center', padding: 20 }}>
+            <View style={{ flex: 1, backgroundColor: colors.background, justifyContent: 'center', padding: 20 }}>
                 <EmptyStateCTA
                     iconName="lock"
-                    title="Cohorts Locked"
-                    description="Reach Level 2 to join student cohorts, view leaderboards, and coordinate with study peers."
-                    buttonText="BACK TO DASHBOARD"
+                    title={t('workspaces.locked_title')}
+                    description={t('workspaces.locked_desc')}
+                    buttonText={t('marketplace.back_dashboard')}
                     onPress={() => router.replace('/(tabs)')}
                 />
-                <View style={{ marginTop: 24, backgroundColor: 'rgba(255,255,255,0.02)', padding: 16, borderRadius: 16, borderWidth: 1, borderColor: 'rgba(255,255,255,0.05)' }}>
+                <View style={{ marginTop: 24, backgroundColor: colors.card, padding: 16, borderRadius: 16, borderWidth: 1, borderColor: colors.glassBorder }}>
                     <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 8 }}>
-                        <Text style={{ fontSize: 10, fontWeight: '800', color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: 1 }}>Progress to Level 2</Text>
-                        <Text style={{ fontSize: 11, fontWeight: '900', color: C.electricBlue }}>{xp} / 1000 XP</Text>
+                        <Text style={{ fontSize: 10, fontWeight: '800', color: colors.textMuted, textTransform: 'uppercase', letterSpacing: 1 }}>
+                            {t('marketplace.progress_level', { level: 2 })}
+                        </Text>
+                        <Text style={{ fontSize: 11, fontWeight: '900', color: colors.primary }}>{xp} / 1000 XP</Text>
                     </View>
                     <AnimatedProgressBar
                         progress={Math.min(1, Math.max(0, xp / 1000))}
-                        colors={Gradients.xpBar}
+                        colors={colors.primaryGradient}
                     />
                 </View>
             </View>
@@ -140,7 +157,7 @@ export default function WorkspacesIndex() {
     }
 
     return (
-        <View style={{ flex: 1, backgroundColor: '#050508' }}>
+        <View style={{ flex: 1, backgroundColor: colors.background }}>
             {/* Background Ambient Glows */}
             <View
               pointerEvents="none"
@@ -151,7 +168,7 @@ export default function WorkspacesIndex() {
                 width: 320,
                 height: 320,
                 borderRadius: 160,
-                backgroundColor: '#00F0FF',
+                backgroundColor: colors.primary,
                 opacity: 0.05,
               }}
             />
@@ -164,16 +181,17 @@ export default function WorkspacesIndex() {
                 width: 320,
                 height: 320,
                 borderRadius: 160,
-                backgroundColor: '#BD00FF',
+                backgroundColor: colors.secondary,
                 opacity: 0.05,
               }}
             />
+
 
             <View style={{ flex: 1, paddingHorizontal: 16, paddingTop: 16 }}>
                 {/* Segmented Tab Toggle */}
                 <FadeInView delay={0} style={{ marginBottom: 18 }}>
                     <SegmentedControl
-                        segments={[`MY COHORTS (${joinedWorkspaces.length})`, `DISCOVER (${discoverWorkspaces.length})`]}
+                        segments={[`${t('workspaces.tab_joined')} (${joinedWorkspaces.length})`, `${t('workspaces.tab_discover')} (${discoverWorkspaces.length})`]}
                         selectedIndex={activeTabIndex}
                         onChange={setActiveTabIndex}
                     />
@@ -202,14 +220,14 @@ export default function WorkspacesIndex() {
                         ListEmptyComponent={
                             <EmptyStateCTA
                                 iconName={activeTabIndex === 0 ? "users" : "compass"}
-                                title={activeTabIndex === 0 ? "No Cohorts Joined" : "No Cohorts Found"}
+                                title={activeTabIndex === 0 ? t('workspaces.empty_joined_title') : t('workspaces.empty_discover_title')}
                                 description={activeTabIndex === 0 
-                                    ? "Join a study group to sync XP, view progress charts, and solve assigned tutor tasks."
-                                    : "There are no public cohorts available to join right now."
+                                    ? t('workspaces.empty_joined_desc')
+                                    : t('workspaces.empty_discover_desc')
                                 }
                                 buttonText={activeTabIndex === 0 
-                                    ? "DISCOVER COHORTS" 
-                                    : (userRole === 'tutor' ? "CREATE COHORT" : undefined)
+                                    ? t('workspaces.tab_discover') 
+                                    : (userRole === 'tutor' ? t('workspaces.create_cohort') : undefined)
                                 }
                                 onPress={activeTabIndex === 0 
                                     ? () => setActiveTabIndex(1) 

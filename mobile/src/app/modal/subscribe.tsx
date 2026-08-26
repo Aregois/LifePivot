@@ -3,23 +3,26 @@ import { View, Text, ScrollView, Alert, ActivityIndicator } from 'react-native'
 import { useRouter } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
 import * as Haptics from 'expo-haptics'
+import { HapticsEngine } from '../../utils/HapticsEngine'
 import { useSubscribe } from '../../hooks/useSubscription'
 import { C, Shadows } from '../../constants/theme'
 import { FadeInView, GlassCard, PremiumButton, GradientText } from '../../components/ui'
+import { useTheme } from '../../context/ThemeContext'
 
 export default function SubscribeModal() {
     const router = useRouter()
+    const { colors } = useTheme()
     const { mutate: subscribe, isPending } = useSubscribe()
     const [selectedPlan, setSelectedPlan] = useState<'monthly' | 'yearly'>('monthly')
 
     const handleSubscribe = () => {
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
+        HapticsEngine.tier2.action()
         // Trigger mock checkout transaction
         subscribe(
             { mockSuccess: true, transactionId: `iap-mock-${Date.now()}` },
             {
                 onSuccess: () => {
-                    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
+                    HapticsEngine.tier3.success()
                     Alert.alert(
                         'POWER UNLOCKED',
                         'Welcome to the Solo Power tier! Your customization features are now active.',
@@ -27,7 +30,7 @@ export default function SubscribeModal() {
                     )
                 },
                 onError: (err) => {
-                    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error)
+                    HapticsEngine.tier4.error()
                     Alert.alert('TRANSACTION FAILED', err.message || 'Payment processing error')
                 }
             }
@@ -35,12 +38,12 @@ export default function SubscribeModal() {
     }
 
     const selectPlan = (plan: 'monthly' | 'yearly') => {
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+        HapticsEngine.tier1.selection()
         setSelectedPlan(plan)
     }
 
     return (
-        <View style={{ flex: 1, backgroundColor: '#050508' }}>
+        <View style={{ flex: 1, backgroundColor: colors.background }}>
             {/* Background Ambient Glows */}
             <View
               pointerEvents="none"
@@ -51,7 +54,7 @@ export default function SubscribeModal() {
                 width: 320,
                 height: 320,
                 borderRadius: 160,
-                backgroundColor: '#00F0FF',
+                backgroundColor: colors.primary,
                 opacity: 0.05,
               }}
             />
@@ -64,7 +67,7 @@ export default function SubscribeModal() {
                 width: 320,
                 height: 320,
                 borderRadius: 160,
-                backgroundColor: '#BD00FF',
+                backgroundColor: colors.secondary,
                 opacity: 0.05,
               }}
             />
@@ -73,10 +76,11 @@ export default function SubscribeModal() {
                 <View>
                 {/* Header title */}
                 <FadeInView delay={0} style={{ alignItems: 'center', marginBottom: 24 }}>
-                    <View style={{ backgroundColor: 'rgba(189, 0, 255, 0.05)', padding: 14, borderRadius: 20, borderWidth: 1, borderColor: 'rgba(189, 0, 255, 0.15)', marginBottom: 12 }}>
-                        <Ionicons name="diamond" size={32} color={C.neonViolet} />
+                    <View style={{ backgroundColor: `${colors.secondary}15`, padding: 14, borderRadius: 20, borderWidth: 1, borderColor: `${colors.secondary}33`, marginBottom: 12 }}>
+                        <Ionicons name="diamond" size={32} color={colors.secondary} />
                     </View>
                     <GradientText
+                        colors={colors.primaryGradient}
                         style={{
                             fontSize: 11,
                             fontWeight: '900',
@@ -90,46 +94,46 @@ export default function SubscribeModal() {
                     <Text style={{ fontSize: 24, fontWeight: '900', color: '#FFFFFF', textTransform: 'uppercase', letterSpacing: 1.5 }}>
                         UPGRADE STATUS
                     </Text>
-                    <Text style={{ fontSize: 10, color: C.textDim, marginTop: 8, textTransform: 'uppercase', letterSpacing: 1, textAlign: 'center', lineHeight: 14 }}>
+                    <Text style={{ fontSize: 10, color: colors.textMuted, marginTop: 8, textTransform: 'uppercase', letterSpacing: 1, textAlign: 'center', lineHeight: 14 }}>
                         UNLEASH UNLIMITED STUDY EFFICIENCY & CUSTOMIZATIONS
                     </Text>
                 </FadeInView>
 
                 {/* Benefits List */}
                 <FadeInView delay={100} style={{ marginBottom: 24 }}>
-                    <GlassCard style={{ padding: 20 }}>
+                    <GlassCard style={{ padding: 20, borderColor: colors.glassBorder }}>
                         <View style={{ flexDirection: 'row', alignItems: 'flex-start', marginBottom: 16 }}>
-                            <Ionicons name="checkmark-circle" size={18} color={C.electricBlue} style={{ marginRight: 12, marginTop: 1 }} />
+                            <Ionicons name="checkmark-circle" size={18} color={colors.primary} style={{ marginRight: 12, marginTop: 1 }} />
                             <View style={{ flex: 1 }}>
                                 <Text style={{ fontSize: 11, fontWeight: '900', color: '#FFFFFF', letterSpacing: 0.5, textTransform: 'uppercase' }}>
                                     UNLIMITED ACTIVE PLANS
                                 </Text>
-                                <Text style={{ fontSize: 9, color: C.textSecondary, marginTop: 2, textTransform: 'uppercase', letterSpacing: 0.5, lineHeight: 13 }}>
+                                <Text style={{ fontSize: 9, color: colors.textSecondary, marginTop: 2, textTransform: 'uppercase', letterSpacing: 0.5, lineHeight: 13 }}>
                                     TRACK MULTIPLE CURRICULUMS CONCURRENTLY (STANDARD LIMIT: 1 ACTIVE PLAN)
                                 </Text>
                             </View>
                         </View>
 
                         <View style={{ flexDirection: 'row', alignItems: 'flex-start', borderTopWidth: 1, borderTopColor: 'rgba(255, 255, 255, 0.03)', paddingTop: 16, marginBottom: 16 }}>
-                            <Ionicons name="checkmark-circle" size={18} color={C.electricBlue} style={{ marginRight: 12, marginTop: 1 }} />
+                            <Ionicons name="checkmark-circle" size={18} color={colors.primary} style={{ marginRight: 12, marginTop: 1 }} />
                             <View style={{ flex: 1 }}>
                                 <Text style={{ fontSize: 11, fontWeight: '900', color: '#FFFFFF', letterSpacing: 0.5, textTransform: 'uppercase' }}>
                                     NEON GLOW CUSTOMIZATIONS
                                 </Text>
-                                <Text style={{ fontSize: 9, color: C.textSecondary, marginTop: 2, textTransform: 'uppercase', letterSpacing: 0.5, lineHeight: 13 }}>
+                                <Text style={{ fontSize: 9, color: colors.textSecondary, marginTop: 2, textTransform: 'uppercase', letterSpacing: 0.5, lineHeight: 13 }}>
                                     IRIDESCENT PROFILE BORDERS FOR YOUR REACTIVE AVATAR MONOGRAM
                                 </Text>
                             </View>
                         </View>
 
                         <View style={{ flexDirection: 'row', alignItems: 'flex-start', borderTopWidth: 1, borderTopColor: 'rgba(255, 255, 255, 0.03)', paddingTop: 16 }}>
-                            <Ionicons name="checkmark-circle" size={18} color={C.electricBlue} style={{ marginRight: 12, marginTop: 1 }} />
+                            <Ionicons name="checkmark-circle" size={18} color={colors.primary} style={{ marginRight: 12, marginTop: 1 }} />
                             <View style={{ flex: 1 }}>
                                 <Text style={{ fontSize: 11, fontWeight: '900', color: '#FFFFFF', letterSpacing: 0.5, textTransform: 'uppercase' }}>
-                                    EXCLUSIVE SYNTH SOUNDSCAPES
+                                    UNLIMITED SOCRATIC AI HINTS
                                 </Text>
-                                <Text style={{ fontSize: 9, color: C.textSecondary, marginTop: 2, textTransform: 'uppercase', letterSpacing: 0.5, lineHeight: 13 }}>
-                                    UNLOCK ADVANCED WEB AUDIO OSCILLATORS (Zen Rain, Pink Noise)
+                                <Text style={{ fontSize: 9, color: colors.textSecondary, marginTop: 2, textTransform: 'uppercase', letterSpacing: 0.5, lineHeight: 13 }}>
+                                    REAL-TIME FEYNMAN MENTAL MODELS & COMPREHENSION MICRO-DRILLS
                                 </Text>
                             </View>
                         </View>
@@ -145,23 +149,23 @@ export default function SubscribeModal() {
                             {
                                 padding: 16,
                                 borderWidth: 1.5,
-                                borderColor: selectedPlan === 'monthly' ? C.electricBlue : C.glassBorder,
+                                borderColor: selectedPlan === 'monthly' ? colors.primary : colors.glassBorder,
+                                backgroundColor: selectedPlan === 'monthly' ? `${colors.primary}12` : colors.card,
                                 flexDirection: 'row',
                                 justifyContent: 'space-between',
                                 alignItems: 'center',
                             },
-                            selectedPlan === 'monthly' && Shadows.glowSmall(C.electricBlue, 0.2),
                         ]}
                     >
                         <View>
                             <Text style={{ fontSize: 12, fontWeight: '900', color: '#FFFFFF', letterSpacing: 0.5, textTransform: 'uppercase' }}>
                                 MONTHLY SUB
                             </Text>
-                            <Text style={{ fontSize: 9, color: C.textSecondary, marginTop: 2, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                            <Text style={{ fontSize: 9, color: colors.textSecondary, marginTop: 2, textTransform: 'uppercase', letterSpacing: 0.5 }}>
                                 CANCEL ANYTIME
                             </Text>
                         </View>
-                        <Text style={{ fontSize: 13, fontWeight: '900', color: C.electricBlue }}>$9.99 / MO</Text>
+                        <Text style={{ fontSize: 13, fontWeight: '900', color: colors.primary }}>$9.99 / MO</Text>
                     </GlassCard>
 
                     <GlassCard
@@ -171,23 +175,23 @@ export default function SubscribeModal() {
                             {
                                 padding: 16,
                                 borderWidth: 1.5,
-                                borderColor: selectedPlan === 'yearly' ? C.electricBlue : C.glassBorder,
+                                borderColor: selectedPlan === 'yearly' ? colors.primary : colors.glassBorder,
+                                backgroundColor: selectedPlan === 'yearly' ? `${colors.primary}12` : colors.card,
                                 flexDirection: 'row',
                                 justifyContent: 'space-between',
                                 alignItems: 'center',
                             },
-                            selectedPlan === 'yearly' && Shadows.glowSmall(C.electricBlue, 0.2),
                         ]}
                     >
                         <View>
                             <Text style={{ fontSize: 12, fontWeight: '900', color: '#FFFFFF', letterSpacing: 0.5, textTransform: 'uppercase' }}>
                                 YEARLY SAVINGS (50% OFF)
                             </Text>
-                            <Text style={{ fontSize: 9, color: C.neonViolet, fontWeight: '900', marginTop: 2, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                            <Text style={{ fontSize: 9, color: colors.secondary, fontWeight: '900', marginTop: 2, textTransform: 'uppercase', letterSpacing: 0.5 }}>
                                 BEST VALUE
                             </Text>
                         </View>
-                        <Text style={{ fontSize: 13, fontWeight: '900', color: C.electricBlue }}>$59.99 / YR</Text>
+                        <Text style={{ fontSize: 13, fontWeight: '900', color: colors.primary }}>$59.99 / YR</Text>
                     </GlassCard>
                 </FadeInView>
             </View>
@@ -205,7 +209,7 @@ export default function SubscribeModal() {
                 <PremiumButton
                     title="NOT NOW"
                     onPress={() => {
-                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+                        HapticsEngine.tier1.light()
                         router.back()
                     }}
                     variant="ghost"
@@ -215,3 +219,4 @@ export default function SubscribeModal() {
       </View>
     )
 }
+

@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useState, useEffect, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
@@ -135,7 +135,7 @@ export function WorkspaceDetailClient({ user, workspace, initialProfile }: Works
     }, [workspace.id])
 
     const handleLeaveCohort = () => {
-        const confirm = window.confirm('Are you sure you want to leave this study cohort?')
+        const confirm = window.confirm(t('workspaces.leave_confirm') || 'Are you sure you want to leave this study cohort?')
         if (!confirm) return
 
         haptics.medium()
@@ -165,7 +165,7 @@ export function WorkspaceDetailClient({ user, workspace, initialProfile }: Works
         e.preventDefault()
         if (!selectedStudent) return
         if (!injectTaskTitle.trim()) {
-            setInjectError('Task title is required')
+            setInjectError(t('creator.objective') || 'Task title is required')
             return
         }
 
@@ -226,7 +226,7 @@ export function WorkspaceDetailClient({ user, workspace, initialProfile }: Works
                     className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 text-xs font-black uppercase tracking-wider text-gray-300 transition-all active:scale-95"
                 >
                     <ArrowLeft className="w-4 h-4" />
-                    All Cohorts
+                    {t('workspaces.title')}
                 </button>
 
                 <button
@@ -235,14 +235,14 @@ export function WorkspaceDetailClient({ user, workspace, initialProfile }: Works
                     className="flex items-center gap-2 px-4 py-2 rounded-xl border border-rose-500/20 bg-rose-500/5 hover:bg-rose-500/10 text-xs font-black uppercase tracking-wider text-rose-400 transition-all active:scale-95 shrink-0"
                 >
                     <LogOut className="w-4 h-4" />
-                    Leave Cohort
+                    {t('workspaces.leave_cohort') || 'Leave Cohort'}
                 </button>
             </div>
 
             {/* Title Block */}
             <div className="mb-2">
                 <h1 className="text-3xl font-black text-white leading-tight uppercase tracking-tight">{workspace.name}</h1>
-                <p className="text-gray-400 text-xs mt-1">Study domain managed by {workspace.is_premium ? 'Premium Tutor Tier' : 'Standard Cohort'}</p>
+                <p className="text-gray-400 text-xs mt-1">{workspace.is_premium ? t('workspaces.premium_badge') : t('workspaces.cohort')}</p>
             </div>
 
             {loading ? (
@@ -260,15 +260,15 @@ export function WorkspaceDetailClient({ user, workspace, initialProfile }: Works
                             <div className="absolute top-0 right-0 w-32 h-32 bg-electric-blue/5 rounded-full blur-[40px] pointer-events-none" />
                             
                             <div className="flex flex-col gap-1.5 border-b sm:border-b-0 sm:border-r border-white/5 pb-4 sm:pb-0 sm:pr-4">
-                                <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Cohort Size</span>
+                                <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">{t('workspaces.cohort_size') || 'Cohort Size'}</span>
                                 <span className="text-2xl font-black text-white flex items-center gap-1.5">
                                     <Users className="w-5 h-5 text-electric-blue" />
-                                    {students.length} Members
+                                    {t('workspaces.members_count', { count: students.length })}
                                 </span>
                             </div>
 
                             <div className="flex flex-col gap-1.5 border-b sm:border-b-0 sm:border-r border-white/5 py-4 sm:py-0 sm:px-4">
-                                <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Combined XP</span>
+                                <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">{t('workspaces.combined_xp') || 'Combined XP'}</span>
                                 <span className="text-2xl font-black text-white flex items-center gap-1.5">
                                     <Award className="w-5 h-5 text-yellow-500" />
                                     {aggregateXp} XP
@@ -276,7 +276,7 @@ export function WorkspaceDetailClient({ user, workspace, initialProfile }: Works
                             </div>
 
                             <div className="flex flex-col gap-1.5 pt-4 sm:pt-0 sm:pl-4">
-                                <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Average Syllabus Completion</span>
+                                <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">{t('workspaces.avg_completion') || 'Average Syllabus Completion'}</span>
                                 <span className="text-2xl font-black text-emerald-400 flex items-center gap-1.5">
                                     <CheckCircle2 className="w-5 h-5" />
                                     {avgCompletion}%
@@ -286,7 +286,7 @@ export function WorkspaceDetailClient({ user, workspace, initialProfile }: Works
 
                         {/* Student Progress Roster */}
                         <div className="space-y-4">
-                            <h2 className="text-sm font-black text-white uppercase tracking-wider px-2">Cohort Members Progression</h2>
+                            <h2 className="text-sm font-black text-white uppercase tracking-wider px-2">{t('workspaces.members_progression') || 'Cohort Members Progression'}</h2>
                             
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 {students.map(student => (
@@ -314,7 +314,7 @@ export function WorkspaceDetailClient({ user, workspace, initialProfile }: Works
                                         {/* Progress bar */}
                                         <div className="space-y-1.5 my-3">
                                             <div className="flex items-center justify-between text-[9px] font-black uppercase text-gray-400 tracking-wider">
-                                                <span>Tasks Completed</span>
+                                                <span>{t('workspaces.tasks_completed') || 'Tasks Completed'}</span>
                                                 <span className="text-emerald-400">{student.completionRate}%</span>
                                             </div>
                                             <div className="w-full h-1.5 bg-black/60 rounded-full overflow-hidden border border-white/5">
@@ -328,7 +328,7 @@ export function WorkspaceDetailClient({ user, workspace, initialProfile }: Works
                                         {/* Tutor Task Inject Button */}
                                         <div className="flex items-center justify-between pt-3 border-t border-white/5">
                                             <span className="text-[9px] text-gray-500 uppercase tracking-wider font-extrabold">
-                                                {student.completedTasks}/{student.totalTasks} Tasks
+                                                {student.completedTasks}/{student.totalTasks} {t('plan_import.stat_tasks')}
                                             </span>
                                             {isTutor && student.id !== user.id && (
                                                 <button
@@ -336,7 +336,7 @@ export function WorkspaceDetailClient({ user, workspace, initialProfile }: Works
                                                     className="px-3.5 py-1.5 rounded-lg bg-electric-blue/10 border border-electric-blue/20 hover:bg-electric-blue hover:text-black font-black text-[9px] tracking-widest uppercase transition-all flex items-center gap-1 text-electric-blue"
                                                 >
                                                     <Plus className="w-3 h-3 stroke-[2.5]" />
-                                                    Inject Task
+                                                    {t('workspaces.inject_task') || 'Inject Task'}
                                                 </button>
                                             )}
                                         </div>
@@ -353,12 +353,12 @@ export function WorkspaceDetailClient({ user, workspace, initialProfile }: Works
                                 <div className="h-9 w-9 bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center rounded-xl text-emerald-400">
                                     <Clock className="h-5 w-5" />
                                 </div>
-                                <h3 className="text-white font-extrabold text-sm uppercase tracking-wider">Focus Feed</h3>
+                                <h3 className="text-white font-extrabold text-sm uppercase tracking-wider">{t('workspaces.focus_feed') || 'Focus Feed'}</h3>
                             </div>
 
                             {feedItems.length === 0 ? (
                                 <p className="text-xs text-gray-500 italic text-center py-8">
-                                    No completions logged in this cohort yet. Let's start studying!
+                                    {t('workspaces.no_feed_items') || "No completions logged in this cohort yet. Let's start studying!"}
                                 </p>
                             ) : (
                                 <div className="space-y-4 max-h-[450px] overflow-y-auto pr-1">
@@ -404,7 +404,7 @@ export function WorkspaceDetailClient({ user, workspace, initialProfile }: Works
                     className="flex items-center gap-2 w-full text-left mb-3"
                 >
                     <Paperclip className="w-3.5 h-3.5 text-electric-blue" />
-                    <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Study Materials</span>
+                    <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{t('workspaces.study_materials') || 'Study Materials'}</span>
                     <span className="ml-auto text-[10px] text-gray-600">{materialsOpen ? '▲' : '▼'}</span>
                 </button>
                 <AnimatePresence>
@@ -432,9 +432,9 @@ export function WorkspaceDetailClient({ user, workspace, initialProfile }: Works
                             className="relative w-full max-w-md rounded-[2.5rem] bg-[#141824] border border-white/10 p-8 shadow-2xl flex flex-col gap-6"
                         >
                             <div className="flex flex-col gap-1.5">
-                                <h3 className="text-lg font-black text-white uppercase tracking-wider italic">Inject Study Task</h3>
+                                <h3 className="text-lg font-black text-white uppercase tracking-wider italic">{t('workspaces.inject_task') || 'Inject Study Task'}</h3>
                                 <p className="text-xs text-gray-400 leading-relaxed font-medium">
-                                    Directly queue a custom learning node to <span className="text-electric-blue font-bold">{selectedStudent.username}</span>'s active syllabus.
+                                    Queue task for <span className="text-electric-blue font-bold">{selectedStudent.username}</span>:
                                 </p>
                             </div>
 
@@ -443,15 +443,15 @@ export function WorkspaceDetailClient({ user, workspace, initialProfile }: Works
                                     <div className="h-12 w-12 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 mx-auto">
                                         <CheckCircle2 className="w-6 h-6" />
                                     </div>
-                                    <h4 className="text-white font-black text-sm uppercase">Task Injected</h4>
+                                    <h4 className="text-white font-black text-sm uppercase">{t('marketplace.success_title')}</h4>
                                     <p className="text-gray-400 text-xs">
-                                        Task successfully added to the student's calendar checklist.
+                                        {t('marketplace.success_cloned')}
                                     </p>
                                 </div>
                             ) : (
                                 <form onSubmit={handleInjectTask} className="flex flex-col gap-4">
                                     <div className="flex flex-col gap-1.5">
-                                        <label className="text-[9px] font-black text-gray-500 uppercase tracking-widest">Task Title</label>
+                                        <label className="text-[9px] font-black text-gray-500 uppercase tracking-widest">{t('creator.objective')}</label>
                                         <input
                                             type="text"
                                             required
@@ -464,7 +464,7 @@ export function WorkspaceDetailClient({ user, workspace, initialProfile }: Works
 
                                     <div className="grid grid-cols-2 gap-4">
                                         <div className="flex flex-col gap-1.5">
-                                            <label className="text-[9px] font-black text-gray-500 uppercase tracking-widest">Subject Domain</label>
+                                            <label className="text-[9px] font-black text-gray-500 uppercase tracking-widest">{t('creator.subtitle')}</label>
                                             <select
                                                 value={injectTaskSubject}
                                                 onChange={(e) => setInjectTaskSubject(e.target.value)}
@@ -479,7 +479,7 @@ export function WorkspaceDetailClient({ user, workspace, initialProfile }: Works
                                         </div>
 
                                         <div className="flex flex-col gap-1.5">
-                                            <label className="text-[9px] font-black text-gray-500 uppercase tracking-widest">Duration (Mins)</label>
+                                            <label className="text-[9px] font-black text-gray-500 uppercase tracking-widest">{t('creator.duration')}</label>
                                             <input
                                                 type="number"
                                                 required
@@ -493,7 +493,7 @@ export function WorkspaceDetailClient({ user, workspace, initialProfile }: Works
                                     </div>
 
                                     <div className="flex flex-col gap-1.5">
-                                        <label className="text-[9px] font-black text-gray-500 uppercase tracking-widest">Priority Rating (1 - 5)</label>
+                                        <label className="text-[9px] font-black text-gray-500 uppercase tracking-widest">{t('plan_import.priority_breakdown')}</label>
                                         <select
                                             value={injectTaskPriority}
                                             onChange={(e) => setInjectTaskPriority(Number(e.target.value))}
@@ -508,7 +508,7 @@ export function WorkspaceDetailClient({ user, workspace, initialProfile }: Works
                                     </div>
 
                                     <div className="flex flex-col gap-1.5">
-                                        <label className="text-[9px] font-black text-gray-500 uppercase tracking-widest">Tutor Notes / Guidelines</label>
+                                        <label className="text-[9px] font-black text-gray-500 uppercase tracking-widest">{t('workspaces.create_desc')}</label>
                                         <textarea
                                             value={injectTaskNotes}
                                             onChange={(e) => setInjectTaskNotes(e.target.value)}
@@ -530,14 +530,14 @@ export function WorkspaceDetailClient({ user, workspace, initialProfile }: Works
                                             onClick={() => { haptics.light(); setSelectedStudent(null) }}
                                             className="flex-1 py-3.5 rounded-2xl bg-white/5 border border-white/10 text-white font-black text-[10px] tracking-widest uppercase hover:bg-white/10 transition-all"
                                         >
-                                            Cancel
+                                            {t('workspaces.cancel')}
                                         </button>
                                         <button
                                             type="submit"
                                             disabled={isPending}
                                             className="flex-1 py-3.5 rounded-2xl bg-electric-blue text-black hover:scale-[1.02] active:scale-95 transition-all font-black text-[10px] tracking-widest uppercase shadow-[0_0_20px_rgba(var(--accent-rgb),0.25)] flex items-center justify-center gap-1"
                                         >
-                                            {isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : 'Inject'}
+                                            {isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : (t('workspaces.inject_task') || 'Inject')}
                                         </button>
                                     </div>
                                 </form>

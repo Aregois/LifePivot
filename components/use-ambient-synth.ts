@@ -1,8 +1,8 @@
-﻿'use client'
+'use client'
 
 import { useRef, useEffect, useState } from 'react'
 
-export type SoundType = 'none' | 'space' | 'rain' | 'binaural' | 'cafe' | 'greenhouse'
+export type SoundType = 'none' | 'off' | 'space' | 'rain' | 'binaural' | 'cafe' | 'greenhouse'
 
 class AmbientSynth {
     private ctx: AudioContext | null = null
@@ -17,7 +17,7 @@ class AmbientSynth {
 
     start(type: SoundType, volume: number) {
         if (this.isPlaying) this.stop()
-        if (type === 'none') return
+        if (type === 'none' || type === 'off') return
 
         if (typeof window === 'undefined') return
 
@@ -25,13 +25,17 @@ class AmbientSynth {
         if (!AudioContextClass) return
 
         this.ctx = new AudioContextClass()
+        const now = this.ctx.currentTime
+
         this.gain = this.ctx.createGain()
-        this.gain.gain.value = volume
+        this.gain.gain.setValueAtTime(0.0001, now)
+        this.gain.gain.setTargetAtTime(Math.max(0, Math.min(1, volume)), now, 0.05)
         this.gain.connect(this.ctx.destination)
 
         this.filter = this.ctx.createBiquadFilter()
         this.filter.type = 'lowpass'
         this.filter.frequency.value = 400 // Warm and muffled
+        this.filter.Q.value = 0.6 // Smooth resonance Q tuning
         this.filter.connect(this.gain)
 
         this.isPlaying = true
@@ -74,6 +78,7 @@ class AmbientSynth {
             const rainFilter = this.ctx.createBiquadFilter()
             rainFilter.type = 'lowpass'
             rainFilter.frequency.value = 800
+            rainFilter.Q.value = 0.7
 
             this.noiseNode.connect(rainFilter)
             rainFilter.connect(this.gain)
@@ -135,6 +140,7 @@ class AmbientSynth {
             const cafeFilter = this.ctx.createBiquadFilter()
             cafeFilter.type = 'lowpass'
             cafeFilter.frequency.value = 350
+            cafeFilter.Q.value = 0.5
 
             this.noiseNode.connect(cafeFilter)
             cafeFilter.connect(this.gain)
@@ -293,8 +299,14 @@ class AmbientSynth {
     }
 
     setVolume(volume: number) {
-        if (this.gain) {
-            this.gain.gain.value = volume
+        const clamped = Math.max(0, Math.min(1, volume))
+        if (this.gain && this.ctx) {
+            try {
+                this.gain.gain.cancelScheduledValues(this.ctx.currentTime)
+                this.gain.gain.setTargetAtTime(clamped, this.ctx.currentTime, 0.05)
+            } catch {
+                this.gain.gain.value = clamped
+            }
         }
     }
 
@@ -302,11 +314,22 @@ class AmbientSynth {
         clearInterval(this.timerId)
         clearInterval(this.rainTimerId)
         try {
+            if (this.gain && this.ctx) {
+                try {
+                    this.gain.gain.cancelScheduledValues(this.ctx.currentTime)
+                    this.gain.gain.setTargetAtTime(0.0001, this.ctx.currentTime, 0.03)
+                } catch (e) {}
+            }
             if (this.noiseNode) this.noiseNode.stop()
             this.oscillators.forEach(osc => {
                 try { osc.stop() } catch(e) {}
             })
-            if (this.ctx) this.ctx.close()
+            if (this.ctx) {
+                const ctxToClose = this.ctx
+                setTimeout(() => {
+                    try { ctxToClose.close() } catch (e) {}
+                }, 50)
+            }
         } catch (e) {
             // safely caught
         }

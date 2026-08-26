@@ -9,15 +9,20 @@ import { supabase } from '../../utils/supabase'
 import { C, Gradients, Shadows, BorderRadius } from '../../constants/theme'
 import { FadeInView, GlassCard, SegmentedControl, AvatarMonogram, PremiumButton, GradientText, GlowBadge } from '../../components/ui'
 import { FileUploadSheet } from '../../components/FileUploadSheet'
+import { useLanguage } from '../../context/LanguageContext'
+import { useTheme } from '../../context/ThemeContext'
+import { HapticsEngine } from '../../utils/HapticsEngine'
 
 export default function WorkspaceDetail() {
     const { id } = useLocalSearchParams<{ id: string }>()
     const router = useRouter()
+    const { colors } = useTheme()
+    const { t } = useLanguage()
     const { data: students, isLoading, refetch } = useWorkspaceStudents(id)
     const { mutate: pushTask, isPending: isPushing } = usePushTutorTask()
     const { mutate: leaveWS } = useLeaveWorkspace()
 
-    const [activeSegmentIndex, setActiveSegmentIndex] = useState(0) // 0: feed, 1: members
+    const [activeSegmentIndex, setActiveSegmentIndex] = useState(0) // 0: feed, 1: members, 2: materials
     const [userRole, setUserRole] = useState<'student' | 'tutor'>('student')
     const [selectedStudent, setSelectedStudent] = useState<WorkspaceStudent | null>(null)
     const [studentRoster, setStudentRoster] = useState<WorkspaceStudent[]>([])
@@ -78,12 +83,12 @@ export default function WorkspaceDetail() {
     const handleLeave = () => {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
         Alert.alert(
-            'LEAVE COHORT',
-            'Are you sure you want to leave this study cohort?',
+            t('workspaces.leave_title'),
+            t('workspaces.leave_confirm'),
             [
-                { text: 'CANCEL', style: 'cancel' },
+                { text: t('workspaces.cancel'), style: 'cancel' },
                 {
-                    text: 'LEAVE',
+                    text: t('workspaces.leave_button'),
                     style: 'destructive',
                     onPress: () => {
                         leaveWS(id, {
@@ -125,7 +130,7 @@ export default function WorkspaceDetail() {
             {
                 onSuccess: () => {
                     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
-                    Alert.alert('SUCCESS', `Task pushed to student successfully!`)
+                    Alert.alert(t('marketplace.success_title'), `Task pushed to student successfully!`)
                     setSelectedStudent(null)
                     setTaskTitle('')
                     setTaskSubject('')
@@ -164,8 +169,8 @@ export default function WorkspaceDetail() {
 
     if (isLoading) {
         return (
-            <View className="flex-1 justify-center items-center bg-[#050508]">
-                <ActivityIndicator size="large" color="#00F0FF" />
+            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.background }}>
+                <ActivityIndicator size="large" color={colors.primary} />
             </View>
         )
     }
@@ -178,7 +183,7 @@ export default function WorkspaceDetail() {
     return (
         <KeyboardAvoidingView
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-            style={{ flex: 1, backgroundColor: '#050508' }}
+            style={{ flex: 1, backgroundColor: colors.background }}
         >
             {/* Background Ambient Glows */}
             <View
@@ -190,7 +195,7 @@ export default function WorkspaceDetail() {
                 width: 320,
                 height: 320,
                 borderRadius: 160,
-                backgroundColor: '#00F0FF',
+                backgroundColor: colors.primary,
                 opacity: 0.05,
               }}
             />
@@ -203,7 +208,7 @@ export default function WorkspaceDetail() {
                 width: 320,
                 height: 320,
                 borderRadius: 160,
-                backgroundColor: '#BD00FF',
+                backgroundColor: colors.secondary,
                 opacity: 0.05,
               }}
             />
@@ -211,22 +216,22 @@ export default function WorkspaceDetail() {
             <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 80 }} style={{ flex: 1 }}>
                 {/* 1. Shared HUD Card */}
                 <FadeInView delay={0} style={{ marginBottom: 20 }}>
-                    <GlassCard style={{ padding: 20, position: 'relative', overflow: 'hidden' }} elevated>
+                    <GlassCard style={{ padding: 20, position: 'relative', overflow: 'hidden', borderColor: colors.glassBorder }} elevated>
                         <LinearGradient
-                            colors={['rgba(26, 31, 54, 0.2)', 'rgba(14, 17, 31, 0.4)']}
+                            colors={colors.heroGradient}
                             start={{ x: 0, y: 0 }}
                             end={{ x: 1, y: 1 }}
                             style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
                         />
-                        <View style={{ position: 'absolute', top: 0, right: 0, width: 120, height: 120, borderRadius: 60, backgroundColor: 'rgba(0, 240, 255, 0.03)', transform: [{ scale: 1.5 }] }} />
-                        <Text style={{ fontSize: 10, fontWeight: '900', letterSpacing: 3.5, color: C.electricBlue, textTransform: 'uppercase' }}>
+                        <View style={{ position: 'absolute', top: 0, right: 0, width: 120, height: 120, borderRadius: 60, backgroundColor: `${colors.primary}08`, transform: [{ scale: 1.5 }] }} />
+                        <Text style={{ fontSize: 10, fontWeight: '900', letterSpacing: 3.5, color: colors.primary, textTransform: 'uppercase' }}>
                             COHORT PROGRESS SHIELD
                         </Text>
                         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline', marginTop: 8 }}>
-                            <GradientText style={{ fontSize: 22, fontWeight: '900', letterSpacing: 1 }}>
+                            <GradientText colors={colors.primaryGradient} style={{ fontSize: 22, fontWeight: '900', letterSpacing: 1 }}>
                                 GROUP SYNERGY
                             </GradientText>
-                            <GlowBadge label={`${displayedStudents.length} MEMBERS`} colorScheme="violet" />
+                            <GlowBadge label={t('workspaces.members_count', { count: displayedStudents.length })} colorScheme="violet" />
                         </View>
                         
                         {/* Aggregated progress stats */}
@@ -250,7 +255,7 @@ export default function WorkspaceDetail() {
                 {/* 2. Custom Segments Toggle */}
                 <FadeInView delay={50} style={{ marginBottom: 20 }}>
                     <SegmentedControl
-                        segments={['FOCUS FEED', 'MEMBERS', 'MATERIALS']}
+                        segments={[t('workspaces.tab_feed'), t('workspaces.tab_members'), 'MATERIALS']}
                         selectedIndex={activeSegmentIndex}
                         onChange={setActiveSegmentIndex}
                     />
@@ -305,7 +310,7 @@ export default function WorkspaceDetail() {
                                     {/* Tutor Push Task Button */}
                                     {userRole === 'tutor' && (
                                         <PremiumButton
-                                            title="INJECT STUDY TASK"
+                                            title={t('workspaces.push_task_title')}
                                             onPress={() => setSelectedStudent(student)}
                                             variant="ghost"
                                             style={{ minHeight: 38, marginTop: 4 }}
@@ -329,7 +334,7 @@ export default function WorkspaceDetail() {
                 {userRole === 'student' && (
                     <FadeInView delay={200}>
                         <PremiumButton
-                            title="LEAVE STUDY COHORT"
+                            title={t('workspaces.leave_title')}
                             onPress={handleLeave}
                             variant="destructive"
                             style={{ marginTop: 24 }}
@@ -344,18 +349,22 @@ export default function WorkspaceDetail() {
                     <GlassCard padded={false} style={{ borderTopLeftRadius: 32, borderTopRightRadius: 32, borderBottomLeftRadius: 0, borderBottomRightRadius: 0, borderTopWidth: 1, borderTopColor: C.glassBorderSubtle, padding: 24, ...Shadows.elevated }}>
                         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
                             <Text style={{ fontSize: 13, fontWeight: '900', color: '#FFFFFF', letterSpacing: 1, textTransform: 'uppercase' }}>
-                                INJECT TASK: {selectedStudent.username}
+                                {t('workspaces.push_task_title')}: {selectedStudent.username}
                             </Text>
                              <TouchableOpacity onPress={() => {
                                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
                                 setSelectedStudent(null)
                             }}>
-                                <Text style={{ color: C.textSecondary, fontWeight: '800', fontSize: 12, letterSpacing: 1, textTransform: 'uppercase' }}>CANCEL</Text>
+                                <Text style={{ color: C.textSecondary, fontWeight: '800', fontSize: 12, letterSpacing: 1, textTransform: 'uppercase' }}>
+                                    {t('workspaces.cancel')}
+                                </Text>
                             </TouchableOpacity>
                         </View>
 
                         <ScrollView showsVerticalScrollIndicator={false} style={{ maxHeight: Platform.OS === 'ios' ? 420 : 320 }}>
-                            <Text style={{ fontSize: 9, color: C.electricBlue, fontWeight: '700', letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 6 }}>TASK TITLE</Text>
+                            <Text style={{ fontSize: 9, color: C.electricBlue, fontWeight: '700', letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 6 }}>
+                                {t('workspaces.task_title_label')}
+                            </Text>
                             <TextInput
                                 value={taskTitle}
                                 onChangeText={setTaskTitle}
@@ -377,7 +386,9 @@ export default function WorkspaceDetail() {
                                 }}
                             />
 
-                            <Text style={{ fontSize: 9, color: C.electricBlue, fontWeight: '700', letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 6 }}>SUBJECT</Text>
+                            <Text style={{ fontSize: 9, color: C.electricBlue, fontWeight: '700', letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 6 }}>
+                                {t('workspaces.task_subject_label')}
+                            </Text>
                             <TextInput
                                 value={taskSubject}
                                 onChangeText={setTaskSubject}
@@ -399,7 +410,9 @@ export default function WorkspaceDetail() {
                                 }}
                             />
 
-                            <Text style={{ fontSize: 9, color: C.electricBlue, fontWeight: '700', letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 6 }}>DURATION (MINS)</Text>
+                            <Text style={{ fontSize: 9, color: C.electricBlue, fontWeight: '700', letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 6 }}>
+                                {t('workspaces.task_duration_label')}
+                            </Text>
                             <TextInput
                                 value={taskDuration}
                                 onChangeText={setTaskDuration}
@@ -420,7 +433,9 @@ export default function WorkspaceDetail() {
                                 }}
                             />
 
-                            <Text style={{ fontSize: 9, color: C.electricBlue, fontWeight: '700', letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 6 }}>ADDITIONAL NOTES</Text>
+                            <Text style={{ fontSize: 9, color: C.electricBlue, fontWeight: '700', letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 6 }}>
+                                {t('workspaces.task_notes_label')}
+                            </Text>
                             <TextInput
                                 value={taskNotes}
                                 onChangeText={setTaskNotes}
@@ -447,7 +462,7 @@ export default function WorkspaceDetail() {
                         </ScrollView>
 
                         <PremiumButton
-                            title="INJECT STUDY PLAN NODE"
+                            title={t('workspaces.dispatch_button')}
                             onPress={handlePushTask}
                             variant="primary"
                             loading={isPushing}

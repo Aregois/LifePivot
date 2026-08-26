@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useState, useEffect, useRef, useTransition, useCallback } from 'react'
 import type { PanInfo } from 'framer-motion'
@@ -6,9 +6,9 @@ import { createPortal } from 'react-dom'
 import { motion, AnimatePresence, useDragControls } from 'framer-motion'
 import { 
     X, Play, Pause, RotateCcw, CheckCircle2, Plus, Coins, 
-    HelpCircle, MessageSquare, Loader2, Volume2, VolumeX, Cloud, Waves,
+    HelpCircle, MessageSquare, Loader2, Sparkles, Volume2, VolumeX,
     BookOpen, Edit3, Clock, CheckSquare, Square, ShieldAlert,
-    ExternalLink, Check, Headphones, Flame, Sparkles, Coffee, Leaf
+    ExternalLink, Check, Flame
 } from 'lucide-react'
 import { haptics } from '@/utils/haptics'
 import { 
@@ -23,14 +23,22 @@ import { useEconomy } from './economy-provider'
 import type { Task, Subtask } from '@/utils/types'
 import { SocraticMicroDrills } from './socratic-micro-drills'
 import { useLanguage } from './language-provider'
+import { useAmbientSynth, SoundType } from './use-ambient-synth'
 
 type FocusState = 'idle' | 'running' | 'paused' | 'drill' | 'finished'
 type TabType = 'timer' | 'notes' | 'resources'
-import { useAmbientSynth } from './use-ambient-synth'
-import type { SoundType } from './use-ambient-synth'
 
 const TOKEN_REWARD: Record<number, number> = { 0: 0, 1: 1, 2: 1, 3: 1, 4: 2, 5: 3 }
 const ADD_TIME_SECONDS = 300 // 5 minutes
+
+const SOUNDSCAPES_LIST: { id: SoundType; label: string; icon: string }[] = [
+    { id: 'none', label: 'Off', icon: '🔇' },
+    { id: 'space', label: 'Space', icon: '🌌' },
+    { id: 'rain', label: 'Rain', icon: '🌧️' },
+    { id: 'binaural', label: 'Binaural', icon: '🧠' },
+    { id: 'cafe', label: 'Cafe', icon: '☕' },
+    { id: 'greenhouse', label: 'Greenhouse', icon: '🌿' },
+]
 
 interface FocusModeOverlayProps {
     task: Task
@@ -82,12 +90,6 @@ export function FocusModeOverlay({ task, goalTitle, onClose, onOptimisticTokenUp
     const hasUserEditedNotes = useRef(false)
     const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle')
 
-    // Ambient noise states
-    const [sound, setSound] = useState<SoundType>('none')
-    const [volume, setVolume] = useState(0.4)
-    const { startSound, stopSound, setVolume: setSynthVolume } = useAmbientSynth()
-    const [unlockedSoundscapes, setUnlockedSoundscapes] = useState<string[]>(['none', 'space', 'rain', 'binaural'])
-
     // Resources states
     const [resources, setResources] = useState<any[]>(task.resources ?? [])
     const [resourcesLoading, setResourcesLoading] = useState(false)
@@ -113,10 +115,23 @@ export function FocusModeOverlay({ task, goalTitle, onClose, onOptimisticTokenUp
     const [activeSubtask, setActiveSubtask] = useState<Subtask | null>(null)
     
     const [isPending, startTransition] = useTransition()
-
-
-
     const [isDesktop, setIsDesktop] = useState(false)
+
+    // Ambient Soundscape synthesizer hook & state
+    const [ambientSound, setAmbientSound] = useState<SoundType>('none')
+    const [ambientVolume, setAmbientVolume] = useState<number>(0.5)
+    const { startSound, stopSound, setVolume: setSynthVolume } = useAmbientSynth()
+
+    useEffect(() => {
+        if (state === 'running' && ambientSound !== 'none' && ambientSound !== 'off') {
+            startSound(ambientSound, ambientVolume)
+        } else {
+            stopSound()
+        }
+        return () => {
+            stopSound()
+        }
+    }, [state, ambientSound, ambientVolume])
 
     // Mount guard for SSR-safe portal & preferences initialization
     useEffect(() => {
@@ -130,12 +145,6 @@ export function FocusModeOverlay({ task, goalTitle, onClose, onOptimisticTokenUp
         const prefSeconds = prefDuration * 60
         setTotalSeconds(prefSeconds)
         setRemaining(prefSeconds)
-
-        const prefSoundscape = (localStorage.getItem('lifepivot_soundscape') as SoundType) || 'none'
-        setSound(prefSoundscape)
-
-        const unlockedSounds = JSON.parse(localStorage.getItem('lifepivot_unlocked_soundscapes') || '["none", "space", "rain", "binaural"]')
-        setUnlockedSoundscapes(unlockedSounds)
 
         const prefPersona = localStorage.getItem('lifepivot_persona') || 'feynman'
         setPersona(prefPersona)
@@ -188,7 +197,6 @@ export function FocusModeOverlay({ task, goalTitle, onClose, onOptimisticTokenUp
                         clearInterval(intervalRef.current!)
                         setState('drill')
                         haptics.medium()
-                        stopSound()
                         return 0
                     }
                     return prev - 1
@@ -199,12 +207,6 @@ export function FocusModeOverlay({ task, goalTitle, onClose, onOptimisticTokenUp
         }
         return () => { if (intervalRef.current) clearInterval(intervalRef.current) }
     }, [state])
-
-    const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const val = parseFloat(e.target.value)
-        setVolume(val)
-        setSynthVolume(val)
-    }
 
     const formatTime = (secs: number) => {
         const m = Math.floor(secs / 60).toString().padStart(2, '0')
@@ -328,9 +330,6 @@ export function FocusModeOverlay({ task, goalTitle, onClose, onOptimisticTokenUp
         haptics.light()
         setRemaining(prev => prev + ADD_TIME_SECONDS)
         setState('running')
-        if (sound !== 'none') {
-            startSound(sound, volume)
-        }
     }
 
     const handleToggleSpeech = useCallback(() => {
@@ -618,7 +617,6 @@ export function FocusModeOverlay({ task, goalTitle, onClose, onOptimisticTokenUp
                                 {/* Exit Button */}
                                 <button 
                                     onClick={() => {
-                                        stopSound()
                                         onTaskUpdate?.({
                                             ...task,
                                             notes,
@@ -656,10 +654,8 @@ export function FocusModeOverlay({ task, goalTitle, onClose, onOptimisticTokenUp
                                                             haptics.medium();
                                                             if (state === 'running') {
                                                                 setState('paused');
-                                                                stopSound();
                                                             } else if (state === 'paused') {
                                                                 setState('running');
-                                                                if (sound !== 'none') startSound(sound, volume);
                                                             } else if (state === 'idle') {
                                                                 setState('running');
                                                             }
@@ -697,6 +693,57 @@ export function FocusModeOverlay({ task, goalTitle, onClose, onOptimisticTokenUp
                                                             </span>
                                                         </div>
                                                     </button>
+
+                                                    {/* Soundscape Ambient Audio Bar */}
+                                                    <div className="flex flex-col items-center gap-2 w-full max-w-md z-10 px-2 py-1">
+                                                        <div className="flex items-center justify-between w-full text-[10px] font-black uppercase text-gray-500 tracking-wider">
+                                                            <span className="flex items-center gap-1.5">
+                                                                <Volume2 className="h-3 w-3 text-primary" /> Ambient Soundscapes
+                                                            </span>
+                                                            {ambientSound !== 'none' && ambientSound !== 'off' && (
+                                                                <span className="text-emerald-400 font-bold">{Math.round(ambientVolume * 100)}% Volume</span>
+                                                            )}
+                                                        </div>
+                                                        <div className="flex gap-1.5 w-full overflow-x-auto no-scrollbar p-1 rounded-2xl bg-black/30 border border-white/5">
+                                                            {SOUNDSCAPES_LIST.map((sc) => (
+                                                                <button
+                                                                    key={sc.id}
+                                                                    type="button"
+                                                                    onClick={() => {
+                                                                        haptics.light()
+                                                                        setAmbientSound(sc.id)
+                                                                    }}
+                                                                    className={`flex-1 min-w-[70px] py-1.5 px-2 rounded-xl text-[10px] font-black transition-all flex items-center justify-center gap-1 border ${
+                                                                        ambientSound === sc.id
+                                                                            ? 'bg-primary/15 border-primary/30 text-primary shadow-sm'
+                                                                            : 'border-transparent text-gray-500 hover:text-gray-300'
+                                                                    }`}
+                                                                >
+                                                                    <span>{sc.icon}</span>
+                                                                    <span>{sc.label}</span>
+                                                                </button>
+                                                            ))}
+                                                        </div>
+                                                        {ambientSound !== 'none' && ambientSound !== 'off' && (
+                                                            <div className="flex items-center gap-2 w-full px-3 py-1.5 bg-black/25 rounded-xl border border-white/5">
+                                                                <VolumeX className="h-3 w-3 text-gray-500 shrink-0" />
+                                                                <input
+                                                                    type="range"
+                                                                    min="0.05"
+                                                                    max="1"
+                                                                    step="0.05"
+                                                                    value={ambientVolume}
+                                                                    onChange={(e) => {
+                                                                        const vol = parseFloat(e.target.value)
+                                                                        setAmbientVolume(vol)
+                                                                        setSynthVolume(vol)
+                                                                    }}
+                                                                    className="w-full h-1.5 bg-white/10 rounded-lg appearance-none cursor-pointer accent-primary"
+                                                                />
+                                                                <Volume2 className="h-3 w-3 text-primary shrink-0" />
+                                                            </div>
+                                                        )}
+                                                    </div>
 
                                                     {/* Action Buttons Row */}
                                                     <div className="flex gap-4 z-10 mt-2">
@@ -753,7 +800,7 @@ export function FocusModeOverlay({ task, goalTitle, onClose, onOptimisticTokenUp
 
                                                         {state === 'running' && (
                                                             <button 
-                                                                onClick={() => { haptics.light(); setState('paused'); stopSound() }}
+                                                                onClick={() => { haptics.light(); setState('paused'); }}
                                                                 className="w-40 py-3 rounded-xl font-bold text-xs uppercase tracking-wider text-white border border-white/5 bg-white/[0.03] hover:bg-white/[0.06] active:scale-[0.98] transition-all flex items-center justify-center gap-2"
                                                             >
                                                                 <Pause className="h-3.5 w-3.5" /> {t('focus.pause_btn')}
@@ -763,7 +810,7 @@ export function FocusModeOverlay({ task, goalTitle, onClose, onOptimisticTokenUp
                                                         {state === 'paused' && (
                                                             <>
                                                                 <button 
-                                                                    onClick={() => { haptics.medium(); setState('running'); if (sound !== 'none') startSound(sound, volume) }}
+                                                                    onClick={() => { haptics.medium(); setState('running'); }}
                                                                     className="flex-1 py-3 rounded-xl font-black text-xs uppercase tracking-wider text-black hover:opacity-90 active:scale-[0.98] transition-all flex items-center justify-center gap-2"
                                                                     style={{ background: timerColor }}
                                                                 >
@@ -771,7 +818,6 @@ export function FocusModeOverlay({ task, goalTitle, onClose, onOptimisticTokenUp
                                                                 </button>
                                                                 <button 
                                                                     onClick={() => { 
-                                                                        stopSound(); 
                                                                         onTaskUpdate?.({
                                                                             ...task,
                                                                             notes,
@@ -787,64 +833,6 @@ export function FocusModeOverlay({ task, goalTitle, onClose, onOptimisticTokenUp
                                                                 </button>
                                                             </>
                                                         )}
-                                                    </div>
-                                                </div>
-
-                                                {/* Soundscapes bottom panel */}
-                                                <div className="w-full max-w-2xl mt-auto bg-[#161b2e]/40 backdrop-blur-[12px] border border-white/10 bg-gradient-to-br from-white/5 to-transparent rounded-2xl p-5 z-10 flex flex-col gap-4 shadow-xl shrink-0">
-                                                    <div className="flex justify-between items-center">
-                                                        <h3 className="text-[11px] font-black uppercase tracking-wider text-gray-400 flex items-center gap-2">
-                                                            <Headphones className="h-4 w-4 text-primary" />
-                                                            {t('focus.soundscape')}
-                                                        </h3>
-                                                        {sound !== 'none' && (
-                                                            <div className="flex items-center gap-2.5 bg-black/20 px-3 py-1.5 rounded-xl border border-white/5">
-                                                                <VolumeX className="h-3.5 w-3.5 text-gray-500 cursor-pointer hover:text-white transition-colors" onClick={() => { haptics.light(); setSound('none'); stopSound() }} />
-                                                                <input 
-                                                                    type="range" 
-                                                                    min="0" 
-                                                                    max="1" 
-                                                                    step="0.05" 
-                                                                    value={volume}
-                                                                    onChange={handleVolumeChange}
-                                                                    className="w-20 accent-primary bg-white/5 h-1 rounded-full cursor-pointer"
-                                                                />
-                                                                <Volume2 className="h-3.5 w-3.5 text-gray-300" />
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                    <div className="flex justify-start gap-2 overflow-x-auto pb-1.5 no-scrollbar">
-                                                        {[
-                                                            { type: 'none', label: t('focus.mute'), icon: VolumeX },
-                                                            { type: 'space', label: t('focus.space'), icon: Sparkles },
-                                                            { type: 'rain', label: t('focus.rain'), icon: Cloud },
-                                                            { type: 'binaural', label: t('focus.waves'), icon: Waves },
-                                                            { type: 'cafe', label: t('focus.cafe'), icon: Coffee },
-                                                            { type: 'greenhouse', label: t('focus.glass'), icon: Leaf }
-                                                        ]
-                                                        .filter(item => unlockedSoundscapes.includes(item.type))
-                                                        .map((item) => {
-                                                            const Icon = item.icon
-                                                            const isActive = sound === item.type
-                                                            return (
-                                                                <button
-                                                                    key={item.type}
-                                                                    onClick={() => {
-                                                                        haptics.light()
-                                                                        setSound(item.type as SoundType)
-                                                                        startSound(item.type as SoundType, volume)
-                                                                    }}
-                                                                    className={`flex flex-col items-center justify-center gap-1.5 py-2.5 rounded-xl transition-all border min-w-[75px] shrink-0 ${
-                                                                        isActive 
-                                                                            ? 'bg-primary/10 border-primary/30 text-primary shadow-[0_0_12px_rgba(166,200,255,0.15)]' 
-                                                                            : 'bg-transparent border-transparent hover:bg-white/5 text-gray-500 hover:text-white'
-                                                                    }`}
-                                                                >
-                                                                    <Icon className={`h-4.5 w-4.5 ${isActive ? 'text-primary' : 'text-gray-500'}`} />
-                                                                    <span className="text-[9px] font-black uppercase tracking-wider">{item.label}</span>
-                                                                </button>
-                                                            )
-                                                        })}
                                                     </div>
                                                 </div>
                                             </div>
@@ -1095,7 +1083,6 @@ export function FocusModeOverlay({ task, goalTitle, onClose, onOptimisticTokenUp
                             <div className="flex items-center justify-between px-5 pt-4 pb-2">
                                 <button 
                                     onClick={() => {
-                                        stopSound()
                                         onTaskUpdate?.({
                                             ...task,
                                             notes,
@@ -1155,60 +1142,53 @@ export function FocusModeOverlay({ task, goalTitle, onClose, onOptimisticTokenUp
                                                 </div>
                                             </div>
 
-                                            {/* Soundscape Control Panel */}
-                                            <div className="w-full bg-white/[0.03] backdrop-blur-md border border-white/5 p-4 rounded-3xl flex flex-col gap-4 shadow-xl">
-                                                <div className="flex items-center justify-between">
-                                                    <div className="flex items-center gap-2">
-                                                        <Headphones className="h-4 w-4 text-electric-blue" />
-                                                        <span className="text-[10px] font-black uppercase tracking-wider text-gray-400">{t('focus.soundscape')}</span>
-                                                    </div>
+                                            {/* Soundscape Ambient Audio Bar (Mobile) */}
+                                            <div className="flex flex-col items-center gap-2 w-full max-w-sm z-10">
+                                                <div className="flex items-center justify-between w-full text-[9px] font-black uppercase text-gray-500 tracking-wider">
+                                                    <span className="flex items-center gap-1">
+                                                        <Volume2 className="h-3 w-3 text-primary" /> Ambient Soundscapes
+                                                    </span>
+                                                    {ambientSound !== 'none' && ambientSound !== 'off' && (
+                                                        <span className="text-emerald-400 font-bold">{Math.round(ambientVolume * 100)}%</span>
+                                                    )}
                                                 </div>
-                                                <div className="grid grid-cols-3 gap-2 bg-black/20 p-1.5 rounded-2xl border border-white/5">
-                                                    {[
-                                                        { type: 'none', label: t('focus.mute'), icon: VolumeX },
-                                                        { type: 'space', label: t('focus.space'), icon: Sparkles },
-                                                        { type: 'rain', label: t('focus.rain'), icon: Cloud },
-                                                        { type: 'binaural', label: t('focus.waves'), icon: Waves },
-                                                        { type: 'cafe', label: t('focus.cafe'), icon: Coffee },
-                                                        { type: 'greenhouse', label: t('focus.glass'), icon: Leaf }
-                                                    ]
-                                                    .filter(item => unlockedSoundscapes.includes(item.type))
-                                                    .map((item) => {
-                                                        const Icon = item.icon
-                                                        const isActive = sound === item.type
-                                                        return (
-                                                            <button
-                                                                key={item.type}
-                                                                onClick={() => {
-                                                                    haptics.light()
-                                                                    setSound(item.type as SoundType)
-                                                                    startSound(item.type as SoundType, volume)
-                                                                }}
-                                                                className={`flex flex-col items-center justify-center gap-1.5 py-2.5 rounded-xl transition-all border ${
-                                                                    isActive 
-                                                                        ? 'bg-electric-blue/10 border-electric-blue/20 text-white shadow-md' 
-                                                                        : 'text-gray-500 hover:text-gray-300 border-transparent'
-                                                                }`}
-                                                            >
-                                                                <Icon className={`h-4 w-4 ${isActive ? 'text-electric-blue' : 'text-gray-500'}`} />
-                                                                <span className="text-[9px] font-black uppercase tracking-wider">{item.label}</span>
-                                                            </button>
-                                                        )
-                                                    })}
+                                                <div className="flex gap-1.5 w-full overflow-x-auto no-scrollbar p-1 rounded-2xl bg-black/30 border border-white/5">
+                                                    {SOUNDSCAPES_LIST.map((sc) => (
+                                                        <button
+                                                            key={sc.id}
+                                                            type="button"
+                                                            onClick={() => {
+                                                                haptics.light()
+                                                                setAmbientSound(sc.id)
+                                                            }}
+                                                            className={`flex-1 min-w-[64px] py-1.5 px-2 rounded-xl text-[9px] font-black transition-all flex items-center justify-center gap-1 border ${
+                                                                ambientSound === sc.id
+                                                                    ? 'bg-primary/15 border-primary/30 text-primary shadow-sm'
+                                                                    : 'border-transparent text-gray-500 hover:text-gray-300'
+                                                            }`}
+                                                        >
+                                                            <span>{sc.icon}</span>
+                                                            <span>{sc.label}</span>
+                                                        </button>
+                                                    ))}
                                                 </div>
-                                                {sound !== 'none' && (
-                                                    <div className="flex items-center gap-3 bg-black/10 px-3 py-2 rounded-xl border border-white/5">
-                                                        <VolumeX className="h-3.5 w-3.5 text-gray-500" />
-                                                        <input 
-                                                            type="range" 
-                                                            min="0" 
-                                                            max="1" 
-                                                            step="0.05" 
-                                                            value={volume}
-                                                            onChange={handleVolumeChange}
-                                                            className="flex-1 accent-electric-blue bg-white/5 h-1 rounded-full cursor-pointer"
+                                                {ambientSound !== 'none' && ambientSound !== 'off' && (
+                                                    <div className="flex items-center gap-2 w-full px-2.5 py-1 bg-black/25 rounded-xl border border-white/5">
+                                                        <VolumeX className="h-2.5 w-2.5 text-gray-500 shrink-0" />
+                                                        <input
+                                                            type="range"
+                                                            min="0.05"
+                                                            max="1"
+                                                            step="0.05"
+                                                            value={ambientVolume}
+                                                            onChange={(e) => {
+                                                                const vol = parseFloat(e.target.value)
+                                                                setAmbientVolume(vol)
+                                                                setSynthVolume(vol)
+                                                            }}
+                                                            className="w-full h-1 bg-white/10 rounded-lg appearance-none cursor-pointer accent-primary"
                                                         />
-                                                        <Volume2 className="h-3.5 w-3.5 text-gray-300" />
+                                                        <Volume2 className="h-2.5 w-2.5 text-primary shrink-0" />
                                                     </div>
                                                 )}
                                             </div>
@@ -1419,14 +1399,14 @@ export function FocusModeOverlay({ task, goalTitle, onClose, onOptimisticTokenUp
                                     </div>
                                     {state === 'running' ? (
                                         <button
-                                            onClick={() => { haptics.light(); setState('paused'); stopSound() }}
+                                            onClick={() => { haptics.light(); setState('paused'); }}
                                             className="h-8 w-8 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center active:scale-95 transition-transform"
                                         >
                                             <Pause className="h-3.5 w-3.5 text-white" />
                                         </button>
                                     ) : state === 'paused' ? (
                                         <button
-                                            onClick={() => { haptics.medium(); setState('running'); if (sound !== 'none') startSound(sound, volume) }}
+                                            onClick={() => { haptics.medium(); setState('running'); }}
                                             className="h-8 w-8 rounded-xl flex items-center justify-center active:scale-95 transition-transform"
                                             style={{ background: timerColor }}
                                         >
@@ -1471,7 +1451,7 @@ export function FocusModeOverlay({ task, goalTitle, onClose, onOptimisticTokenUp
                                     {state === 'running' && (
                                         <>
                                             <div className="grid grid-cols-2 gap-3">
-                                                <button onClick={() => { haptics.light(); setState('paused'); stopSound() }}
+                                                <button onClick={() => { haptics.light(); setState('paused'); }}
                                                     className="py-4 rounded-2xl font-bold text-sm text-white border border-white/5 bg-white/[0.03] hover:bg-white/[0.06] active:scale-[0.98] transition-all flex items-center justify-center gap-2">
                                                     <Pause className="h-4 w-4" /> {t('focus.pause_mini_btn')}
                                                 </button>
@@ -1491,13 +1471,12 @@ export function FocusModeOverlay({ task, goalTitle, onClose, onOptimisticTokenUp
                                     {/* PAUSED */}
                                     {state === 'paused' && (
                                         <div className="grid grid-cols-2 gap-3">
-                                            <button onClick={() => { haptics.medium(); setState('running'); if (sound !== 'none') startSound(sound, volume) }}
+                                            <button onClick={() => { haptics.medium(); setState('running'); }}
                                                 className="py-4 rounded-2xl font-black text-sm text-black hover:opacity-90 active:scale-[0.98] transition-all flex items-center justify-center gap-2"
                                                 style={{ background: timerColor }}>
                                                 <Play className="h-4 w-4 fill-black" /> {t('focus.resume_btn')}
                                             </button>
                                             <button onClick={() => { 
-                                                stopSound(); 
                                                 onTaskUpdate?.({
                                                     ...task,
                                                     notes,

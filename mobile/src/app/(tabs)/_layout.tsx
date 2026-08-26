@@ -1,9 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Tabs } from 'expo-router';
-import { Platform, Alert } from 'react-native';
+import { Platform, Alert, View, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { BlurView } from 'expo-blur';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
 import { supabase } from '../../utils/supabase';
+import { useLanguage } from '../../context/LanguageContext';
+import { useTheme } from '../../context/ThemeContext';
 
 /* ────────────────────────────────────────────────────────────────────────── */
 /*  Tab icon map                                                              */
@@ -25,22 +29,32 @@ const TAB_ICONS: Record<
 /* ────────────────────────────────────────────────────────────────────────── */
 
 export default function TabsLayout() {
-  const [level, setLevel] = useState<number>(2);
+  const [level, setLevel] = useState<number>(1);
+  const insets = useSafeAreaInsets();
+  const { t } = useLanguage();
+  const { colors } = useTheme();
 
   useEffect(() => {
+    let isMounted = true;
     supabase.auth.getUser().then(({ data: { user } }) => {
-      if (user) {
+      if (user && isMounted) {
         supabase
           .from('profiles')
           .select('level')
           .eq('id', user.id)
           .single()
           .then(({ data }) => {
-            if (data) setLevel(data.level);
+            if (data?.level != null && isMounted) setLevel(data.level);
           });
       }
     });
+    return () => {
+      isMounted = false;
+    };
   }, []);
+
+  const tabHeight = Platform.OS === 'ios' ? 56 + insets.bottom : 64;
+  const paddingBottom = Platform.OS === 'ios' ? Math.max(16, insets.bottom) : 10;
 
   return (
     <Tabs
@@ -50,48 +64,86 @@ export default function TabsLayout() {
           const icons = TAB_ICONS[route.name];
           if (!icons) return null;
           const iconName = focused ? icons.active : icons.inactive;
-          return <Ionicons name={iconName} size={size ?? 22} color={color} />;
+          return (
+            <View style={styles.iconContainer}>
+              <Ionicons name={iconName} size={focused ? (size ?? 22) + 1 : (size ?? 22)} color={color} />
+              {focused && (
+                <View
+                  style={[
+                    styles.activeIndicatorDot,
+                    { backgroundColor: colors.primary },
+                  ]}
+                />
+              )}
+            </View>
+          );
         },
 
         /* ── Tab bar colours ────────────────────────────────── */
-        tabBarActiveTintColor: '#00F0FF',
-        tabBarInactiveTintColor: '#5A6178',
+        tabBarActiveTintColor: colors.primary,
+        tabBarInactiveTintColor: colors.inactive,
+        tabBarHideOnKeyboard: true,
 
         /* ── Tab bar chrome ─────────────────────────────────── */
+        tabBarBackground: () =>
+          Platform.OS === 'ios' ? (
+            <BlurView
+              intensity={40}
+              tint="dark"
+              style={[
+                StyleSheet.absoluteFill,
+                {
+                  backgroundColor: 'rgba(11, 13, 23, 0.75)',
+                  borderTopWidth: 1,
+                  borderTopColor: colors.glassBorder,
+                },
+              ]}
+            />
+          ) : (
+            <View
+              style={[
+                StyleSheet.absoluteFill,
+                {
+                  backgroundColor: colors.card,
+                  borderTopWidth: 1,
+                  borderTopColor: colors.glassBorder,
+                },
+              ]}
+            />
+          ),
         tabBarStyle: {
-          backgroundColor: '#141824',
-          borderTopColor: 'rgba(255, 255, 255, 0.05)',
-          borderTopLeftRadius: 24,
-          borderTopRightRadius: 24,
-          height: Platform.OS === 'ios' ? 92 : 68,
-          paddingBottom: Platform.OS === 'ios' ? 28 : 12,
+          borderTopWidth: 0,
+          backgroundColor: 'transparent',
+          height: tabHeight,
+          paddingBottom,
           paddingTop: 8,
-          // Elevation / shadow
-          shadowColor: '#000',
-          shadowOffset: { width: 0, height: -8 },
-          shadowOpacity: 0.4,
-          shadowRadius: 20,
-          elevation: 16,
-          // Absolute positioning so rounded corners sit over content
           position: 'absolute',
           left: 0,
           right: 0,
           bottom: 0,
+          elevation: 16,
+          shadowColor: '#000000',
+          shadowOffset: { width: 0, height: -6 },
+          shadowOpacity: 0.35,
+          shadowRadius: 16,
         },
 
         /* ── Tab bar label ──────────────────────────────────── */
         tabBarLabelStyle: {
-          fontSize: 10,
+          fontSize: 9,
           fontWeight: '800',
-          letterSpacing: 1,
+          letterSpacing: 0.4,
           textTransform: 'uppercase',
+        },
+        tabBarItemStyle: {
+          paddingHorizontal: 2,
         },
 
         /* ── Header ─────────────────────────────────────────── */
         headerStyle: {
-          backgroundColor: '#0E111F',
+          backgroundColor: colors.headerBg,
         },
-        headerTintColor: '#00F0FF',
+        headerTintColor: colors.primary,
         headerTitleStyle: {
           fontWeight: 'bold',
           textTransform: 'uppercase',
@@ -103,25 +155,25 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: 'DASHBOARD',
+          title: t('nav.home') || 'DASHBOARD',
         }}
       />
       <Tabs.Screen
         name="plan"
         options={{
-          title: 'PLANS',
+          title: t('nav.plan') || 'PLANS',
         }}
       />
       <Tabs.Screen
         name="calendar"
         options={{
-          title: 'CALENDAR',
+          title: t('nav.calendar') || 'CALENDAR',
         }}
       />
       <Tabs.Screen
         name="shop"
         options={{
-          title: 'EXCHANGE',
+          title: t('nav.shop') || 'EXCHANGE',
         }}
         listeners={{
           tabPress: (e) => {
@@ -136,9 +188,24 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="profile"
         options={{
-          title: 'PROFILE',
+          title: t('nav.profile') || 'PROFILE',
         }}
       />
     </Tabs>
   );
 }
+
+const styles = StyleSheet.create({
+  iconContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    height: 28,
+  },
+  activeIndicatorDot: {
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+    marginTop: 2,
+  },
+});
+

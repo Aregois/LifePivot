@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useState, useEffect, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
@@ -7,6 +7,7 @@ import { useEconomy } from './economy-provider'
 import { useLanguage } from './language-provider'
 import { haptics } from '@/utils/haptics'
 import { motion, AnimatePresence } from 'framer-motion'
+import { translateGoalTitle } from '@/utils/translations'
 
 interface Plan {
     id: string
@@ -37,7 +38,7 @@ interface MarketplaceClientProps {
 
 export function MarketplaceClient({ user, initialProfile }: MarketplaceClientProps) {
     const router = useRouter()
-    const { t } = useLanguage()
+    const { t, locale } = useLanguage()
     const { tokens, setTokens } = useEconomy()
     const [isPending, startTransition] = useTransition()
 
@@ -77,7 +78,7 @@ export function MarketplaceClient({ user, initialProfile }: MarketplaceClientPro
         const cost = Number(plan.plan_metadata?.token_cost || 0)
         if (cost > 0 && tokens < cost) {
             haptics.error()
-            setImportError('Insufficient tokens to purchase this plan!')
+            setImportError(t('marketplace.insufficient_tokens') || 'Insufficient tokens to purchase this plan!')
             setTimeout(() => setImportError(null), 3000)
             return
         }
@@ -152,8 +153,8 @@ export function MarketplaceClient({ user, initialProfile }: MarketplaceClientPro
             
             {/* Header block */}
             <div className="mb-4">
-                <h1 className="text-3xl font-black text-white leading-tight">Plan Marketplace</h1>
-                <p className="text-gray-400 text-xs mt-1">Discover, clone, and rate curated syllabuses designed by peer pathseekers.</p>
+                <h1 className="text-3xl font-black text-white leading-tight">{t('marketplace.title')}</h1>
+                <p className="text-gray-400 text-xs mt-1">{t('marketplace.subtitle')}</p>
             </div>
 
             {/* Filter controls row */}
@@ -166,24 +167,29 @@ export function MarketplaceClient({ user, initialProfile }: MarketplaceClientPro
                         type="text"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        placeholder="Search syllabuses..."
+                        placeholder={t('marketplace.search_placeholder') || 'Search syllabuses...'}
                         className="w-full bg-[#0B0D17]/80 border border-white/[0.06] rounded-xl pl-9 pr-4 py-2.5 text-xs text-white placeholder-gray-600 focus:outline-none focus:border-electric-blue transition-colors font-medium"
                     />
                 </div>
 
                 {/* Level / Difficulty Filter control */}
                 <div className="flex gap-1 bg-[#0B0D17] p-1 rounded-2xl border border-white/5 w-full md:w-auto overflow-x-auto">
-                    {['All', 'Beginner', 'Intermediate', 'Advanced'].map(lvl => (
+                    {[
+                        { id: 'All', label: t('marketplace.all_filter') || 'All' },
+                        { id: 'Beginner', label: t('marketplace.beginner') },
+                        { id: 'Intermediate', label: t('marketplace.intermediate') },
+                        { id: 'Advanced', label: t('marketplace.advanced') }
+                    ].map(lvl => (
                         <button
-                            key={lvl}
-                            onClick={() => { haptics.light(); setSelectedLevel(lvl) }}
+                            key={lvl.id}
+                            onClick={() => { haptics.light(); setSelectedLevel(lvl.id) }}
                             className={`flex-1 md:flex-none px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all ${
-                                selectedLevel === lvl
+                                selectedLevel === lvl.id
                                     ? 'bg-electric-blue/15 text-electric-blue border border-electric-blue/10'
                                     : 'text-gray-500 hover:text-gray-300'
                             }`}
                         >
-                            {lvl}
+                            {lvl.label}
                         </button>
                     ))}
                 </div>
@@ -198,7 +204,7 @@ export function MarketplaceClient({ user, initialProfile }: MarketplaceClientPro
                                 : 'text-gray-500 hover:text-gray-300'
                         }`}
                     >
-                        Newest
+                        {t('marketplace.newest_arrivals')}
                     </button>
                     <button
                         onClick={() => { haptics.light(); setSortBy('rating') }}
@@ -208,7 +214,7 @@ export function MarketplaceClient({ user, initialProfile }: MarketplaceClientPro
                                 : 'text-gray-500 hover:text-gray-300'
                         }`}
                     >
-                        Top Rated
+                        {t('marketplace.top_rated')}
                     </button>
                 </div>
             </div>
@@ -223,14 +229,15 @@ export function MarketplaceClient({ user, initialProfile }: MarketplaceClientPro
                     {filteredPlans.length === 0 ? (
                         <div className="col-span-full py-20 text-center bg-[#141824]/40 border border-white/5 rounded-[2.5rem] p-6">
                             <Compass className="w-12 h-12 text-gray-600 mx-auto mb-4" />
-                            <h3 className="text-white font-extrabold text-sm uppercase tracking-wider">No Plans Discovered</h3>
+                            <h3 className="text-white font-extrabold text-sm uppercase tracking-wider">{t('marketplace.empty_title')}</h3>
                             <p className="text-gray-400 text-xs mt-1.5 leading-relaxed max-w-sm mx-auto">
-                                No public study blueprints match your query. Clear search parameters and check again.
+                                {t('marketplace.empty_desc')}
                             </p>
                         </div>
                     ) : (
                         filteredPlans.map(plan => {
                             const cost = Number(plan.plan_metadata?.token_cost || 0)
+                            const localizedTitle = translateGoalTitle(plan.title, locale)
                             return (
                                 <div
                                     key={plan.id}
@@ -251,13 +258,13 @@ export function MarketplaceClient({ user, initialProfile }: MarketplaceClientPro
                                                 </div>
                                             ) : (
                                                 <span className="text-[9px] font-black text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-0.5 rounded-full uppercase tracking-wider shrink-0">
-                                                    Free
+                                                    {t('marketplace.free')}
                                                 </span>
                                             )}
                                         </div>
 
                                         <h3 className="text-white font-black text-base tracking-tight leading-snug group-hover:text-electric-blue transition-colors line-clamp-2 pr-6">
-                                            {plan.title}
+                                            {localizedTitle}
                                         </h3>
                                     </div>
 
@@ -268,15 +275,15 @@ export function MarketplaceClient({ user, initialProfile }: MarketplaceClientPro
                                                 <span className="text-[11px] font-extrabold text-white mt-0.5">{plan.rating}</span>
                                             </div>
                                             <span className="text-gray-600 text-[10px]">•</span>
-                                            <span className="text-gray-400 text-[10px] font-extrabold uppercase tracking-wide">{plan.duration_days} Days</span>
+                                            <span className="text-gray-400 text-[10px] font-extrabold uppercase tracking-wide">{plan.duration_days} {t('marketplace.days')}</span>
                                         </div>
 
                                         <div className="flex items-center justify-between pt-3 border-t border-white/5">
                                             <span className="text-[9px] font-extrabold text-gray-500 uppercase tracking-widest truncate max-w-[120px]">
-                                                By {plan.profiles?.id === user.id ? 'You' : `Creator-${plan.profiles?.id.slice(0, 5)}`}
+                                                {t('marketplace.created_by', { author: plan.profiles?.id === user.id ? 'YOU' : plan.profiles?.id.slice(0, 5) })}
                                             </span>
                                             <div className="flex items-center gap-1 text-electric-blue font-black text-[10px] uppercase tracking-widest group-hover:translate-x-1 transition-transform">
-                                                View Blueprint <ChevronRight className="w-4 h-4" strokeWidth={2.5} />
+                                                {t('marketplace.view_blueprint') || 'View Blueprint'} <ChevronRight className="w-4 h-4" strokeWidth={2.5} />
                                             </div>
                                         </div>
                                     </div>
@@ -307,9 +314,9 @@ export function MarketplaceClient({ user, initialProfile }: MarketplaceClientPro
 
                             <div className="flex flex-col gap-2 border-b border-white/5 pb-4 pr-10">
                                 <span className="text-[9px] font-black text-electric-blue bg-electric-blue/10 border border-electric-blue/20 px-2.5 py-0.5 rounded-full uppercase tracking-wider w-fit">
-                                    {selectedPlan.level} Course Syllabus
+                                    {selectedPlan.level}
                                 </span>
-                                <h3 className="text-xl font-black text-white leading-tight uppercase tracking-tight mt-1">{selectedPlan.title}</h3>
+                                <h3 className="text-xl font-black text-white leading-tight uppercase tracking-tight mt-1">{translateGoalTitle(selectedPlan.title, locale)}</h3>
                             </div>
 
                             {importSuccess ? (
@@ -317,9 +324,9 @@ export function MarketplaceClient({ user, initialProfile }: MarketplaceClientPro
                                     <div className="h-14 w-14 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 mx-auto">
                                         <CheckCircle2 className="w-8 h-8" />
                                     </div>
-                                    <h4 className="text-white font-black text-base uppercase">Syllabus Cloned</h4>
+                                    <h4 className="text-white font-black text-base uppercase">{t('marketplace.success_title')}</h4>
                                     <p className="text-gray-400 text-xs leading-relaxed max-w-xs mx-auto">
-                                        The plan curriculum structure has been imported into your calendar scheduler. Redirecting...
+                                        {t('marketplace.success_cloned')}
                                     </p>
                                 </div>
                             ) : (
@@ -328,17 +335,17 @@ export function MarketplaceClient({ user, initialProfile }: MarketplaceClientPro
                                     <div className="grid grid-cols-3 gap-3">
                                         <div className="bg-[#0B0D17]/40 border border-white/5 p-4 rounded-2xl flex flex-col gap-1 items-center justify-center">
                                             <Calendar className="w-4 h-4 text-electric-blue" />
-                                            <span className="text-[9px] font-black text-gray-500 uppercase tracking-widest mt-1">Duration</span>
-                                            <span className="text-xs font-black text-white mt-0.5">{selectedPlan.duration_days} Days</span>
+                                            <span className="text-[9px] font-black text-gray-500 uppercase tracking-widest mt-1">{t('creator.duration') || 'Duration'}</span>
+                                            <span className="text-xs font-black text-white mt-0.5">{selectedPlan.duration_days} {t('marketplace.days')}</span>
                                         </div>
                                         <div className="bg-[#0B0D17]/40 border border-white/5 p-4 rounded-2xl flex flex-col gap-1 items-center justify-center">
                                             <Clock className="w-4 h-4 text-electric-blue" />
-                                            <span className="text-[9px] font-black text-gray-500 uppercase tracking-widest mt-1">Weekly</span>
+                                            <span className="text-[9px] font-black text-gray-500 uppercase tracking-widest mt-1">{t('creator.daily_limit') || 'Weekly'}</span>
                                             <span className="text-xs font-black text-white mt-0.5">{selectedPlan.commitment_hours_per_week || 14} Hrs</span>
                                         </div>
                                         <div className="bg-[#0B0D17]/40 border border-white/5 p-4 rounded-2xl flex flex-col gap-1 items-center justify-center">
                                             <BookOpen className="w-4 h-4 text-electric-blue" />
-                                            <span className="text-[9px] font-black text-gray-500 uppercase tracking-widest mt-1">Intent</span>
+                                            <span className="text-[9px] font-black text-gray-500 uppercase tracking-widest mt-1">{t('creator.intent') || 'Intent'}</span>
                                             <span className="text-xs font-black text-white mt-0.5 truncate max-w-[100px]">{selectedPlan.goal_intent}</span>
                                         </div>
                                     </div>
@@ -346,7 +353,7 @@ export function MarketplaceClient({ user, initialProfile }: MarketplaceClientPro
                                     {/* Star Rating Form */}
                                     <div className="bg-white/[0.01] border border-white/5 p-4 rounded-2xl">
                                         <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 flex items-center justify-between">
-                                            <span>Syllabus Review Rating</span>
+                                            <span>{t('marketplace.rated_title')}</span>
                                             <span className="text-yellow-500 font-extrabold">{selectedPlan.rating} / 5.0</span>
                                         </h4>
                                         <div className="flex gap-2 items-center">
@@ -384,7 +391,7 @@ export function MarketplaceClient({ user, initialProfile }: MarketplaceClientPro
                                             onClick={() => { haptics.light(); setSelectedPlan(null) }}
                                             className="flex-1 py-4 rounded-2xl bg-white/5 border border-white/10 text-white font-black text-[10px] tracking-widest uppercase hover:bg-white/10 transition-all"
                                         >
-                                            Dismiss
+                                            {t('workspaces.cancel')}
                                         </button>
                                         
                                         <button
@@ -396,10 +403,10 @@ export function MarketplaceClient({ user, initialProfile }: MarketplaceClientPro
                                                 <Loader2 className="w-4 h-4 animate-spin" />
                                             ) : selectedPlan.plan_metadata?.token_cost ? (
                                                 <>
-                                                    Purchase & Import • <Coins className="w-3.5 h-3.5 inline text-black" /> {selectedPlan.plan_metadata.token_cost}
+                                                    {t('workspaces.join_for_tokens', { count: selectedPlan.plan_metadata.token_cost })}
                                                 </>
                                             ) : (
-                                                'Clone Syllabus (Free)'
+                                                t('marketplace.free')
                                             )}
                                         </button>
                                     </div>
