@@ -1,16 +1,19 @@
 import { createClient } from '@/utils/supabase/server'
 import { getLocalDateString } from '@/utils/date-utils'
 import { DashboardClient } from '@/components/dashboard-client'
+import { AuthenticatedLayoutClient } from '@/components/authenticated-layout-client'
+import { LandingPage } from '@/components/landing-page'
 
 export default async function Home() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return null
 
-  // Fetch user profile and goals.
-  // Performance Optimization: Fetch all user goals but select only the minimal columns from tasks
-  // (excluding subtasks, notes, resources, reflections, drill_data) to reduce data payload size.
-  // Limit to 10 goals max to prevent massive arrays under free/pro tier.
+  // If visitor is unauthenticated, render the Public Marketing Landing Page
+  if (!user) {
+    return <LandingPage />
+  }
+
+  // If user is logged in, fetch profile and active goals for the dashboard
   const [{ data: goals }, { data: profile }] = await Promise.all([
     supabase
       .from('learning_goals')
@@ -31,11 +34,13 @@ export default async function Home() {
   const username = user?.email?.split('@')[0] || 'Pathseeker'
 
   return (
-    <DashboardClient
-      username={username}
-      profile={profile}
-      goals={goals || []}
-      todayStr={getLocalDateString()}
-    />
+    <AuthenticatedLayoutClient>
+      <DashboardClient
+        username={username}
+        profile={profile}
+        goals={goals || []}
+        todayStr={getLocalDateString()}
+      />
+    </AuthenticatedLayoutClient>
   )
 }

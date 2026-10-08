@@ -20,6 +20,11 @@ import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { supabase } from '../../utils/supabase';
 import { apiRequest } from '../../utils/api';
+import {
+  requestNotificationPermissions,
+  scheduleDailyStudyReminder,
+  cancelDailyStudyReminders,
+} from '../../utils/notifications';
 import { useTheme, AccentType } from '../../context/ThemeContext';
 import { useLanguage } from '../../context/LanguageContext';
 import {
@@ -94,6 +99,8 @@ export default function Profile() {
   // Persona & Frame preferences
   const [persona, setPersona] = useState<PersonaType>('feynman');
   const [selectedFrame, setSelectedFrame] = useState('frame_cyan');
+  const [remindersEnabled, setRemindersEnabled] = useState(false);
+  const [reminderHour, setReminderHour] = useState(9);
 
   // Mastery metrics computed from tasks
   const [totalCompleted, setTotalCompleted] = useState(0);
@@ -153,6 +160,14 @@ export default function Profile() {
       const savedFrame = await SecureStore.getItemAsync('lifepivot_frame');
       if (savedFrame) {
         setSelectedFrame(savedFrame);
+      }
+      const savedReminders = await SecureStore.getItemAsync('lifepivot_reminder_enabled');
+      if (savedReminders) {
+        setRemindersEnabled(savedReminders === 'true');
+      }
+      const savedHour = await SecureStore.getItemAsync('lifepivot_reminder_hour');
+      if (savedHour) {
+        setReminderHour(parseInt(savedHour, 10));
       }
     } catch (err) {
       console.warn('Error loading profile:', err);
@@ -249,6 +264,57 @@ export default function Profile() {
     }
   };
 
+  const handleToggleReminder = async (enabled: boolean) => {
+    HapticsEngine.tier1.selection();
+    if (enabled) {
+      const granted = await requestNotificationPermissions();
+      if (!granted) {
+        Alert.alert(
+          'PERMISSIONS REQUIRED',
+          'Please enable notifications in your iPhone Settings to receive daily study reminders.'
+        );
+        setRemindersEnabled(false);
+        await SecureStore.setItemAsync('lifepivot_reminder_enabled', 'false');
+        return;
+      }
+      setRemindersEnabled(true);
+      await SecureStore.setItemAsync('lifepivot_reminder_enabled', 'true');
+      try {
+        await scheduleDailyStudyReminder(
+          'LifePivot Daily Focus',
+          1,
+          totalCompleted > 0 ? 3 : 1,
+          reminderHour,
+          0
+        );
+      } catch {}
+      HapticsEngine.tier3.success();
+    } else {
+      setRemindersEnabled(false);
+      await SecureStore.setItemAsync('lifepivot_reminder_enabled', 'false');
+      await cancelDailyStudyReminders();
+      HapticsEngine.tier1.light();
+    }
+  };
+
+  const handleSelectReminderHour = async (hour: number) => {
+    HapticsEngine.tier1.selection();
+    setReminderHour(hour);
+    await SecureStore.setItemAsync('lifepivot_reminder_hour', hour.toString());
+    if (remindersEnabled) {
+      try {
+        await scheduleDailyStudyReminder(
+          'LifePivot Daily Focus',
+          1,
+          totalCompleted > 0 ? 3 : 1,
+          hour,
+          0
+        );
+      } catch {}
+      HapticsEngine.tier3.success();
+    }
+  };
+
   const handleLogout = async () => {
     HapticsEngine.tier1.light();
     Alert.alert(
@@ -262,6 +328,41 @@ export default function Profile() {
           onPress: async () => {
             await supabase.auth.signOut();
             router.replace('/(auth)/login');
+          },
+        },
+      ]
+    );
+  };
+
+  const handleDeleteAccount = () => {
+    HapticsEngine.tier4.warning();
+    Alert.alert(
+      'PERMANENT ACCOUNT DELETION',
+      'Are you absolutely sure? This will permanently erase all your study plans, task history, streaks, XP, tokens, and account data. This action cannot be undone.',
+      [
+        { text: 'CANCEL', style: 'cancel' },
+        {
+          text: 'PERMANENTLY DELETE',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              setUpdating(true);
+              HapticsEngine.tier4.error();
+              await apiRequest('/api/profile/delete-account', {
+                method: 'POST',
+              });
+              await SecureStore.deleteItemAsync('lifepivot_persona').catch(() => {});
+              await supabase.auth.signOut();
+              Alert.alert(
+                'ACCOUNT ERASED',
+                'Your account and all associated personal data have been completely deleted.',
+                [{ text: 'OK', onPress: () => router.replace('/(auth)/login') }]
+              );
+            } catch (err: any) {
+              Alert.alert('DELETION FAILED', err?.message || 'Could not delete account. Please try again.');
+            } finally {
+              setUpdating(false);
+            }
           },
         },
       ]
@@ -545,6 +646,68 @@ export default function Profile() {
               </View>
             </GlassCard>
 
+            {/* Daily Study Notifications (Phone First & Native Plus) */}
+            <View style={[styles.sectionHeader, { marginTop: 20 }]}>
+              <Text style={styles.sectionTitle}>DAILY STUDY NOTIFICATIONS</Text>
+            </View>
+            <GlassCard style={styles.notificationsCard}>
+              <View style={styles.notificationsToggleRow}>
+                <View style={{ flex: 1, marginRight: 12 }}>
+                  <Text style={styles.notificationsToggleTitle}>DAILY STUDY ALERTS</Text>
+                  <Text style={styles.notificationsToggleSubtitle}>
+                    Receive a repeating daily nudge on your iPhone with your active curriculum tasks.
+                  </Text>
+                </View>
+                <TouchableOpacity
+                  activeOpacity={0.8}
+                  onPress={() => handleToggleReminder(!remindersEnabled)}
+                  style={[
+                    styles.toggleSwitch,
+                    remindersEnabled && { backgroundColor: colors.primary },
+                  ]}
+                >
+                  <View
+                    style={[
+                      styles.toggleKnob,
+                      remindersEnabled && styles.toggleKnobActive,
+                    ]}
+                  />
+                </TouchableOpacity>
+              </View>
+
+              {remindersEnabled && (
+                <View style={styles.reminderHoursRow}>
+                  <Text style={styles.reminderHoursLabel}>REMINDER TIME</Text>
+                  <View style={styles.hoursChipsGrid}>
+                    {[8, 9, 12, 18, 20].map((h) => {
+                      const isSelected = reminderHour === h;
+                      const label = h < 12 ? `${h}:00 AM` : h === 12 ? '12:00 PM' : `${h - 12}:00 PM`;
+                      return (
+                        <TouchableOpacity
+                          key={h}
+                          activeOpacity={0.7}
+                          onPress={() => handleSelectReminderHour(h)}
+                          style={[
+                            styles.hourChip,
+                            isSelected && { borderColor: colors.primary, backgroundColor: `${colors.primary}18` },
+                          ]}
+                        >
+                          <Text
+                            style={[
+                              styles.hourChipText,
+                              isSelected && { color: colors.primary, fontWeight: '900' },
+                            ]}
+                          >
+                            {label}
+                          </Text>
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </View>
+                </View>
+              )}
+            </GlassCard>
+
             {/* Student / Tutor Role Settings */}
             <View style={[styles.sectionHeader, { marginTop: 20 }]}>
               <Text style={styles.sectionTitle}>TUTOR & COHORT PRIVILEGES</Text>
@@ -611,12 +774,34 @@ export default function Profile() {
             </View>
 
             {/* Logout Button */}
-            <View style={{ marginTop: 16, marginBottom: 32 }}>
+            <View style={{ marginTop: 16, marginBottom: 16 }}>
               <PremiumButton
                 title={t('profile.logout') || 'SIGN OUT'}
                 onPress={handleLogout}
                 variant="destructive"
               />
+            </View>
+
+            {/* Account Deletion / Danger Zone (Apple Guideline 5.1.1(v)) */}
+            <View style={{ marginBottom: 36 }}>
+              <GlassCard style={styles.dangerZoneCard}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 6 }}>
+                  <Ionicons name="warning" size={16} color="#EF4444" style={{ marginRight: 6 }} />
+                  <Text style={styles.dangerZoneTitle}>DANGER ZONE</Text>
+                </View>
+                <Text style={styles.dangerZoneDesc}>
+                  Permanently delete your account and erase all study curriculums, streaks, and personal data. This cannot be undone.
+                </Text>
+                <TouchableOpacity
+                  activeOpacity={0.8}
+                  onPress={handleDeleteAccount}
+                  style={styles.deleteAccountBtn}
+                  disabled={updating}
+                >
+                  <Ionicons name="trash-outline" size={15} color="#EF4444" style={{ marginRight: 6 }} />
+                  <Text style={styles.deleteAccountBtnText}>DELETE ACCOUNT & ERASE DATA</Text>
+                </TouchableOpacity>
+              </GlassCard>
             </View>
           </FadeInView>
         )}
@@ -1009,5 +1194,109 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: '700',
     color: '#8A92A6',
+  },
+  notificationsCard: {
+    padding: 16,
+    borderRadius: 18,
+  },
+  notificationsToggleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  notificationsToggleTitle: {
+    fontSize: 12,
+    fontWeight: '900',
+    color: '#FFFFFF',
+    letterSpacing: 1.2,
+    marginBottom: 4,
+  },
+  notificationsToggleSubtitle: {
+    fontSize: 11,
+    color: '#8A92A6',
+    lineHeight: 15,
+  },
+  toggleSwitch: {
+    width: 48,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    justifyContent: 'center',
+    paddingHorizontal: 2,
+  },
+  toggleKnob: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: '#FFFFFF',
+  },
+  toggleKnobActive: {
+    alignSelf: 'flex-end',
+  },
+  reminderHoursRow: {
+    marginTop: 14,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255, 255, 255, 0.06)',
+  },
+  reminderHoursLabel: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: '#8A92A6',
+    letterSpacing: 1,
+    marginBottom: 8,
+  },
+  hoursChipsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  hourChip: {
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.08)',
+    backgroundColor: 'rgba(255, 255, 255, 0.03)',
+  },
+  hourChipText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#8A92A6',
+  },
+  dangerZoneCard: {
+    padding: 16,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: 'rgba(239, 68, 68, 0.25)',
+    backgroundColor: 'rgba(239, 68, 68, 0.04)',
+  },
+  dangerZoneTitle: {
+    fontSize: 11,
+    fontWeight: '900',
+    color: '#EF4444',
+    letterSpacing: 1.5,
+  },
+  dangerZoneDesc: {
+    fontSize: 11,
+    color: '#8A92A6',
+    lineHeight: 16,
+    marginBottom: 14,
+  },
+  deleteAccountBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(239, 68, 68, 0.4)',
+    backgroundColor: 'rgba(239, 68, 68, 0.12)',
+  },
+  deleteAccountBtnText: {
+    fontSize: 11,
+    fontWeight: '900',
+    color: '#EF4444',
+    letterSpacing: 1,
   },
 });

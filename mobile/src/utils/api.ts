@@ -1,16 +1,23 @@
 import { Platform } from 'react-native'
 import { supabase } from './supabase'
 
-// Resolve API URL dynamically based on Platform for local development
+// Resolve API URL dynamically based on Platform and Environment
 const getApiUrl = () => {
     if (process.env.EXPO_PUBLIC_API_URL) {
-        return process.env.EXPO_PUBLIC_API_URL
+        return process.env.EXPO_PUBLIC_API_URL.replace(/\/$/, '')
     }
     if (Platform.OS === 'web') {
+        if (typeof window !== 'undefined' && window.location?.origin) {
+            return window.location.origin
+        }
         return 'http://localhost:3000'
     }
-    // Default to the host computer's local IP so physical devices on the same Wi-Fi can connect
-    return 'http://192.168.11.57:3000'
+    if (typeof __DEV__ !== 'undefined' && __DEV__) {
+        // Local computer IP for physical test devices during development
+        return 'http://192.168.11.57:3000'
+    }
+    // Production cloud fallback
+    return 'https://lifepivot.app'
 }
 
 export const API_BASE_URL = getApiUrl()

@@ -1,10 +1,12 @@
 import React, { useState } from 'react'
-import { View, Text, ScrollView, Alert, ActivityIndicator } from 'react-native'
+import { View, Text, ScrollView, Alert, ActivityIndicator, TouchableOpacity } from 'react-native'
 import { useRouter } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
+import * as WebBrowser from 'expo-web-browser'
 import * as Haptics from 'expo-haptics'
 import { HapticsEngine } from '../../utils/HapticsEngine'
 import { useSubscribe } from '../../hooks/useSubscription'
+import { supabase } from '../../utils/supabase'
 import { C, Shadows } from '../../constants/theme'
 import { FadeInView, GlassCard, PremiumButton, GradientText } from '../../components/ui'
 import { useTheme } from '../../context/ThemeContext'
@@ -14,6 +16,7 @@ export default function SubscribeModal() {
     const { colors } = useTheme()
     const { mutate: subscribe, isPending } = useSubscribe()
     const [selectedPlan, setSelectedPlan] = useState<'monthly' | 'yearly'>('monthly')
+    const [restoring, setRestoring] = useState(false)
 
     const handleSubscribe = () => {
         HapticsEngine.tier2.action()
@@ -35,6 +38,36 @@ export default function SubscribeModal() {
                 }
             }
         )
+    }
+
+    const handleRestorePurchases = async () => {
+        HapticsEngine.tier1.selection()
+        setRestoring(true)
+        try {
+            const { data: { user } } = await supabase.auth.getUser()
+            if (!user) {
+                setRestoring(false)
+                Alert.alert('NOT SIGNED IN', 'Please sign in to restore your purchases.')
+                return
+            }
+            const { data: profile } = await supabase
+                .from('profiles')
+                .select('is_subscribed')
+                .eq('id', user.id)
+                .single()
+            setRestoring(false)
+            if (profile?.is_subscribed) {
+                HapticsEngine.tier3.success()
+                Alert.alert('PURCHASES RESTORED', 'Your Power Tier subscription is active and restored!', [
+                    { text: 'CONTINUE', onPress: () => router.back() }
+                ])
+            } else {
+                Alert.alert('NO ACTIVE SUBSCRIPTION', 'No active subscription was found on this account.')
+            }
+        } catch (err: any) {
+            setRestoring(false)
+            Alert.alert('RESTORE ERROR', err?.message || 'Could not restore purchases.')
+        }
     }
 
     const selectPlan = (plan: 'monthly' | 'yearly') => {
@@ -196,15 +229,26 @@ export default function SubscribeModal() {
                 </FadeInView>
             </View>
 
-            {/* Apple/Google Pay Mock trigger button */}
+            {/* Apple/Google Pay trigger button */}
             <FadeInView delay={200} style={{ gap: 10 }}>
                 <PremiumButton
-                    title="PAY WITH Apple / Google Pay"
+                    title={selectedPlan === 'monthly' ? "SUBSCRIBE $9.99 / MO" : "SUBSCRIBE $59.99 / YR"}
                     onPress={handleSubscribe}
                     variant="primary"
                     loading={isPending}
                     disabled={isPending}
                 />
+
+                <TouchableOpacity
+                    onPress={handleRestorePurchases}
+                    activeOpacity={0.7}
+                    style={{ alignSelf: 'center', paddingVertical: 8 }}
+                    disabled={restoring}
+                >
+                    <Text style={{ fontSize: 11, fontWeight: '800', color: colors.primary, letterSpacing: 1, textTransform: 'uppercase' }}>
+                        {restoring ? 'RESTORING...' : 'RESTORE PURCHASES'}
+                    </Text>
+                </TouchableOpacity>
 
                 <PremiumButton
                     title="NOT NOW"
@@ -214,6 +258,32 @@ export default function SubscribeModal() {
                     }}
                     variant="ghost"
                 />
+
+                {/* Apple App Store Subscription & Legal Disclosures */}
+                <View style={{ marginTop: 12, alignItems: 'center', gap: 6 }}>
+                    <Text style={{ fontSize: 9, color: colors.textMuted, textAlign: 'center', lineHeight: 13, paddingHorizontal: 8 }}>
+                        Payment charged to your Apple ID upon purchase confirmation. Subscription renews automatically unless cancelled at least 24h before current period ends. Manage anytime in App Store Account Settings.
+                    </Text>
+
+                    <View style={{ flexDirection: 'row', gap: 16, marginTop: 4 }}>
+                        <TouchableOpacity
+                            onPress={() => WebBrowser.openBrowserAsync('https://lifepivot.app/privacy')}
+                            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                        >
+                            <Text style={{ fontSize: 9, fontWeight: '700', color: colors.textSecondary, textDecorationLine: 'underline' }}>
+                                Privacy Policy
+                            </Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            onPress={() => WebBrowser.openBrowserAsync('https://lifepivot.app/terms')}
+                            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                        >
+                            <Text style={{ fontSize: 9, fontWeight: '700', color: colors.textSecondary, textDecorationLine: 'underline' }}>
+                                Terms of Use (EULA)
+                            </Text>
+                        </TouchableOpacity>
+                    </View>
+                </View>
             </FadeInView>
         </ScrollView>
       </View>

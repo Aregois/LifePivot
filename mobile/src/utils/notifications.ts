@@ -72,3 +72,19 @@ export async function scheduleDailyStudyReminder(
 
   return identifier;
 }
+
+/**
+ * Cancels all scheduled daily study reminders.
+ */
+export async function cancelDailyStudyReminders(): Promise<void> {
+  try {
+    const scheduledNotifications = await Notifications.getAllScheduledNotificationsAsync();
+    for (const notification of scheduledNotifications) {
+      if (notification.content.data?.type === 'daily_study_reminder') {
+        await Notifications.cancelScheduledNotificationAsync(notification.identifier);
+      }
+    }
+  } catch (err) {
+    console.warn('[notifications] Failed to cancel reminders:', err);
+  }
+}

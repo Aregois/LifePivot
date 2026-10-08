@@ -1,7 +1,8 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { View, Text, TextInput, Alert, KeyboardAvoidingView, Platform, TouchableOpacity, Image, ScrollView } from 'react-native'
 import { useRouter } from 'expo-router'
 import { LinearGradient } from 'expo-linear-gradient'
+import * as AppleAuthentication from 'expo-apple-authentication'
 import { supabase } from '../../utils/supabase'
 import { C, Gradients } from '../../constants/theme'
 import { FadeInView, GlassCard, PremiumButton, GradientText } from '../../components/ui'
@@ -20,6 +21,55 @@ export default function Signup() {
     const [emailFocused, setEmailFocused] = useState(false)
     const [passwordFocused, setPasswordFocused] = useState(false)
     const [confirmFocused, setConfirmFocused] = useState(false)
+    const [appleAuthAvailable, setAppleAuthAvailable] = useState(false)
+
+    useEffect(() => {
+        if (Platform.OS === 'ios') {
+            AppleAuthentication.isAvailableAsync().then(setAppleAuthAvailable).catch(() => setAppleAuthAvailable(false))
+        }
+    }, [])
+
+    const handleAppleSignUp = async () => {
+        try {
+            const credential = await AppleAuthentication.signInAsync({
+                requestedScopes: [
+                    AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
+                    AppleAuthentication.AppleAuthenticationScope.EMAIL,
+                ],
+            })
+
+            if (credential.identityToken) {
+                setLoading(true)
+                const { data, error } = await supabase.auth.signInWithIdToken({
+                    provider: 'apple',
+                    token: credential.identityToken,
+                })
+                setLoading(false)
+
+                if (error) {
+                    Alert.alert('APPLE SIGN UP FAILED', error.message)
+                    return
+                }
+
+                if (credential.fullName && (credential.fullName.givenName || credential.fullName.familyName)) {
+                    const fullName = `${credential.fullName.givenName || ''} ${credential.fullName.familyName || ''}`.trim()
+                    if (fullName && data.user) {
+                        await supabase.from('profiles').update({ full_name: fullName }).eq('id', data.user.id)
+                    }
+                }
+
+                if (data?.session) {
+                    router.replace('/(tabs)')
+                }
+            }
+        } catch (e: any) {
+            setLoading(false)
+            if (e.code === 'ERR_REQUEST_CANCELED') {
+                return
+            }
+            Alert.alert('SIGN UP ERROR', e?.message || 'Apple Sign-Up could not be completed.')
+        }
+    }
 
     const handleSignup = async () => {
         const trimmedName = name.trim()
@@ -262,6 +312,34 @@ export default function Signup() {
                             disabled={loading}
                         />
                     </FadeInView>
+
+                    {/* ── Apple Sign Up (iOS Native Plus) ── */}
+                    {Platform.OS === 'ios' && appleAuthAvailable && (
+                        <FadeInView delay={350} style={{ marginTop: 12 }}>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', marginVertical: 12 }}>
+                                <View style={{ flex: 1, height: 1, backgroundColor: 'rgba(255, 255, 255, 0.08)' }} />
+                                <Text
+                                    style={{
+                                        color: C.textDim,
+                                        fontSize: 9,
+                                        fontWeight: '800',
+                                        marginHorizontal: 12,
+                                        letterSpacing: 2,
+                                    }}
+                                >
+                                    OR
+                                </Text>
+                                <View style={{ flex: 1, height: 1, backgroundColor: 'rgba(255, 255, 255, 0.08)' }} />
+                            </View>
+                            <AppleAuthentication.AppleAuthenticationButton
+                                buttonType={AppleAuthentication.AppleAuthenticationButtonType.SIGN_UP}
+                                buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.WHITE}
+                                cornerRadius={14}
+                                style={{ width: '100%', height: 48 }}
+                                onPress={handleAppleSignUp}
+                            />
+                        </FadeInView>
+                    )}
 
                     {/* ── Sign In Link ── */}
                     <FadeInView delay={400} style={{ marginTop: 20 }}>

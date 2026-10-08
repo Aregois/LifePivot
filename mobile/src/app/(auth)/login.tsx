@@ -1,7 +1,8 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { View, Text, TextInput, TouchableOpacity, Alert, KeyboardAvoidingView, Platform, Image } from 'react-native'
 import { useRouter } from 'expo-router'
 import { LinearGradient } from 'expo-linear-gradient'
+import * as AppleAuthentication from 'expo-apple-authentication'
 import { supabase } from '../../utils/supabase'
 import { C, Gradients } from '../../constants/theme'
 import FadeInView from '../../components/ui/FadeInView'
@@ -18,6 +19,13 @@ export default function Login() {
     const [loading, setLoading] = useState(false)
     const [emailFocused, setEmailFocused] = useState(false)
     const [passwordFocused, setPasswordFocused] = useState(false)
+    const [appleAuthAvailable, setAppleAuthAvailable] = useState(false)
+
+    useEffect(() => {
+        if (Platform.OS === 'ios') {
+            AppleAuthentication.isAvailableAsync().then(setAppleAuthAvailable).catch(() => setAppleAuthAvailable(false))
+        }
+    }, [])
 
     const handleLogin = async () => {
         const trimmedEmail = email.trim()
@@ -38,6 +46,66 @@ export default function Login() {
             Alert.alert(t('common.error') || 'SIGN IN FAILED', error.message)
         } else {
             router.replace('/(tabs)')
+        }
+    }
+
+    const handleForgotPassword = async () => {
+        const trimmedEmail = email.trim()
+        if (!trimmedEmail) {
+            Alert.alert('RESET PASSWORD', 'Please enter your email address in the field above first.')
+            return
+        }
+
+        try {
+            setLoading(true)
+            const { error } = await supabase.auth.resetPasswordForEmail(trimmedEmail)
+            setLoading(false)
+            if (error) {
+                Alert.alert('RESET FAILED', error.message)
+            } else {
+                Alert.alert(
+                    'CHECK YOUR EMAIL',
+                    'A password reset link has been dispatched to your email address.'
+                )
+            }
+        } catch (err: any) {
+            setLoading(false)
+            Alert.alert('ERROR', err?.message || 'Could not send reset email.')
+        }
+    }
+
+    const handleAppleSignIn = async () => {
+        try {
+            const credential = await AppleAuthentication.signInAsync({
+                requestedScopes: [
+                    AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
+                    AppleAuthentication.AppleAuthenticationScope.EMAIL,
+                ],
+            })
+
+            if (credential.identityToken) {
+                setLoading(true)
+                const { data, error } = await supabase.auth.signInWithIdToken({
+                    provider: 'apple',
+                    token: credential.identityToken,
+                })
+                setLoading(false)
+
+                if (error) {
+                    Alert.alert('APPLE SIGN IN FAILED', error.message)
+                    return
+                }
+
+                if (data?.session) {
+                    router.replace('/(tabs)')
+                }
+            }
+        } catch (e: any) {
+            setLoading(false)
+            if (e.code === 'ERR_REQUEST_CANCELED') {
+                return
+            }
+            Alert.alert('SIGN IN ERROR', e?.message || 'Apple Sign-In could not be completed.')
         }
     }
 
@@ -160,11 +228,30 @@ export default function Login() {
                                 fontSize: 13,
                             }}
                         />
+
+                        {/* Forgot Password Link */}
+                        <TouchableOpacity
+                            onPress={handleForgotPassword}
+                            activeOpacity={0.7}
+                            style={{ alignSelf: 'flex-end', marginTop: 12 }}
+                        >
+                            <Text
+                                style={{
+                                    fontSize: 10,
+                                    color: C.electricBlue,
+                                    fontWeight: '700',
+                                    textTransform: 'uppercase',
+                                    letterSpacing: 1.2,
+                                }}
+                            >
+                                FORGOT PASSWORD?
+                            </Text>
+                        </TouchableOpacity>
                     </GlassCard>
                 </FadeInView>
 
                 {/* ── CTA ── */}
-                <FadeInView delay={300} style={{ marginTop: 28 }}>
+                <FadeInView delay={300} style={{ marginTop: 24 }}>
                     <PremiumButton
                         title={t('auth.login')}
                         onPress={handleLogin}
@@ -173,6 +260,34 @@ export default function Login() {
                         disabled={loading}
                     />
                 </FadeInView>
+
+                {/* ── Apple Sign In (iOS Native Plus) ── */}
+                {Platform.OS === 'ios' && appleAuthAvailable && (
+                    <FadeInView delay={350} style={{ marginTop: 12 }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', marginVertical: 12 }}>
+                            <View style={{ flex: 1, height: 1, backgroundColor: 'rgba(255, 255, 255, 0.08)' }} />
+                            <Text
+                                style={{
+                                    color: C.textDim,
+                                    fontSize: 9,
+                                    fontWeight: '800',
+                                    marginHorizontal: 12,
+                                    letterSpacing: 2,
+                                }}
+                            >
+                                OR
+                            </Text>
+                            <View style={{ flex: 1, height: 1, backgroundColor: 'rgba(255, 255, 255, 0.08)' }} />
+                        </View>
+                        <AppleAuthentication.AppleAuthenticationButton
+                            buttonType={AppleAuthentication.AppleAuthenticationButtonType.SIGN_IN}
+                            buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.WHITE}
+                            cornerRadius={14}
+                            style={{ width: '100%', height: 48 }}
+                            onPress={handleAppleSignIn}
+                        />
+                    </FadeInView>
+                )}
 
                 {/* ── Sign Up Link ── */}
                 <FadeInView delay={400} style={{ marginTop: 24 }}>

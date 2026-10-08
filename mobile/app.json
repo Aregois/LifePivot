@@ -1,16 +1,22 @@
 {
   "expo": {
-    "name": "mobile",
-    "slug": "mobile",
+    "name": "LifePivot",
+    "slug": "lifepivot",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "mobile",
+    "scheme": "lifepivot",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "icon": "./assets/expo.icon"
+      "bundleIdentifier": "com.lifepivot.app",
+      "supportsTablet": false,
+      "icon": "./assets/images/icon.png",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
+      "package": "com.lifepivot.app",
       "adaptiveIcon": {
         "backgroundColor": "#050508",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
@@ -39,7 +45,9 @@
       "expo-secure-store",
       "expo-web-browser",
       "@sentry/react-native",
-      "expo-localization"
+      "expo-localization",
+      "expo-notifications",
+      "expo-apple-authentication"
     ],
     "experiments": {
       "typedRoutes": true,
