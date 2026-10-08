@@ -10,7 +10,8 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import * as Haptics from 'expo-haptics';
+import { HapticsEngine } from '../utils/HapticsEngine';
+import { useLanguage } from '../context/LanguageContext';
 import { C, Gradients } from '../constants/theme';
 import { GlassCard, GradientText, GlowBadge, AnimatedProgressBar } from './ui';
 
@@ -82,6 +83,7 @@ export const StudyTipCarouselModal: React.FC<StudyTipCarouselModalProps> = ({
   onComplete,
   rewardAmount = 5,
 }) => {
+  const { t } = useLanguage();
   const [secondsRemaining, setSecondsRemaining] = useState(TOTAL_AD_SECONDS);
   const [slideIndex, setSlideIndex] = useState(0);
   const [isCompleted, setIsCompleted] = useState(false);
@@ -98,7 +100,7 @@ export const StudyTipCarouselModal: React.FC<StudyTipCarouselModalProps> = ({
         if (prev <= 1) {
           clearInterval(timer);
           setIsCompleted(true);
-          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+          HapticsEngine.tier3.success();
           onComplete();
           return 0;
         }
@@ -117,7 +119,18 @@ export const StudyTipCarouselModal: React.FC<StudyTipCarouselModalProps> = ({
     setSlideIndex(currentSlide);
   }, [secondsRemaining, visible]);
 
-  const currentTip = STUDY_TIPS[slideIndex] || STUDY_TIPS[0];
+  const defaultTip = STUDY_TIPS[slideIndex] || STUDY_TIPS[0];
+  const localizedTag = t(`study_tips.tips.${slideIndex}.tag` as any);
+  const localizedTitle = t(`study_tips.tips.${slideIndex}.title` as any);
+  const localizedDesc = t(`study_tips.tips.${slideIndex}.description` as any);
+
+  const currentTip = {
+    icon: defaultTip.icon,
+    colorScheme: defaultTip.colorScheme,
+    tag: localizedTag && !localizedTag.startsWith('study_tips.') ? localizedTag : defaultTip.tag,
+    title: localizedTitle && !localizedTitle.startsWith('study_tips.') ? localizedTitle : defaultTip.title,
+    description: localizedDesc && !localizedDesc.startsWith('study_tips.') ? localizedDesc : defaultTip.description,
+  };
   const progressRatio = (TOTAL_AD_SECONDS - secondsRemaining) / TOTAL_AD_SECONDS;
 
   return (
@@ -139,10 +152,10 @@ export const StudyTipCarouselModal: React.FC<StudyTipCarouselModalProps> = ({
           <View style={styles.header}>
             <View style={styles.badgeRow}>
               <View style={styles.liveDot} />
-              <Text style={styles.headerLabel}>SPONSORED INSIGHT</Text>
+              <Text style={styles.headerLabel}>{t('study_tips.sponsored_insight' as any)}</Text>
             </View>
 
-            <GlowBadge label={`+${rewardAmount} TOKENS 🪙`} colorScheme="amber" glow />
+            <GlowBadge label={t('study_tips.tokens_reward' as any, { amount: rewardAmount })} colorScheme="amber" glow />
           </View>
 
           {/* Countdown & Progress bar */}
@@ -154,7 +167,7 @@ export const StudyTipCarouselModal: React.FC<StudyTipCarouselModalProps> = ({
             <View style={{ flex: 1 }}>
               <View style={styles.progressHeader}>
                 <Text style={styles.progressTitle}>
-                  {isCompleted ? 'REWARD UNLOCKED!' : 'LEARNING INTERSTITIAL'}
+                  {isCompleted ? t('study_tips.reward_unlocked' as any) : t('study_tips.learning_interstitial' as any)}
                 </Text>
                 <Text style={styles.progressPercent}>
                   {Math.round(progressRatio * 100)}%
@@ -198,7 +211,7 @@ export const StudyTipCarouselModal: React.FC<StudyTipCarouselModalProps> = ({
           {isCompleted ? (
             <TouchableOpacity
               onPress={() => {
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                HapticsEngine.tier1.light();
                 onClose();
               }}
               style={styles.claimButton}
@@ -211,7 +224,7 @@ export const StudyTipCarouselModal: React.FC<StudyTipCarouselModalProps> = ({
               >
                 <Ionicons name="checkmark-done" size={20} color="#050508" />
                 <Text style={styles.claimButtonText}>
-                  CLAIM +{rewardAmount} TOKENS & CLOSE
+                  {t('study_tips.claim_reward' as any, { amount: rewardAmount })}
                 </Text>
               </LinearGradient>
             </TouchableOpacity>
@@ -219,7 +232,7 @@ export const StudyTipCarouselModal: React.FC<StudyTipCarouselModalProps> = ({
             <View style={styles.waitingContainer}>
               <Ionicons name="time-outline" size={16} color={C.textDim} />
               <Text style={styles.waitingText}>
-                Reward unlocks after countdown completes ({secondsRemaining}s)
+                {secondsRemaining}s
               </Text>
             </View>
           )}

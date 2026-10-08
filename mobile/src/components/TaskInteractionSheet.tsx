@@ -283,7 +283,7 @@ export const TaskInteractionSheet: React.FC<TaskInteractionSheetProps> = ({
       <View style={[styles.overlay, { backgroundColor: colors.overlayBg }]}>
         {/* Backdrop dismiss button */}
         <TouchableOpacity
-          style={StyleSheet.absoluteFillObject}
+          style={StyleSheet.absoluteFill}
           activeOpacity={1}
           onPress={onClose}
         />
@@ -308,7 +308,7 @@ export const TaskInteractionSheet: React.FC<TaskInteractionSheetProps> = ({
             {/* Header Section */}
             <View style={styles.header}>
               <View style={{ flex: 1 }}>
-                <Text style={[styles.headerSub, { color: colors.primary }]}>TASK SPECIFICATION</Text>
+                <Text style={[styles.headerSub, { color: colors.primary }]}>{t('tasks.task_specification' as any)}</Text>
                 <Text style={styles.headerTitle} numberOfLines={2}>
                   {task.title}
                 </Text>
@@ -633,13 +633,13 @@ export const TaskInteractionSheet: React.FC<TaskInteractionSheetProps> = ({
                     {saveStatus === 'saving' && (
                       <View style={styles.savingRow}>
                         <ActivityIndicator size="small" color={colors.primary} />
-                        <Text style={[styles.saveStatusText, { color: colors.primary }]}>SAVING...</Text>
+                        <Text style={[styles.saveStatusText, { color: colors.primary }]}>{t('tasks.saving' as any)}</Text>
                       </View>
                     )}
                     {saveStatus === 'saved' && (
                       <View style={styles.savingRow}>
                         <Ionicons name="checkmark-circle" size={12} color={colors.emerald} />
-                        <Text style={[styles.saveStatusText, { color: colors.emerald }]}>AUTOSAVED</Text>
+                        <Text style={[styles.saveStatusText, { color: colors.emerald }]}>{t('tasks.autosaved' as any)}</Text>
                       </View>
                     )}
                   </View>
@@ -678,13 +678,13 @@ export const TaskInteractionSheet: React.FC<TaskInteractionSheetProps> = ({
                     {reflectionStatus === 'saving' && (
                       <View style={styles.savingRow}>
                         <ActivityIndicator size="small" color={colors.secondary} />
-                        <Text style={[styles.saveStatusText, { color: colors.secondary }]}>SAVING...</Text>
+                        <Text style={[styles.saveStatusText, { color: colors.secondary }]}>{t('tasks.saving' as any)}</Text>
                       </View>
                     )}
                     {reflectionStatus === 'saved' && (
                       <View style={styles.savingRow}>
                         <Ionicons name="checkmark-circle" size={12} color={colors.emerald} />
-                        <Text style={[styles.saveStatusText, { color: colors.emerald }]}>AUTOSAVED</Text>
+                        <Text style={[styles.saveStatusText, { color: colors.emerald }]}>{t('tasks.autosaved' as any)}</Text>
                       </View>
                     )}
                   </View>

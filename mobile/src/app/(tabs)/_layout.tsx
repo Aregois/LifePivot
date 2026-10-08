@@ -88,14 +88,14 @@ export default function TabsLayout() {
         tabBarBackground: () =>
           Platform.OS === 'ios' ? (
             <BlurView
-              intensity={40}
+              intensity={65}
               tint="dark"
               style={[
                 StyleSheet.absoluteFill,
                 {
-                  backgroundColor: 'rgba(11, 13, 23, 0.75)',
+                  backgroundColor: 'rgba(11, 13, 23, 0.82)',
                   borderTopWidth: 1,
-                  borderTopColor: colors.glassBorder,
+                  borderTopColor: colors.glassBorderSpecular || 'rgba(255, 255, 255, 0.16)',
                 },
               ]}
             />
@@ -106,7 +106,7 @@ export default function TabsLayout() {
                 {
                   backgroundColor: colors.card,
                   borderTopWidth: 1,
-                  borderTopColor: colors.glassBorder,
+                  borderTopColor: colors.glassBorderSpecular || 'rgba(255, 255, 255, 0.16)',
                 },
               ]}
             />
@@ -121,11 +121,11 @@ export default function TabsLayout() {
           left: 0,
           right: 0,
           bottom: 0,
-          elevation: 16,
+          elevation: 20,
           shadowColor: '#000000',
-          shadowOffset: { width: 0, height: -6 },
-          shadowOpacity: 0.35,
-          shadowRadius: 16,
+          shadowOffset: { width: 0, height: -8 },
+          shadowOpacity: 0.45,
+          shadowRadius: 20,
         },
 
         /* ── Tab bar label ──────────────────────────────────── */

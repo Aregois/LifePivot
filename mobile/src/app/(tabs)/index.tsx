@@ -21,9 +21,10 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
-import * as SecureStore from 'expo-secure-store';
+import { HapticsEngine } from '../../utils/HapticsEngine';
+import { storage as SecureStore } from '../../utils/storage';
 import { supabase } from '../../utils/supabase';
-import { C, Gradients, Shadows } from '../../constants/theme';
+import { C, Gradients, Shadows, Typography } from '../../constants/theme';
 import { useTheme } from '../../context/ThemeContext';
 import { useLanguage, translateGoal, translateGoalsArray, translateTasksArray } from '../../context/LanguageContext';
 import {
@@ -498,10 +499,10 @@ export default function Dashboard() {
 
                 <Text style={styles.heroSubtitle}>
                   {activeGoalStats && activeGoalStats.todayPending > 0
-                    ? (t('dashboard.sessions_left', { count: activeGoalStats.todayPending }) || `${activeGoalStats.todayPending} FOCUS SESSIONS SCHEDULED TODAY.`)
+                    ? (t('dashboard.sessions_left', { count: activeGoalStats.todayPending }) || `${activeGoalStats.todayPending} focus sessions scheduled today.`)
                     : activeGoalStats && activeGoalStats.todayTotal > 0
-                    ? (t('focus.session_completed') || 'ALL SCHEDULED SESSIONS SECURED.')
-                    : (t('focus.ready') || 'READY FOR YOUR NEXT FOCUS SPRINT.')}
+                    ? (t('focus.session_completed') || 'All scheduled sessions secured.')
+                    : (t('focus.ready') || 'Ready for your next focus sprint.')}
                 </Text>
 
                 {/* Status Indicator & Focus Trigger */}
@@ -509,7 +510,7 @@ export default function Dashboard() {
                   <View style={styles.statusIndicatorRow}>
                     <View style={[styles.onlineDot, { backgroundColor: colors.emerald }]} />
                     <Text style={[styles.statusText, { color: colors.emerald }]}>
-                      {t('focus.focusing') || 'FOCUSED'}
+                      {t('focus.focusing') || 'Focused'}
                     </Text>
                   </View>
 
@@ -522,7 +523,7 @@ export default function Dashboard() {
                   >
                     <TouchableOpacity
                       onPress={() => {
-                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                        HapticsEngine.tier2.action();
                         handleStartFocus();
                       }}
                       style={[styles.heroFocusBtn, { backgroundColor: colors.primary }]}
@@ -787,12 +788,11 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
   },
   heroSubtitle: {
-    fontSize: 11,
+    ...Typography.subhead,
     color: '#9CA3AF',
-    marginTop: 8,
-    lineHeight: 16,
-    letterSpacing: 0.5,
-    textTransform: 'uppercase',
+    marginTop: 6,
+    lineHeight: 18,
+    letterSpacing: -0.1,
   },
   heroActionsRow: {
     flexDirection: 'row',

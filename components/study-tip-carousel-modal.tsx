@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { CheckCircle2, Clock, X, AlertCircle, Loader2, Sparkles } from 'lucide-react'
 import { haptics } from '@/utils/haptics'
+import { useLanguage } from '@/components/language-provider'
 
 export interface StudyTipCarouselModalProps {
   isOpen: boolean
@@ -21,7 +22,7 @@ interface StudyTip {
   colorScheme: 'cyan' | 'violet' | 'amber' | 'emerald'
 }
 
-const STUDY_TIPS: StudyTip[] = [
+const DEFAULT_STUDY_TIPS: StudyTip[] = [
   {
     icon: '🧠',
     tag: 'COGNITIVE SCIENCE',
@@ -73,6 +74,7 @@ export function StudyTipCarouselModal({
   onTokensRewarded,
   rewardAmount = 5,
 }: StudyTipCarouselModalProps) {
+  const { t } = useLanguage()
   const [secondsRemaining, setSecondsRemaining] = useState<number>(TOTAL_AD_SECONDS)
   const [slideIndex, setSlideIndex] = useState<number>(0)
   const [isCompleted, setIsCompleted] = useState<boolean>(false)
@@ -155,7 +157,7 @@ export function StudyTipCarouselModal({
   useEffect(() => {
     if (!isOpen || isLoadingSession || isCompleted) return
     const elapsed = TOTAL_AD_SECONDS - secondsRemaining
-    const currentSlide = Math.min(Math.floor(elapsed / 3), STUDY_TIPS.length - 1)
+    const currentSlide = Math.min(Math.floor(elapsed / 3), DEFAULT_STUDY_TIPS.length - 1)
     setSlideIndex(currentSlide)
   }, [secondsRemaining, isOpen, isLoadingSession, isCompleted])
 
@@ -214,7 +216,18 @@ export function StudyTipCarouselModal({
     }
   }
 
-  const currentTip = STUDY_TIPS[slideIndex] || STUDY_TIPS[0]
+  const defaultTip = DEFAULT_STUDY_TIPS[slideIndex] || DEFAULT_STUDY_TIPS[0]
+  const localizedTag = t(`study_tips.tips.${slideIndex}.tag`)
+  const localizedTitle = t(`study_tips.tips.${slideIndex}.title`)
+  const localizedDesc = t(`study_tips.tips.${slideIndex}.description`)
+
+  const currentTip = {
+    icon: defaultTip.icon,
+    colorScheme: defaultTip.colorScheme,
+    tag: localizedTag && !localizedTag.startsWith('study_tips.') ? localizedTag : defaultTip.tag,
+    title: localizedTitle && !localizedTitle.startsWith('study_tips.') ? localizedTitle : defaultTip.title,
+    description: localizedDesc && !localizedDesc.startsWith('study_tips.') ? localizedDesc : defaultTip.description,
+  }
   const progressRatio = (TOTAL_AD_SECONDS - secondsRemaining) / TOTAL_AD_SECONDS
 
   // SVG Circular math
@@ -284,13 +297,13 @@ export function StudyTipCarouselModal({
               <div className="flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse shadow-[0_0_8px_#f59e0b]" />
                 <span className="text-[10px] font-black text-amber-400 tracking-[0.2em] uppercase">
-                  SPONSORED INSIGHT
+                  {t('study_tips.sponsored_insight')}
                 </span>
               </div>
 
               <div className="px-2.5 py-1 rounded-xl bg-amber-500/10 border border-amber-500/20 shadow-[0_0_12px_rgba(245,158,11,0.15)]">
                 <span className="text-[10px] font-black text-amber-400">
-                  +{rewardAmount} TOKENS 🪙
+                  {t('study_tips.tokens_reward', { amount: rewardAmount })}
                 </span>
               </div>
             </div>
@@ -300,10 +313,10 @@ export function StudyTipCarouselModal({
               <div className="py-16 flex flex-col items-center justify-center text-center">
                 <Loader2 className="w-8 h-8 animate-spin text-electric-blue mb-4" />
                 <p className="text-xs font-black tracking-widest uppercase text-white mb-1">
-                  Connecting to Insight Network...
+                  {t('study_tips.connecting')}
                 </p>
                 <p className="text-[11px] text-gray-400">
-                  Generating verified reward session
+                  {t('study_tips.generating')}
                 </p>
               </div>
             )}
@@ -315,10 +328,10 @@ export function StudyTipCarouselModal({
                   ⏳
                 </div>
                 <h3 className="text-sm font-black uppercase tracking-wider text-white mb-1">
-                  Reward Cooldown Active
+                  {t('study_tips.cooldown_active')}
                 </h3>
                 <p className="text-xs text-gray-400 mb-5 max-w-[260px]">
-                  Rewarded insights have a 60-minute interval between token grants.
+                  {t('study_tips.cooldown_desc')}
                 </p>
                 <div className="px-5 py-3 rounded-2xl bg-white/5 border border-white/10 font-mono text-base font-black text-amber-400 tracking-wider mb-6">
                   {formatCooldown(cooldownSecs)}
@@ -330,7 +343,7 @@ export function StudyTipCarouselModal({
                   }}
                   className="w-full py-3.5 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-black tracking-widest uppercase text-gray-300 transition-colors"
                 >
-                  Return to Shop
+                  {t('study_tips.return_to_shop')}
                 </button>
               </div>
             )}
@@ -342,7 +355,7 @@ export function StudyTipCarouselModal({
                   <AlertCircle className="w-6 h-6" />
                 </div>
                 <h3 className="text-sm font-black uppercase tracking-wider text-white mb-1">
-                  Session Error
+                  {t('study_tips.session_error')}
                 </h3>
                 <p className="text-xs text-rose-300 mb-6 max-w-[280px]">
                   {errorMessage}
@@ -354,7 +367,7 @@ export function StudyTipCarouselModal({
                   }}
                   className="w-full py-3.5 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-black tracking-widest uppercase text-white transition-colors"
                 >
-                  Dismiss
+                  {t('workspaces.cancel')}
                 </button>
               </div>
             )}
@@ -388,11 +401,11 @@ export function StudyTipCarouselModal({
                         className="transition-all duration-1000 ease-linear drop-shadow-[0_0_8px_rgba(var(--accent-rgb),0.5)]"
                       />
                     </svg>
-                    <div className="absolute flex flex-col items-center justify-center text-center">
-                      <span className="text-sm font-black text-electric-blue leading-none">
+                    <div className="absolute inset-0 flex items-center justify-center flex-col">
+                      <span className="text-sm font-black text-white font-mono leading-none">
                         {secondsRemaining}
                       </span>
-                      <span className="text-[7px] font-black text-gray-400 tracking-wider">
+                      <span className="text-[7px] font-black text-gray-500 uppercase tracking-wider">
                         SEC
                       </span>
                     </div>
@@ -402,7 +415,7 @@ export function StudyTipCarouselModal({
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between mb-1.5">
                       <span className="text-[10px] font-black tracking-wider uppercase text-white">
-                        {isCompleted ? 'REWARD UNLOCKED!' : 'LEARNING INTERSTITIAL'}
+                        {isCompleted ? t('study_tips.reward_unlocked') : t('study_tips.learning_interstitial')}
                       </span>
                       <span className="text-[10px] font-black text-electric-blue">
                         {Math.round(progressRatio * 100)}%
@@ -454,7 +467,7 @@ export function StudyTipCarouselModal({
 
                 {/* Slide Indicator Dots */}
                 <div className="flex items-center justify-center gap-1.5 my-4">
-                  {STUDY_TIPS.map((_, idx) => (
+                  {DEFAULT_STUDY_TIPS.map((_, idx) => (
                     <motion.div
                       key={idx}
                       className={`h-1.5 rounded-full transition-all duration-300 ${
@@ -473,7 +486,7 @@ export function StudyTipCarouselModal({
                   {claimSuccess ? (
                     <div className="w-full py-3.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 font-black text-xs tracking-widest uppercase flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(16,185,129,0.2)]">
                       <CheckCircle2 className="w-4 h-4" />
-                      +{rewardAmount} Tokens Added to Wallet!
+                      {t('study_tips.tokens_claimed')}
                     </div>
                   ) : isCompleted ? (
                     <button
@@ -484,12 +497,12 @@ export function StudyTipCarouselModal({
                       {isClaiming ? (
                         <>
                           <Loader2 className="w-4 h-4 animate-spin text-black" />
-                          Claiming Reward...
+                          {t('study_tips.claiming')}
                         </>
                       ) : (
                         <>
                           <CheckCircle2 className="w-4 h-4" />
-                          CLAIM +{rewardAmount} TOKENS & CLOSE
+                          {t('study_tips.claim_reward', { amount: rewardAmount })}
                         </>
                       )}
                     </button>
@@ -497,7 +510,7 @@ export function StudyTipCarouselModal({
                     <div className="flex items-center justify-center gap-2 py-3 text-gray-400">
                       <Clock className="w-3.5 h-3.5 text-gray-500" />
                       <span className="text-[11px] font-bold tracking-wider">
-                        Reward unlocks after countdown completes ({secondsRemaining}s)
+                        {secondsRemaining}s
                       </span>
                     </div>
                   )}

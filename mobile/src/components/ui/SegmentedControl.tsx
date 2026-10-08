@@ -119,7 +119,7 @@ export function SegmentedControl({
               ]}
               numberOfLines={1}
             >
-              {label.toUpperCase()}
+              {label}
             </Text>
           </Pressable>
         );
@@ -131,7 +131,7 @@ export function SegmentedControl({
 const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
-    borderRadius: BorderRadius.xxl,
+    borderRadius: BorderRadius.xl,
     padding: 3,
     borderWidth: 1,
     position: 'relative',
@@ -141,12 +141,12 @@ const styles = StyleSheet.create({
     top: 3,
     bottom: 3,
     left: 0,
-    borderRadius: BorderRadius.xl,
+    borderRadius: BorderRadius.lg,
     borderWidth: 1,
     shadowColor: '#000000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
     elevation: 3,
   },
   segment: {
@@ -155,14 +155,15 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: Spacing.two,
     zIndex: 1,
-    minHeight: 40,
+    minHeight: 38,
   },
   segmentText: {
-    ...Typography.overline,
-    fontWeight: '800',
+    ...Typography.footnote,
+    fontWeight: '600',
+    letterSpacing: 0.2,
   },
   segmentTextActive: {
-    fontWeight: '900',
+    fontWeight: '800',
   },
 });
 

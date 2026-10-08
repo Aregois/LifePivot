@@ -1,4 +1,4 @@
-﻿import { createGoalBase } from '@/app/actions'
+import { createGoalBase } from '@/app/actions'
 import { verifyUserSession } from '@/utils/auth'
 import { createClient } from '@/utils/supabase/server'
 import { getLocalDateString } from '@/utils/date-utils'
@@ -21,6 +21,16 @@ const CATEGORY_PROMPTS: Record<string, string> = {
     'Custom': 'The curriculum should be a balanced, general study course covering key concepts, vocabulary, practice exercises, and project milestones.'
 };
 
+const LANGUAGE_DISPLAY_NAMES: Record<string, string> = {
+    en: 'English',
+    es: 'Spanish (Español)',
+    ru: 'Russian (Русский)',
+    fr: 'French (Français)',
+    hy: 'Armenian (Հայերեն)',
+    ja: 'Japanese (日本語)',
+    zh: 'Chinese (中文)',
+};
+
 /**
  * POST /api/plans/generate
  *
@@ -35,7 +45,7 @@ export async function POST(request: Request) {
         }
 
         const body = await request.json()
-        const { goal, level, dailyTime, style } = body
+        const { goal, level, dailyTime, style, duration, intent, language } = body
 
         if (!goal || !level || !dailyTime || !style) {
             return NextResponse.json(
@@ -44,22 +54,25 @@ export async function POST(request: Request) {
             )
         }
 
-        const durationDays = 30
+        const durationDays = duration ? parseInt(String(duration), 10) || 30 : 30
         const dailyHours = mapDailyTimeToHours(dailyTime)
         const planLevel = mapLevel(level)
         const category = mapStyleToCategory(style)
         const categoryInstructions = CATEGORY_PROMPTS[category] || CATEGORY_PROMPTS['Custom']
+        const userLanguage = (language as string) || 'en'
+        const goalIntent = (intent as string) || 'Level Up'
+        const targetLanguageName = LANGUAGE_DISPLAY_NAMES[userLanguage] || userLanguage
 
         // Create the goal base first
         const formData = new FormData()
         formData.append('title', goal)
         formData.append('duration_days', durationDays.toString())
         formData.append('level', planLevel)
-        formData.append('goal_intent', 'Level Up')
+        formData.append('goal_intent', goalIntent)
         formData.append('sprint_walls', JSON.stringify([]))
         formData.append('daily_hours', dailyHours.toString())
         formData.append('category', category)
-        formData.append('language', 'en')
+        formData.append('language', userLanguage)
 
         const createResult = await createGoalBase(formData)
         if (createResult.error) {
@@ -131,16 +144,27 @@ ${docSnippets}
         Category Specific Guidelines:
         ${categoryInstructions}
 
-        MULTILINGUAL TRANSLATION CONSTRAINT:
-        CRITICAL: To optimize performance and reduce response time, only generate task titles and subtask titles directly in the user's active language: "en". Do NOT output any translation arrays, dictionaries, or "title_translations" fields.
+        MULTILINGUAL TRANSLATION & LOCALIZATION MANDATE:
+        CRITICAL: The user's active language is "${targetLanguageName}" (code: "${userLanguage}").
+        You MUST generate ALL task titles, subtask titles, and descriptions directly, fluently, and naturally in "${targetLanguageName}".
+        For example:
+        - If language is Armenian (hy), every title and subtask MUST be written in proper Armenian (e.g. "API-ի բարելավում", "Տվյալների բազայի նախագծում"):
+        - If language is Russian (ru), write in Russian (e.g. "Создание базы данных").
+        - If language is Spanish (es), write in Spanish (e.g. "Diseño de la base de datos").
+        - If language is French (fr), write in French (e.g. "Conception de base de données").
+        - If language is Japanese (ja), write in Japanese.
+        - If language is Chinese (zh), write in Chinese.
+        - For P0 Void/Rest days, write the rest day title in ${targetLanguageName} (or "VOID DAY").
+        Do NOT output in English unless the requested active language is English.
+        Do NOT output any translation arrays, dictionaries, or "title_translations" fields.
 
-        Mission Intent: Level Up
+        Mission Intent: ${goalIntent}
         Total Duration: ${durationDays} days.
         Daily Study Budget: ${dailyHours} hours/day.
         Level: ${planLevel}.
         Phase Boundaries (Hard Walls): []
         
-        Current Generate Window: Days 1 to 30.
+        Current Generate Window: Days 1 to ${durationDays}.
         
         TASK HIERARCHY (P0 to P5):
         - P5 (Deep Theory): Hardest concepts. Mental ceiling. Max 1 per day.
@@ -153,12 +177,12 @@ ${docSnippets}
         VOID DAY & P5 TIEBREAKER RULES:
         - The P5 Void Day rule takes absolute priority. In any plan where a P5 task is placed, a P0 Void Day must follow it the next day regardless of plan length or the every-6-days rule.
         - Otherwise, inject ONE P0 Void day every 6 days (e.g. day 6, 12, 18, 24, etc.).
-        - NEVER place a P0 (Void Day) on the FINAL DAY of the plan (day 30) or on day 1.
+        - NEVER place a P0 (Void Day) on the FINAL DAY of the plan (day ${durationDays}) or on day 1.
 
         PRIORITY RULES:
         - P5 (Deep Theory): max 1 per day, requires 4-5 subtasks
         - P4 (Hard Application): requires 3-4 subtasks
-        - P3 (Standard): requires exactly 2 subtasks (with placeholder titles like "Practice exercise 1", "Practice exercise 2")
+        - P3 (Standard): requires exactly 2 subtasks (with practical action titles in ${targetLanguageName})
         - P2 (Theory Overview): no subtasks (subtasks: [])
         - P1 (Exercises): no subtasks
         - P0 (Void Day): title must be "VOID DAY", no subtasks
@@ -174,8 +198,8 @@ ${docSnippets}
             async start(controller) {
                 let tasksSaved = 0
                 try {
-                    // Send planId as the very first event
-                    controller.enqueue(encoder.encode(`data: ${JSON.stringify({ planId: goalId })}\n\n`))
+                    // Send planId as the very first event (both type and planId formats)
+                    controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'start', planId: goalId })}\n\n`))
 
                     const result = await textModel.generateContentStream(prompt)
                     let buffer = ''
@@ -190,7 +214,7 @@ ${docSnippets}
                             const parsedTask = cleanAndParseTaskLine(line)
                             if (parsedTask) {
                                 // Save to Supabase tasks table
-                                const dbTask = formatDbTask(parsedTask, goalId, user.id, category, planLevel, goalCreatedAt)
+                                const dbTask = formatDbTask(parsedTask, goalId, user.id, category, planLevel, goalCreatedAt, userLanguage)
                                 const { error: insertError } = await supabase
                                     .from('tasks')
                                     .insert(dbTask)
@@ -201,12 +225,19 @@ ${docSnippets}
                                     tasksSaved++
                                 }
 
-                                // Send SSE event immediately to client
-                                controller.enqueue(encoder.encode(`data: ${JSON.stringify({
+                                const streamTaskPayload = {
+                                    id: `task_${parsedTask.day}_${Math.random().toString(36).substring(2, 7)}`,
                                     title: parsedTask.title,
                                     priority: parsedTask.priority,
                                     day: parsedTask.day,
                                     estimated_mins: parsedTask.estimated_mins
+                                }
+
+                                // Send SSE event immediately to client in both task and flat formats
+                                controller.enqueue(encoder.encode(`data: ${JSON.stringify({
+                                    type: 'task',
+                                    task: streamTaskPayload,
+                                    ...streamTaskPayload
                                 })}\n\n`))
                             }
                         }
@@ -216,7 +247,7 @@ ${docSnippets}
                     if (buffer.trim()) {
                         const parsedTask = cleanAndParseTaskLine(buffer)
                         if (parsedTask) {
-                            const dbTask = formatDbTask(parsedTask, goalId, user.id, category, planLevel, goalCreatedAt)
+                            const dbTask = formatDbTask(parsedTask, goalId, user.id, category, planLevel, goalCreatedAt, userLanguage)
                             const { error: insertError } = await supabase
                                 .from('tasks')
                                 .insert(dbTask)
@@ -225,16 +256,24 @@ ${docSnippets}
                                 tasksSaved++
                             }
 
-                            controller.enqueue(encoder.encode(`data: ${JSON.stringify({
+                            const streamTaskPayload = {
+                                id: `task_${parsedTask.day}_${Math.random().toString(36).substring(2, 7)}`,
                                 title: parsedTask.title,
                                 priority: parsedTask.priority,
                                 day: parsedTask.day,
                                 estimated_mins: parsedTask.estimated_mins
+                            }
+
+                            controller.enqueue(encoder.encode(`data: ${JSON.stringify({
+                                type: 'task',
+                                task: streamTaskPayload,
+                                ...streamTaskPayload
                             })}\n\n`))
                         }
                     }
 
-                    // Send [DONE] signal
+                    // Send [DONE] and typed done signal
+                    controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'done', planId: goalId })}\n\n`))
                     controller.enqueue(encoder.encode('data: [DONE]\n\n'))
                 } catch (err: any) {
                     console.error('Error in Gemini Stream Generation:', err)
@@ -245,7 +284,7 @@ ${docSnippets}
                         await supabase.from('learning_goals').delete().eq('id', goalId)
                     }
 
-                    controller.enqueue(encoder.encode(`data: ${JSON.stringify({ error: err.message || 'Generation failed. Please try again.' })}\n\n`))
+                    controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'error', error: err.message || 'Generation failed. Please try again.' })}\n\n`))
                 } finally {
                     controller.close()
                 }
@@ -307,7 +346,7 @@ function cleanAndParseTaskLine(line: string) {
 }
 
 /** Formats a task object to match the Supabase DB schema with backward-compatible translations subtask */
-function formatDbTask(task: any, goalId: string, userId: string, category: string, planLevel: string, goalCreatedAt: string) {
+function formatDbTask(task: any, goalId: string, userId: string, category: string, planLevel: string, goalCreatedAt: string, userLanguage = 'en') {
     const baseDate = new Date(goalCreatedAt)
     const targetDate = new Date(baseDate)
     targetDate.setDate(targetDate.getDate() + (task.day - 1))
@@ -326,9 +365,9 @@ function formatDbTask(task: any, goalId: string, userId: string, category: strin
         title: '',
         completed: false,
         translations: {
-            title: { en: task.title },
+            title: { [userLanguage]: task.title, en: task.title },
             subtasks: subtasksFormatted.reduce((acc: any, st: any) => {
-                acc[st.id] = { en: st.title }
+                acc[st.id] = { [userLanguage]: st.title, en: st.title }
                 return acc
             }, {})
         }

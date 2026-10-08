@@ -712,14 +712,14 @@ export function ProfileClient({
                     <div className="bg-[#141824] border border-white/5 p-5 lg:p-8 rounded-[2.5rem] shadow-lg flex flex-col gap-5 lg:gap-8">
                         <div className="flex items-center gap-2">
                             <Palette className="h-4 w-4 lg:h-5 lg:w-5 text-electric-blue" />
-                            <h3 className="text-xs lg:text-sm font-black uppercase tracking-wider text-gray-400">Wardrobe Customization</h3>
+                            <h3 className="text-xs lg:text-sm font-black uppercase tracking-wider text-gray-400">{t('profile.wardrobe_customization')}</h3>
                         </div>
 
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
                             <div className="flex flex-col gap-6">
                                 {/* Title Selection */}
                                 <div>
-                                    <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-2.5">Equip Unlocked Title</p>
+                                    <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-2.5">{t('profile.equip_unlocked_title')}</p>
                                     <div className="flex flex-col gap-2">
                                         {unlockedTitles.map((tId) => (
                                             <button
@@ -740,7 +740,7 @@ export function ProfileClient({
 
                                 {/* Avatar Frame Selection */}
                                 <div>
-                                    <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-2.5">Equip Unlocked Avatar Frame</p>
+                                    <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-2.5">{t('profile.equip_unlocked_frame')}</p>
                                     <div className="flex flex-col gap-2">
                                         {unlockedFrames.map((fId) => {
                                             const frameLabels: Record<string, string> = {
@@ -770,7 +770,7 @@ export function ProfileClient({
 
                             {/* Avatar Profile Icon Selection */}
                             <div className="lg:border-l lg:border-t-0 lg:border-white/5 lg:pl-8 border-t border-white/5 pt-5 lg:pt-0">
-                                <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-2.5">Select Profile Avatar</p>
+                                <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-2.5">{t('profile.select_profile_avatar')}</p>
                                 <div className="grid grid-cols-3 gap-3">
                                     {AVATAR_LIST.map((avatar) => (
                                         <button

@@ -8,11 +8,11 @@ import {
   Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import * as Haptics from 'expo-haptics';
-import * as SecureStore from 'expo-secure-store';
 import { C, Gradients, Shadows } from '../constants/theme';
 import { GlassCard, GlowBadge, AnimatedProgressBar } from './ui';
 import { supabase } from '../utils/supabase';
+import { storage as SecureStore } from '../utils/storage';
+import { HapticsEngine } from '../utils/HapticsEngine';
 
 export interface AchievementItem {
   id: 'first_focus' | 'recall_master' | 'deep_learner' | 'streak_starter';
@@ -127,7 +127,7 @@ export const MasteryAchievementsCard: React.FC<MasteryAchievementsCardProps> = (
     }
 
     setClaimingId(achievement.id);
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    HapticsEngine.tier2.action();
 
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -178,13 +178,13 @@ export const MasteryAchievementsCard: React.FC<MasteryAchievementsCardProps> = (
       };
       onProfileUpdate(updatedProfileState);
 
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      HapticsEngine.tier3.celebrate();
       Alert.alert(
         'REWARD CLAIMED! ✦',
         `+${achievement.xpReward} XP & +${achievement.tokenReward} Tokens credited to your vault.`
       );
     } catch (err: any) {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      HapticsEngine.tier4.error();
       Alert.alert('CLAIM FAILED', err.message || 'Could not claim reward');
     } finally {
       setClaimingId(null);

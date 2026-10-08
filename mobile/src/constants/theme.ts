@@ -1,8 +1,32 @@
-import { Platform } from 'react-native';
+import { Platform, Dimensions, PixelRatio } from 'react-native';
 
-/* ────────────────────────────────────────────────────────────────────────── */
-/*  LifePivot Design Tokens                                                  */
-/* ────────────────────────────────────────────────────────────────────────── */
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
+
+// Standard iPhone reference dimensions (iPhone 14 / 15 / 16 standard viewport)
+const BASE_WIDTH = 390;
+const BASE_HEIGHT = 844;
+
+/** Responsive width scaling based on reference viewport */
+export const scale = (size: number): number => {
+  return (SCREEN_WIDTH / BASE_WIDTH) * size;
+};
+
+/** Responsive height scaling based on reference viewport */
+export const verticalScale = (size: number): number => {
+  return (SCREEN_HEIGHT / BASE_HEIGHT) * size;
+};
+
+/** Moderate scaling with configurable factor (default 0.5) to avoid excessive scaling on tablets */
+export const moderateScale = (size: number, factor = 0.5): number => {
+  return size + (scale(size) - size) * factor;
+};
+
+/** Clamped scaling to ensure minimum readability and maximum bound across all devices */
+export const clampScale = (size: number, min: number, max: number): number => {
+  return Math.min(Math.max(scale(size), min), max);
+};
+
+export { SCREEN_WIDTH, SCREEN_HEIGHT };
 
 export const Colors = {
   light: {
@@ -35,7 +59,10 @@ export const Colors = {
 
     // Glass
     glassBorder: 'rgba(255, 255, 255, 0.08)',
+    glassBorderSpecular: 'rgba(255, 255, 255, 0.16)',
     glassBg: 'rgba(255, 255, 255, 0.03)',
+    glassBgLight: 'rgba(255, 255, 255, 0.06)',
+    glassBgUltraThin: 'rgba(255, 255, 255, 0.02)',
     glassBorderSubtle: 'rgba(255, 255, 255, 0.05)',
     glassBorderFaint: 'rgba(255, 255, 255, 0.03)',
 
@@ -130,66 +157,89 @@ export const Fonts = Platform.select({
 });
 
 export const Typography = {
+  // Apple HIG Hierarchy
+  largeTitle: {
+    fontSize: 34,
+    fontWeight: '800' as const,
+    lineHeight: 41,
+    letterSpacing: 0.37,
+  },
+  title1: {
+    fontSize: 28,
+    fontWeight: '700' as const,
+    lineHeight: 34,
+    letterSpacing: 0.36,
+  },
+  title2: {
+    fontSize: 22,
+    fontWeight: '700' as const,
+    lineHeight: 28,
+    letterSpacing: 0.35,
+  },
+  title3: {
+    fontSize: 20,
+    fontWeight: '600' as const,
+    lineHeight: 25,
+    letterSpacing: 0.38,
+  },
   display: {
     fontSize: 32,
     fontWeight: '900' as const,
     letterSpacing: -1.0,
-    textTransform: 'uppercase' as const,
   },
   heading: {
     fontSize: 24,
     fontWeight: '900' as const,
     letterSpacing: -0.5,
-    textTransform: 'uppercase' as const,
   },
   title: {
     fontSize: 18,
     fontWeight: '800' as const,
     letterSpacing: 0.2,
-    textTransform: 'uppercase' as const,
   },
   headline: {
-    fontSize: 16,
-    fontWeight: '700' as const,
+    fontSize: 17,
+    fontWeight: '600' as const,
     lineHeight: 22,
-    letterSpacing: -0.2,
+    letterSpacing: -0.4,
   },
   body: {
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: '400' as const,
     lineHeight: 21,
-    letterSpacing: -0.1,
+    letterSpacing: -0.2,
   },
   bodyBold: {
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: '600' as const,
     lineHeight: 21,
-    letterSpacing: -0.1,
+    letterSpacing: -0.2,
   },
   callout: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: '500' as const,
+    lineHeight: 19,
+    letterSpacing: -0.2,
+  },
+  subhead: {
+    fontSize: 13,
+    fontWeight: '400' as const,
     lineHeight: 18,
     letterSpacing: -0.1,
   },
-  subhead: {
+  footnote: {
     fontSize: 12,
     fontWeight: '400' as const,
     lineHeight: 16,
   },
-  footnote: {
-    fontSize: 11,
-    fontWeight: '400' as const,
-    lineHeight: 15,
-  },
   caption: {
     fontSize: 11,
     fontWeight: '500' as const,
-    lineHeight: 16,
+    lineHeight: 14,
   },
   label: {
     fontSize: 10,
-    fontWeight: '900' as const,
+    fontWeight: '800' as const,
     letterSpacing: 1.5,
     textTransform: 'uppercase' as const,
   },
@@ -215,12 +265,12 @@ export const Spacing = {
 } as const;
 
 export const BorderRadius = {
-  sm: 8,
-  md: 12,
-  lg: 16,
-  xl: 20,
-  xxl: 24,
-  xxxl: 32,
+  sm: 10,
+  md: 14,
+  lg: 18,
+  xl: 22,
+  xxl: 28,
+  xxxl: 36,
   full: 9999,
 } as const;
 
@@ -235,10 +285,10 @@ export const IconSize = {
 } as const;
 
 export const ComponentHeight = {
-  button: 56,
-  buttonSmall: 40,
-  input: 56,
-  badge: 28,
+  button: 52,
+  buttonSmall: 38,
+  input: 52,
+  badge: 26,
   tab: 48,
   sheetHandle: 5,
 } as const;

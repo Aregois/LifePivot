@@ -12,7 +12,7 @@ import {
   ActivityIndicator,
   Alert,
 } from 'react-native';
-import * as SecureStore from 'expo-secure-store';
+import { storage as SecureStore } from '../utils/storage';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, {
   useSharedValue,
@@ -31,7 +31,6 @@ import { GlassCard, GlowBadge } from './ui';
 import { SocraticChatModal, SocraticPersona } from './SocraticChatModal';
 import { supabase } from '../utils/supabase';
 import { apiRequest } from '../utils/api';
-import { SoundscapesEngine, SOUNDSCAPE_PRESETS, SoundscapePreset } from '../utils/SoundscapesEngine';
 
 const { width } = Dimensions.get('window');
 const TIMER_SIZE = Math.min(width * 0.68, 260);
@@ -116,30 +115,6 @@ export const FocusModeModal: React.FC<FocusModeModalProps> = ({
   const [hintLoading, setHintLoading] = useState(false);
   const [persona, setPersona] = useState<SocraticPersona>('feynman');
 
-  // Ambient Soundscapes state
-  const [soundscape, setSoundscape] = useState<SoundscapePreset>('off');
-  const [soundVolume, setSoundVolume] = useState<number>(0.7);
-
-  // Sync audio with focus timer state
-  useEffect(() => {
-    if (!visible) {
-      SoundscapesEngine.stop();
-      return;
-    }
-    if (timerRunning && soundscape !== 'off' && soundscape !== 'none') {
-      SoundscapesEngine.play(soundscape, soundVolume);
-    } else if (!timerRunning) {
-      SoundscapesEngine.pause();
-    }
-  }, [timerRunning, soundscape, soundVolume, visible]);
-
-  // Clean up audio on unmount
-  useEffect(() => {
-    return () => {
-      SoundscapesEngine.stop();
-    };
-  }, []);
-
   // Sync state when modal opens
   useEffect(() => {
     if (visible) {
@@ -176,8 +151,6 @@ export const FocusModeModal: React.FC<FocusModeModalProps> = ({
       } else {
         setHint(null);
       }
-    } else {
-      SoundscapesEngine.stop();
     }
   }, [initialMinutes, visible, initialSubtasks, initialNotes, initialAiHint]);
 
@@ -241,7 +214,6 @@ export const FocusModeModal: React.FC<FocusModeModalProps> = ({
   useEffect(() => {
     if (timerRunning && secondsRemaining === 0) {
       setTimerRunning(false);
-      SoundscapesEngine.stop();
       HapticsEngine.tier3.celebrate();
       const elapsedMinutes = Math.max(1, Math.round((totalSeconds - secondsRemaining) / 60));
       if (onCompleteSession) {
@@ -309,7 +281,6 @@ export const FocusModeModal: React.FC<FocusModeModalProps> = ({
             style: 'destructive',
             onPress: () => {
               setTimerRunning(false);
-              SoundscapesEngine.stop();
               onClose();
             },
           },
@@ -317,7 +288,6 @@ export const FocusModeModal: React.FC<FocusModeModalProps> = ({
       );
     } else {
       HapticsEngine.tier1.light();
-      SoundscapesEngine.stop();
       onClose();
     }
   };
@@ -706,99 +676,6 @@ export const FocusModeModal: React.FC<FocusModeModalProps> = ({
               </View>
             )}
 
-            {/* Ambient Soundscapes Selector */}
-            <View style={styles.soundscapesSection}>
-              <View style={styles.soundscapesHeader}>
-                <View style={styles.soundscapesHeaderLeft}>
-                  <Ionicons name="musical-notes-outline" size={14} color={colors.primary} />
-                  <Text style={styles.presetLabel}>AMBIENT SOUNDSCAPES</Text>
-                </View>
-                {soundscape !== 'off' && soundscape !== 'none' && (
-                  <View style={styles.soundscapeActiveBadge}>
-                    <Ionicons name="volume-medium-outline" size={12} color={colors.emerald} />
-                    <Text style={[styles.soundscapeActiveBadgeText, { color: colors.emerald }]}>
-                      {Math.round(soundVolume * 100)}% VOL
-                    </Text>
-                  </View>
-                )}
-              </View>
-
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={styles.soundscapesScrollRow}
-              >
-                {SOUNDSCAPE_PRESETS.map((preset) => {
-                  const isSelected = soundscape === preset.id;
-                  return (
-                    <TouchableOpacity
-                      key={preset.id}
-                      onPress={() => {
-                        HapticsEngine.tier1.selection();
-                        setSoundscape(preset.id);
-                      }}
-                      style={[
-                        styles.soundscapeCard,
-                        isSelected && {
-                          backgroundColor: `${preset.color}22`,
-                          borderColor: preset.color,
-                        },
-                      ]}
-                      activeOpacity={0.8}
-                    >
-                      <Ionicons
-                        name={preset.icon as any}
-                        size={15}
-                        color={isSelected ? preset.color : colors.textMuted}
-                      />
-                      <Text
-                        style={[
-                          styles.soundscapeCardTitle,
-                          isSelected && { color: preset.color, fontWeight: '900' },
-                        ]}
-                      >
-                        {preset.title} {preset.emoji ? preset.emoji : ''}
-                      </Text>
-                    </TouchableOpacity>
-                  );
-                })}
-              </ScrollView>
-
-              {soundscape !== 'off' && soundscape !== 'none' && (
-                <View style={styles.volumeControlRow}>
-                  <TouchableOpacity
-                    onPress={() => {
-                      HapticsEngine.tier1.light();
-                      setSoundVolume((prev) => Math.max(0.2, Number((prev - 0.2).toFixed(1))));
-                    }}
-                    style={styles.volumeStepBtn}
-                  >
-                    <Ionicons name="volume-low-outline" size={14} color={colors.textMuted} />
-                  </TouchableOpacity>
-                  <View style={styles.volumeTrack}>
-                    <View
-                      style={[
-                        styles.volumeTrackFill,
-                        {
-                          width: `${Math.round(soundVolume * 100)}%`,
-                          backgroundColor: colors.primary,
-                        },
-                      ]}
-                    />
-                  </View>
-                  <TouchableOpacity
-                    onPress={() => {
-                      HapticsEngine.tier1.light();
-                      setSoundVolume((prev) => Math.min(1.0, Number((prev + 0.2).toFixed(1))));
-                    }}
-                    style={styles.volumeStepBtn}
-                  >
-                    <Ionicons name="volume-high-outline" size={14} color={colors.primary} />
-                  </TouchableOpacity>
-                </View>
-              )}
-            </View>
-
             {/* Quick Socratic Assist Banner */}
             <TouchableOpacity
               onPress={() => {
@@ -812,7 +689,7 @@ export const FocusModeModal: React.FC<FocusModeModalProps> = ({
                 <Ionicons name="sparkles" size={18} color={colors.primary} />
               </View>
               <View style={{ flex: 1 }}>
-                <Text style={styles.teaserTitle}>Stuck or need an intuition check?</Text>
+                <Text style={styles.teaserTitle}>{t('tasks.need_intuition_check' as any)}</Text>
                 <Text style={styles.teaserSubtitle}>
                   Ask your Socratic Mentor (Feynman / Socrates) for real-time guidance.
                 </Text>
@@ -858,7 +735,7 @@ export const FocusModeModal: React.FC<FocusModeModalProps> = ({
                       ? 'SOCRATES'
                       : 'MARCUS AURELIUS'}
                   </Text>
-                  <Text style={styles.hintAuthorSub}>Socratic Conceptual Guide</Text>
+                  <Text style={styles.hintAuthorSub}>{t('tasks.socratic_conceptual_guide' as any)}</Text>
                 </View>
                 <TouchableOpacity
                   onPress={handleFetchHint}
@@ -912,7 +789,7 @@ export const FocusModeModal: React.FC<FocusModeModalProps> = ({
                 style={styles.addSubtaskBtn}
               >
                 <Ionicons name="add" size={16} color={colors.primary} />
-                <Text style={[styles.addSubtaskBtnText, { color: colors.primary }]}>ADD STEP</Text>
+                <Text style={[styles.addSubtaskBtnText, { color: colors.primary }]}>{t('tasks.add_step' as any)}</Text>
               </TouchableOpacity>
             </View>
 
@@ -975,7 +852,7 @@ export const FocusModeModal: React.FC<FocusModeModalProps> = ({
             {/* Live Study Notes */}
             <View style={{ marginTop: 24 }}>
               <View style={styles.notesHeaderRow}>
-                <Text style={styles.subtasksSectionTitle}>STUDY TAKEAWAYS</Text>
+                <Text style={styles.subtasksSectionTitle}>{t('tasks.study_takeaways' as any)}</Text>
                 <Text style={styles.notesSaveBadge}>
                   {saveStatus === 'saving' ? 'SAVING...' : saveStatus === 'saved' ? 'SAVED ✓' : 'AUTOSAVE ON'}
                 </Text>
@@ -1478,87 +1355,5 @@ const styles = StyleSheet.create({
     fontSize: 12,
     lineHeight: 18,
     textAlignVertical: 'top',
-  },
-  soundscapesSection: {
-    width: '100%',
-    marginBottom: 20,
-    padding: 16,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.02)',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.06)',
-  },
-  soundscapesHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  soundscapesHeaderLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  soundscapeActiveBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: 'rgba(16, 185, 129, 0.1)',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: 'rgba(16, 185, 129, 0.25)',
-  },
-  soundscapeActiveBadgeText: {
-    fontSize: 9,
-    fontWeight: '900',
-    letterSpacing: 0.5,
-  },
-  soundscapesScrollRow: {
-    flexDirection: 'row',
-    gap: 8,
-    paddingBottom: 4,
-  },
-  soundscapeCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 14,
-    backgroundColor: 'rgba(255, 255, 255, 0.04)',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
-  },
-  soundscapeCardTitle: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: '#8A92A6',
-  },
-  volumeControlRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    marginTop: 12,
-    paddingTop: 10,
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(255, 255, 255, 0.06)',
-  },
-  volumeStepBtn: {
-    padding: 6,
-    borderRadius: 8,
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
-  },
-  volumeTrack: {
-    flex: 1,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: 'rgba(255, 255, 255, 0.08)',
-    overflow: 'hidden',
-  },
-  volumeTrackFill: {
-    height: '100%',
-    borderRadius: 2,
   },
 });

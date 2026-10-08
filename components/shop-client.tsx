@@ -363,7 +363,7 @@ export function ShopClient() {
                 <div className="absolute top-0 right-0 w-32 h-32 bg-yellow-500/10 rounded-full blur-[40px] pointer-events-none" />
                 <div>
                     <h2 className="text-gray-400 text-[10px] font-black uppercase tracking-[0.2em]">{t('shop.wallet')}</h2>
-                    <p className="text-2xl font-black text-white mt-1">Tokens Balance</p>
+                    <p className="text-2xl font-black text-white mt-1">{t('shop.tokens_balance')}</p>
                 </div>
                 <div className="flex items-center gap-1.5 bg-yellow-500/10 border border-yellow-500/20 px-4 py-2.5 rounded-2xl">
                     <Coins className="h-4 w-4 text-yellow-500 fill-yellow-500/30 filter drop-shadow-[0_0_8px_rgba(234,179,8,0.5)]" />
@@ -383,8 +383,8 @@ export function ShopClient() {
                         <ShoppingCart className="w-4 h-4 text-yellow-400" />
                     </div>
                     <div>
-                        <p className="text-[10px] font-black text-yellow-500 uppercase tracking-widest">Token Store</p>
-                        <h3 className="text-white font-extrabold text-base leading-tight">Buy Tokens</h3>
+                        <p className="text-[10px] font-black text-yellow-500 uppercase tracking-widest">{t('shop.token_store')}</p>
+                        <h3 className="text-white font-extrabold text-base leading-tight">{t('shop.buy_tokens')}</h3>
                     </div>
                 </div>
 

@@ -127,6 +127,21 @@
     "step_commit": "承诺",
     "plan_language": "计划语言"
   },
+  "plan_loader": {
+    "architect_badge": "LIFEPIVOT AI 架构师",
+    "ticker_1": "正在分析您的目标与领域...",
+    "ticker_2": "正在构建阶段性里程碑...",
+    "ticker_3": "正在平衡难度层级...",
+    "ticker_4": "正在添加恢复休息日...",
+    "ticker_5": "正在生成每日学习大纲...",
+    "ticker_6": "正在完成学习路径...",
+    "status_building": "正在生成您的计划",
+    "status_ready": "您的计划已就绪",
+    "status_failed": "生成失败",
+    "btn_try_again": "重试",
+    "btn_skip": "暂时跳过",
+    "day": "天"
+  },
   "profile": {
     "title": "探索者档案",
     "subtitle": "个人成长中心",
@@ -199,7 +214,12 @@
     "achievement_deep_learner_title": "深度学者",
     "achievement_deep_learner_desc": "记录总计 5 小时以上的专注学习时间。",
     "achievement_streak_starter_title": "连击起点",
-    "achievement_streak_starter_desc": "维持连续 3 天的专注学习系列。"
+    "achievement_streak_starter_desc": "维持连续 3 天的专注学习系列。",
+    "wardrobe_customization": "装扮自定义",
+    "equip_unlocked_title": "佩戴已解锁称号",
+    "equip_unlocked_frame": "佩戴已解锁头像框",
+    "select_profile_avatar": "选择个人头像",
+    "streak": "连胜"
   },
   "shop": {
     "wallet": "我的钱包",
@@ -314,7 +334,10 @@
         "desc": "专注音频：雨水击打在温室玻璃屋顶上的清脆声响。",
         "badge": "专注音乐"
       }
-    }
+    },
+    "tokens_balance": "代币余额",
+    "token_store": "代币商城",
+    "buy_tokens": "购买代币"
   },
   "circadian": {
     "celebration_title": "双倍加速已激活！",
@@ -856,7 +879,20 @@
     "tokens_one": "{count} 代币",
     "tokens_other": "{count} 代币",
     "hrs_per_week_one": "每周 {count} 小时",
-    "hrs_per_week_other": "每周 {count} 小时"
+    "hrs_per_week_other": "每周 {count} 小时",
+    "title": "学习计划市场",
+    "subtitle": "探索并克隆来自社区与导师的高效学习大纲",
+    "search_placeholder": "搜索大纲...",
+    "all_filter": "全部",
+    "intermediate": "中级",
+    "advanced": "高级",
+    "insufficient_tokens": "代币不足，无法购买此计划！",
+    "clone_failed": "克隆大纲失败",
+    "view_blueprint": "查看蓝图",
+    "rating_submitted": "评分已提交！",
+    "duration": "周期",
+    "weekly": "每周投入",
+    "intent": "学习目标"
   },
   "workspaces": {
     "owned_by_you": "您创建的群组",
@@ -914,7 +950,28 @@
     "copy_prompt": "复制提示词",
     "copied": "已复制！",
     "shared": "已分享！",
-    "import_plan_cta": "导入计划 JSON"
+    "import_plan_cta": "导入计划 JSON",
+    "step_label": "步骤 {n}",
+    "where_label": "使用位置",
+    "after_copying": "复制后",
+    "prompt_label": "提示词",
+    "step1_where": "任意AI（Claude、ChatGPT、Gemini）",
+    "step1_tip": "将提示词粘贴到任意AI助手中，逐一回答所有问题，直到最后收到主提示词。",
+    "step2_where": "任意AI（Claude、ChatGPT、Gemini）",
+    "step2_tip": "在步骤1的同一AI会话中继续。AI已了解您的学习者档案。",
+    "step3_where": "Gemini Notebook",
+    "step3_inst1": "在 gemini.google.com/notebook 打开 Gemini Notebook",
+    "step3_inst2": "打开您在步骤2中创建的笔记本（包含已上传的源文件）",
+    "step3_inst3": "进入聊天输入区域，粘贴步骤1会话末尾的主提示词",
+    "step3_inst4": "发送 — Gemini Notebook 将读取您的资料并输出完整的 JSON 计划",
+    "step3_inst5": "复制 JSON，然后使用下方的「导入计划」按钮在 LifePivot 中创建计划",
+    "note_label": "注意",
+    "step3_note": "如果您没有个人教科书，Gemini Notebook 将使用上传的资料构建课程——您的任务将描述需要练习和理解的内容，而不是读哪些页面。",
+    "feature1": "每个任务都以您的真实教科书为基础",
+    "feature2": "Pivot Engine 的 P0–P5 优先级",
+    "feature3": "错过课程时自动恢复",
+    "feature4": "每个任务都有 XP 和游戏化机制",
+    "after_plan_cta": "生成计划后"
   },
   "plan_switcher": {
     "sub": "切换当前大纲",
@@ -932,7 +989,9 @@
     "change": "更改",
     "mins": "{count} 分钟",
     "mins_one": "{count} 分钟",
-    "mins_other": "{count} 分钟"
+    "mins_other": "{count} 分钟",
+    "back": "返回",
+    "where": "位置"
   },
   "plan_import": {
     "title": "导入 JSON 学习计划",
@@ -971,5 +1030,58 @@
     "yearly_price": "¥588 / 年",
     "btn_upgrade": "立即升级到 Solo Power",
     "btn_manage": "管理当前订阅"
+  },
+  "study_tips": {
+    "sponsored_insight": "赞助学习洞察",
+    "tokens_reward": "+{amount} 代币 🪙",
+    "reward_unlocked": "奖励已解锁！",
+    "learning_interstitial": "学习间隙洞察",
+    "connecting": "正在连接洞察网络...",
+    "generating": "正在生成验证奖励会话",
+    "cooldown_active": "冷却时间中",
+    "cooldown_desc": "奖励洞察在代币发放之间有 60 分钟的冷却间隔。",
+    "return_to_shop": "返回商店",
+    "session_error": "会话错误",
+    "claim_reward": "领取 +{amount} 代币",
+    "claiming": "正在领取代币…",
+    "tokens_claimed": "代币已领取！",
+    "tips": [
+      {
+        "tag": "认知科学",
+        "title": "主动回忆检索",
+        "description": "在重读笔记前测试记忆，构建的神经回路比被动阅读强 3 倍。"
+      },
+      {
+        "tag": "学习协议",
+        "title": "间隔重复记忆",
+        "description": "在遗忘曲线加速前复习核心概念，实现持久的长期记忆。"
+      },
+      {
+        "tag": "神经巩固",
+        "title": "战略休息日",
+        "description": "计划内的休息日让大脑整理记忆为结构化理解，同时保持打卡连胜。"
+      },
+      {
+        "tag": "费曼学习法",
+        "title": "概念底层理解",
+        "description": "如果您无法用通俗易懂的语言解释一个概念，说明存在知识盲区。"
+      },
+      {
+        "tag": "精力对齐",
+        "title": "优先级排序 (P5/P4)",
+        "description": "在早晨精力最充沛时攻克难度最高的核心大纲里程碑。"
+      }
+    ]
+  },
+  "tasks": {
+    "task_specification": "任务规格",
+    "saving": "保存中...",
+    "autosaved": "已自动保存",
+    "locked": "已锁定",
+    "add_step": "添加步骤",
+    "study_takeaways": "学习重点总结",
+    "ambient_soundscapes": "沉浸式白噪音",
+    "need_intuition_check": "卡壳了或需要思维启发？",
+    "socratic_conceptual_guide": "苏格拉底式启发向导"
   }
 }

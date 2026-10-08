@@ -365,17 +365,9 @@ or access online versions, and upload them to a new
 Gemini Notebook dedicated to this study plan.
 Do not suggest illegal download sources.`
 
-const STEP3_INSTRUCTIONS = [
-    { icon: '📓', text: 'Open Gemini Notebook at gemini.google.com/notebook' },
-    { icon: '📂', text: 'Open the notebook you created in Step 2 (with your uploaded source files)' },
-    { icon: '📋', text: 'Go to the chat input area and paste the Master Prompt generated at the end of your Step 1 chat' },
-    { icon: '🚀', text: 'Send it — Gemini Notebook will read your sources and output a complete JSON plan' },
-    { icon: '📥', text: 'Copy the JSON output, then use the "Import Plan" button below to create your plan in LifePivot' },
-]
-
 // ── CopyButton component ────────────────────────────────────────────────────
 
-function CopyButton({ text, label = 'Copy Prompt' }: { text: string; label?: string }) {
+function CopyButton({ text, label, labelCopied }: { text: string; label: string; labelCopied: string }) {
     const [copied, setCopied] = useState(false)
 
     const handleCopy = async () => {
@@ -392,7 +384,7 @@ function CopyButton({ text, label = 'Copy Prompt' }: { text: string; label?: str
             document.body.appendChild(textarea)
             textarea.focus()
             textarea.select()
-            document.execCommand('copy')
+            try { document.execCommand('copy') } catch { /* silent */ }
             document.body.removeChild(textarea)
             setCopied(true)
             setTimeout(() => setCopied(false), 2000)
@@ -409,9 +401,9 @@ function CopyButton({ text, label = 'Copy Prompt' }: { text: string; label?: str
             }`}
         >
             {copied ? (
-                <><Check className="w-3.5 h-3.5" /> Copied!</>
+                <><Check className="w-3.5 h-3.5" />{labelCopied}</>
             ) : (
-                <><Copy className="w-3.5 h-3.5" /> {label}</>
+                <><Copy className="w-3.5 h-3.5" />{label}</>
             )}
         </button>
     )
@@ -429,21 +421,21 @@ export default function ProCurriculumPage() {
 
     return (
         <div className="min-h-screen bg-[#050508] text-white">
-            {/* Background ambient glows */}
-            <div className="fixed inset-0 pointer-events-none overflow-hidden">
+            {/* Background ambient glows — absolute to avoid iOS Safari fixed glitch */}
+            <div className="absolute inset-0 pointer-events-none overflow-hidden">
                 <div className="absolute -top-40 -right-40 w-[500px] h-[500px] rounded-full bg-[#00F0FF] opacity-[0.04] blur-[80px]" />
                 <div className="absolute top-1/2 -left-40 w-[400px] h-[400px] rounded-full bg-[#BD00FF] opacity-[0.04] blur-[80px]" />
             </div>
 
-            <div className="relative max-w-2xl mx-auto px-5 pt-6 pb-32">
+            <div className="relative max-w-2xl mx-auto px-5 pt-6 pb-32 pb-[max(8rem,calc(8rem+env(safe-area-inset-bottom)))]">
 
                 {/* ── Back button ──────────────────────────────────────────── */}
                 <button
-                    onClick={() => router.back()}
+                    onClick={() => router.push('/plan')}
                     className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 hover:text-[#00F0FF] transition-colors mb-8 group"
                 >
                     <ArrowLeft className="w-3.5 h-3.5 group-hover:-translate-x-0.5 transition-transform" />
-                    Back
+                    {t('common.back')}
                 </button>
 
                 {/* ── Header section ───────────────────────────────────────── */}
@@ -470,11 +462,17 @@ export default function ProCurriculumPage() {
                 {/* ── Step 1: Grill-Me Diagnostic ──────────────────────────── */}
                 <StepCard
                     stepNumber={1}
+                    stepLabel={t('pro_curriculum.step_label', { n: 1 })}
                     icon={STEP_ICONS[0]}
                     title={t('pro_curriculum.step1_title')}
-                    subtitle={t('pro_curriculum.step1_sub')}
+                    subtitle={t('pro_curriculum.step1_subtitle')}
                     where={t('pro_curriculum.step1_where')}
+                    whereLabel={t('pro_curriculum.where_label')}
                     tip={t('pro_curriculum.step1_tip')}
+                    afterCopyingLabel={t('pro_curriculum.after_copying')}
+                    promptLabel={t('pro_curriculum.prompt_label')}
+                    copyLabel={t('pro_curriculum.copy_prompt')}
+                    copiedLabel={t('pro_curriculum.copied')}
                     promptText={STEP1_PROMPT}
                     accentColor="#00F0FF"
                 />
@@ -482,11 +480,17 @@ export default function ProCurriculumPage() {
                 {/* ── Step 2: Find Your Sources ─────────────────────────────── */}
                 <StepCard
                     stepNumber={2}
+                    stepLabel={t('pro_curriculum.step_label', { n: 2 })}
                     icon={STEP_ICONS[1]}
                     title={t('pro_curriculum.step2_title')}
-                    subtitle={t('pro_curriculum.step2_sub')}
+                    subtitle={t('pro_curriculum.step2_subtitle')}
                     where={t('pro_curriculum.step2_where')}
+                    whereLabel={t('pro_curriculum.where_label')}
                     tip={t('pro_curriculum.step2_tip')}
+                    afterCopyingLabel={t('pro_curriculum.after_copying')}
+                    promptLabel={t('pro_curriculum.prompt_label')}
+                    copyLabel={t('pro_curriculum.copy_prompt')}
+                    copiedLabel={t('pro_curriculum.copied')}
                     promptText={STEP2_PROMPT}
                     accentColor="#BD00FF"
                 />
@@ -501,27 +505,29 @@ export default function ProCurriculumPage() {
                         <div className="min-w-0">
                             <div className="flex items-center gap-2 mb-0.5">
                                 <Sparkles className="w-4 h-4 text-[#F59E0B]" />
-                                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[#F59E0B]">{t('pro_curriculum.step3_where')}</span>
+                                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[#F59E0B]">
+                                    {t('pro_curriculum.step_label', { n: 3 })}
+                                </span>
                             </div>
                             <h3 className="text-base font-black text-white">{t('pro_curriculum.step3_title')}</h3>
-                            <p className="text-xs text-gray-400 mt-0.5">{t('pro_curriculum.step3_sub')}</p>
+                            <p className="text-xs text-gray-400 mt-0.5">{t('pro_curriculum.step3_subtitle')}</p>
                         </div>
                     </div>
 
                     {/* Where */}
                     <div className="flex items-center gap-2 mb-5 px-3 py-2 rounded-xl bg-[#F59E0B]/5 border border-[#F59E0B]/10">
-                        <span className="text-[9px] font-black uppercase tracking-[0.2em] text-[#F59E0B]/60">Where</span>
+                        <span className="text-[9px] font-black uppercase tracking-[0.2em] text-[#F59E0B]/60">{t('pro_curriculum.where_label')}</span>
                         <span className="text-[11px] font-bold text-[#F59E0B]/80">{t('pro_curriculum.step3_where')}</span>
                     </div>
 
-                    {/* Numbered instructions */}
+                    {/* Numbered instructions — driven by locale keys */}
                     <div className="space-y-3 mb-5">
                         {[
                             t('pro_curriculum.step3_inst1'),
                             t('pro_curriculum.step3_inst2'),
                             t('pro_curriculum.step3_inst3'),
                             t('pro_curriculum.step3_inst4'),
-                            t('pro_curriculum.step3_inst5')
+                            t('pro_curriculum.step3_inst5'),
                         ].map((inst, i) => (
                             <div key={i} className="flex items-start gap-3">
                                 <div className="flex-shrink-0 w-6 h-6 rounded-lg bg-white/[0.04] border border-white/[0.07] flex items-center justify-center mt-0.5">
@@ -535,19 +541,20 @@ export default function ProCurriculumPage() {
                     {/* Pro note */}
                     <div className="px-4 py-3 rounded-xl bg-[#F59E0B]/5 border border-[#F59E0B]/10">
                         <p className="text-[11px] text-[#F59E0B]/70 leading-relaxed">
-                            <span className="font-black">💡 Note:</span> if you have no personal textbooks, Gemini Notebook will use the uploaded sources to structure your curriculum — but your tasks will describe what to <em>practice and understand</em>, not what pages to read. The books shape the plan quality invisibly.
+                            <span className="font-black">💡 {t('pro_curriculum.note_label')}:</span>{' '}
+                            {t('pro_curriculum.step3_note')}
                         </p>
                     </div>
 
                     {/* What your plan will have */}
                     <div className="mt-5 space-y-1.5">
                         {[
-                            'Every task grounded in your real textbooks',
-                            'P0–P5 priorities for the Pivot Engine to manage',
-                            'Automatic recovery if you miss sessions',
-                            'XP and gamification on every task',
-                        ].map((item) => (
-                            <div key={item} className="flex items-center gap-2">
+                            t('pro_curriculum.feature1'),
+                            t('pro_curriculum.feature2'),
+                            t('pro_curriculum.feature3'),
+                            t('pro_curriculum.feature4'),
+                        ].map((item, i) => (
+                            <div key={i} className="flex items-center gap-2">
                                 <div className="w-1 h-1 rounded-full bg-[#F59E0B]/60 flex-shrink-0" />
                                 <span className="text-[11px] text-gray-400">{item}</span>
                             </div>
@@ -557,7 +564,7 @@ export default function ProCurriculumPage() {
 
                 {/* ── Bottom CTA ────────────────────────────────────────────── */}
                 <div className="mt-8 flex flex-col items-center gap-3">
-                    <p className="text-[10px] text-gray-500 uppercase tracking-widest font-black">After generating your plan</p>
+                    <p className="text-[10px] text-gray-500 uppercase tracking-widest font-black">{t('pro_curriculum.after_plan_cta')}</p>
                     <button
                         onClick={() => router.push('/plan/import')}
                         className="w-full flex items-center justify-center gap-3 py-4 px-6 rounded-[1.5rem] bg-gradient-to-r from-[#BD00FF]/20 to-[#00F0FF]/20 border border-white/[0.1] text-white font-black text-sm uppercase tracking-wider hover:from-[#BD00FF]/30 hover:to-[#00F0FF]/30 hover:border-white/20 transition-all duration-200 active:scale-[0.98] shadow-[0_4px_30px_rgba(0,0,0,0.4)]"
@@ -579,17 +586,25 @@ export default function ProCurriculumPage() {
 
 interface StepCardProps {
     stepNumber: number
+    stepLabel: string
     icon: React.ElementType
     title: string
     subtitle: string
     where: string
+    whereLabel: string
     tip: string
+    afterCopyingLabel: string
+    promptLabel: string
+    copyLabel: string
+    copiedLabel: string
     promptText: string
     accentColor: string
 }
 
 function StepCard({
-    stepNumber, icon: Icon, title, subtitle, where, tip, promptText, accentColor
+    stepNumber, stepLabel, icon: Icon, title, subtitle,
+    where, whereLabel, tip, afterCopyingLabel,
+    promptLabel, copyLabel, copiedLabel, promptText, accentColor
 }: StepCardProps) {
     return (
         <div
@@ -614,7 +629,7 @@ function StepCard({
                             className="text-[10px] font-black uppercase tracking-[0.2em]"
                             style={{ color: accentColor }}
                         >
-                            Step {stepNumber}
+                            {stepLabel}
                         </span>
                     </div>
                     <h3 className="text-base font-black text-white">{title}</h3>
@@ -634,7 +649,7 @@ function StepCard({
                     className="text-[9px] font-black uppercase tracking-[0.2em]"
                     style={{ color: `${accentColor}80` }}
                 >
-                    Where
+                    {whereLabel}
                 </span>
                 <span
                     className="text-[11px] font-bold"
@@ -647,8 +662,8 @@ function StepCard({
             {/* Prompt code block */}
             <div className="relative mb-4">
                 <div className="flex items-center justify-between mb-2">
-                    <span className="text-[9px] font-black uppercase tracking-[0.2em] text-gray-600">Prompt</span>
-                    <CopyButton text={promptText} />
+                    <span className="text-[9px] font-black uppercase tracking-[0.2em] text-gray-600">{promptLabel}</span>
+                    <CopyButton text={promptText} label={copyLabel} labelCopied={copiedLabel} />
                 </div>
                 <div
                     className="relative rounded-xl bg-black/60 border border-white/[0.05] p-4 overflow-hidden"
@@ -682,7 +697,7 @@ function StepCard({
             >
                 <span className="text-sm mt-0.5">💡</span>
                 <p className="text-[11px] text-gray-400 leading-relaxed">
-                    <span className="font-black text-gray-300">After copying:</span> {tip}
+                    <span className="font-black text-gray-300">{afterCopyingLabel}:</span> {tip}
                 </p>
             </div>
         </div>

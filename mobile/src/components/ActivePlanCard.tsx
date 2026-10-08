@@ -178,6 +178,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     backgroundColor: 'rgba(20, 24, 36, 0.85)',
     borderWidth: 1,
+    borderTopColor: 'rgba(255, 255, 255, 0.16)',
   },
   ambientGlow: {
     position: 'absolute',

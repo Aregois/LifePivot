@@ -70,16 +70,20 @@ export function PremiumButton({
   /* ─── Variant-specific style + content color ────────────────────────── */
 
   const variantStyles: Record<ButtonVariant, ViewStyle> = {
-    primary: {},
+    primary: {
+      borderWidth: 1,
+      borderColor: 'rgba(255, 255, 255, 0.25)',
+      borderTopColor: 'rgba(255, 255, 255, 0.6)',
+    },
     destructive: {
       borderWidth: 1,
-      borderColor: 'rgba(189, 0, 255, 0.2)', // Neon Violet
-      backgroundColor: 'rgba(189, 0, 255, 0.05)',
+      borderColor: 'rgba(189, 0, 255, 0.25)', // Neon Violet
+      backgroundColor: 'rgba(189, 0, 255, 0.08)',
     },
     ghost: {
       borderWidth: 1,
-      borderColor: 'rgba(0, 240, 255, 0.2)', // Electric Blue
-      backgroundColor: 'rgba(0, 240, 255, 0.10)',
+      borderColor: 'rgba(0, 240, 255, 0.25)', // Electric Blue
+      backgroundColor: 'rgba(0, 240, 255, 0.08)',
     },
   };
 
@@ -115,7 +119,7 @@ export function PremiumButton({
             ]}
             numberOfLines={1}
           >
-            {title.toUpperCase()}
+            {title}
           </Text>
         </>
       )}
@@ -130,11 +134,12 @@ export function PremiumButton({
       onPressOut={handlePressOut}
       onPress={handlePress}
       disabled={isDisabled}
+      accessibilityRole="button"
       style={[
         animatedScale,
         styles.container,
         variantStyles[variant],
-        variant === 'primary' && Shadows.glowSmall(C.electricBlue, 0.2),
+        variant === 'primary' && Shadows.glowSmall(C.electricBlue, 0.25),
         isDisabled && styles.disabled,
         style,
       ]}
@@ -142,8 +147,8 @@ export function PremiumButton({
       {variant === 'primary' ? (
         <LinearGradient
           colors={[C.electricBlue, '#00D0FF']} // Custom premium Electric Blue gradient
-          start={{ x: 0, y: 0.5 }}
-          end={{ x: 1, y: 0.5 }}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
           style={[StyleSheet.absoluteFill, { borderRadius: BorderRadius.xxl }]}
         />
       ) : null}
@@ -168,10 +173,10 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.three,
   },
   label: {
-    ...Typography.body,
-    fontWeight: '900',
-    letterSpacing: 2.5,
-    textTransform: 'uppercase',
+    ...Typography.headline,
+    fontWeight: '800',
+    letterSpacing: 0.8,
+    textAlign: 'center',
   },
   iconWrapper: {
     marginRight: Spacing.two,

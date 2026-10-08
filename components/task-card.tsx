@@ -301,7 +301,7 @@ export function TaskCard({
                 {isLocked ? (
                   <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/5 border border-white/10 text-gray-500">
                     <Lock className="h-3 w-3 text-gray-500" />
-                    <span className="text-[10px] font-black uppercase">LOCKED</span>
+                    <span className="text-[10px] font-black uppercase">{t('tasks.locked')}</span>
                   </div>
                 ) : (
                   <>

@@ -127,6 +127,21 @@
     "step_commit": "Commit",
     "plan_language": "Plan Language"
   },
+  "plan_loader": {
+    "architect_badge": "LIFEPIVOT AI ARCHITECT",
+    "ticker_1": "Analyzing your goal & domain...",
+    "ticker_2": "Structuring your milestones...",
+    "ticker_3": "Balancing difficulty tiers...",
+    "ticker_4": "Adding recovery void days...",
+    "ticker_5": "Synthesizing daily curriculum...",
+    "ticker_6": "Finalizing learning path...",
+    "status_building": "YOUR PLAN IS BEING BUILT",
+    "status_ready": "YOUR PLAN IS READY",
+    "status_failed": "GENERATION FAILED",
+    "btn_try_again": "TRY AGAIN",
+    "btn_skip": "SKIP FOR NOW",
+    "day": "DAY"
+  },
   "profile": {
     "title": "Pathseeker Profile",
     "subtitle": "Personal Progression Hub",
@@ -199,7 +214,12 @@
     "achievement_deep_learner_title": "Deep Learner",
     "achievement_deep_learner_desc": "Log 5 hours of total focus study time.",
     "achievement_streak_starter_title": "Streak Starter",
-    "achievement_streak_starter_desc": "Maintain a 3-day consistency streak."
+    "achievement_streak_starter_desc": "Maintain a 3-day consistency streak.",
+    "wardrobe_customization": "Wardrobe Customization",
+    "equip_unlocked_title": "Equip Unlocked Title",
+    "equip_unlocked_frame": "Equip Unlocked Avatar Frame",
+    "select_profile_avatar": "Select Profile Avatar",
+    "streak": "Streak"
   },
   "shop": {
     "wallet": "Your Wallet",
@@ -314,7 +334,10 @@
         "desc": "Unlock a dynamic study soundscape: bright water clicks peaking against glass ceilings.",
         "badge": "Study Sound"
       }
-    }
+    },
+    "tokens_balance": "Tokens Balance",
+    "token_store": "Token Store",
+    "buy_tokens": "Buy Tokens"
   },
   "circadian": {
     "celebration_title": "Booster Activated!",
@@ -856,7 +879,20 @@
     "success_cloned": "This syllabus has been cloned to your profile tasks calendar!",
     "import_failed": "IMPORT FAILED",
     "rated_title": "RATED",
-    "rated_updated": "Plan rating updated to: {rating}★"
+    "rated_updated": "Plan rating updated to: {rating}★",
+    "title": "Plan Marketplace",
+    "subtitle": "Discover and clone high-yield community and tutor blueprints",
+    "search_placeholder": "Search syllabuses...",
+    "all_filter": "ALL",
+    "intermediate": "INTERMEDIATE",
+    "advanced": "ADVANCED",
+    "insufficient_tokens": "Insufficient tokens to purchase this plan!",
+    "clone_failed": "Failed to clone syllabus",
+    "view_blueprint": "VIEW BLUEPRINT",
+    "rating_submitted": "Rating Submitted!",
+    "duration": "DURATION",
+    "weekly": "WEEKLY",
+    "intent": "INTENT"
   },
   "workspaces": {
     "owned_by_you": "OWNED BY YOU",
@@ -914,7 +950,28 @@
     "copy_prompt": "COPY PROMPT",
     "copied": "COPIED!",
     "shared": "SHARED!",
-    "import_plan_cta": "IMPORT PLAN JSON"
+    "import_plan_cta": "IMPORT PLAN JSON",
+    "step_label": "Step {n}",
+    "where_label": "Where",
+    "after_copying": "After copying",
+    "prompt_label": "Prompt",
+    "step1_where": "Any AI chat (Claude, ChatGPT, Gemini)",
+    "step1_tip": "Paste the prompt into any AI assistant. Answer all questions one by one until you receive the Master Prompt at the end.",
+    "step2_where": "Any AI chat (Claude, ChatGPT, Gemini)",
+    "step2_tip": "Continue in the same AI session from Step 1. The AI already knows your learner profile.",
+    "step3_where": "Gemini Notebook",
+    "step3_inst1": "Open Gemini Notebook at gemini.google.com/notebook",
+    "step3_inst2": "Open the notebook you created in Step 2 (with your uploaded source files)",
+    "step3_inst3": "Go to the chat input area and paste the Master Prompt from the end of your Step 1 session",
+    "step3_inst4": "Send it — Gemini Notebook will read your sources and output a complete JSON plan",
+    "step3_inst5": "Copy the JSON output, then use the Import Plan button below to create your plan in LifePivot",
+    "note_label": "Note",
+    "step3_note": "If you have no personal textbooks, Gemini Notebook will use the uploaded sources to structure your curriculum — but your tasks will describe what to practice and understand, not what pages to read. The books shape the plan quality invisibly.",
+    "feature1": "Every task grounded in your real textbooks",
+    "feature2": "P0–P5 priorities for the Pivot Engine to manage",
+    "feature3": "Automatic recovery if you miss sessions",
+    "feature4": "XP and gamification on every task",
+    "after_plan_cta": "After generating your plan"
   },
   "plan_switcher": {
     "sub": "SWITCH ACTIVE CURRICULUM",
@@ -932,7 +989,9 @@
     "change": "CHANGE",
     "mins": "{count} MINS",
     "mins_one": "{count} MIN",
-    "mins_other": "{count} MINS"
+    "mins_other": "{count} MINS",
+    "back": "Back",
+    "where": "Where"
   },
   "plan_import": {
     "title": "Import JSON Plan",
@@ -971,5 +1030,58 @@
     "yearly_price": "$79.99 / year",
     "btn_upgrade": "Upgrade to Solo Power",
     "btn_manage": "Manage Current Plan"
+  },
+  "study_tips": {
+    "sponsored_insight": "SPONSORED INSIGHT",
+    "tokens_reward": "+{amount} TOKENS 🪙",
+    "reward_unlocked": "REWARD UNLOCKED!",
+    "learning_interstitial": "LEARNING INTERSTITIAL",
+    "connecting": "Connecting to Insight Network...",
+    "generating": "Generating verified reward session",
+    "cooldown_active": "Reward Cooldown Active",
+    "cooldown_desc": "Rewarded insights have a 60-minute interval between token grants.",
+    "return_to_shop": "Return to Shop",
+    "session_error": "Session Error",
+    "claim_reward": "Claim +{amount} Tokens",
+    "claiming": "Claiming Tokens…",
+    "tokens_claimed": "Tokens Claimed!",
+    "tips": [
+      {
+        "tag": "COGNITIVE SCIENCE",
+        "title": "Active Recall Retrieval",
+        "description": "Testing your memory before re-reading notes creates 3x stronger neural pathways than passive review."
+      },
+      {
+        "tag": "LEARNING PROTOCOL",
+        "title": "Spaced Interval Repetition",
+        "description": "Review concepts right when forgetting curves begin to steepen to achieve permanent long-term retention."
+      },
+      {
+        "tag": "NEURAL CONSOLIDATION",
+        "title": "Strategic Void Days",
+        "description": "Taking scheduled rest days allows your brain to organize memories into structural understanding without breaking streaks."
+      },
+      {
+        "tag": "FEYNMAN TECHNIQUE",
+        "title": "Conceptual Grounding",
+        "description": "If you cannot explain a concept in simple everyday terms, you have identified a fundamental knowledge gap."
+      },
+      {
+        "tag": "ENERGY ALIGNMENT",
+        "title": "Priority Sequencing (P5/P4)",
+        "description": "Tackle highest-friction syllabus milestones at peak morning alertness for maximum compound gains."
+      }
+    ]
+  },
+  "tasks": {
+    "task_specification": "TASK SPECIFICATION",
+    "saving": "SAVING...",
+    "autosaved": "AUTOSAVED",
+    "locked": "LOCKED",
+    "add_step": "ADD STEP",
+    "study_takeaways": "STUDY TAKEAWAYS",
+    "ambient_soundscapes": "AMBIENT SOUNDSCAPES",
+    "need_intuition_check": "Stuck or need an intuition check?",
+    "socratic_conceptual_guide": "Socratic Conceptual Guide"
   }
 }

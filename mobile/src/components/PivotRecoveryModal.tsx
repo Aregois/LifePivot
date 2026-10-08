@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { HapticsEngine } from '../utils/HapticsEngine';
 import { supabase } from '../utils/supabase';
 import { C, Gradients } from '../constants/theme';
@@ -62,6 +63,7 @@ export const PivotRecoveryModal: React.FC<PivotRecoveryModalProps> = ({
   hasStreakShield = false,
   onPivotCompleted,
 }) => {
+  const insets = useSafeAreaInsets();
   const { colors } = useTheme();
   const { t } = useLanguage();
   const [loading, setLoading] = useState<boolean>(false);
@@ -199,7 +201,7 @@ export const PivotRecoveryModal: React.FC<PivotRecoveryModalProps> = ({
     <Modal visible={visible} animationType="slide" transparent={false} onRequestClose={onClose}>
       <View style={[styles.container, { backgroundColor: colors.background }]}>
         {/* Header */}
-        <View style={styles.header}>
+        <View style={[styles.header, { paddingTop: Math.max(insets.top, 20) }]}>
           <TouchableOpacity onPress={onClose} style={styles.iconButton}>
             <Ionicons name="close" size={24} color="#FFFFFF" />
           </TouchableOpacity>
@@ -325,7 +327,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 20,
-    paddingTop: Platform.OS === 'ios' ? 56 : 20,
     paddingBottom: 16,
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(255, 255, 255, 0.05)',

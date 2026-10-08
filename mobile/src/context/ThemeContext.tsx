@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import * as SecureStore from 'expo-secure-store';
+import { storage as SecureStore } from '../utils/storage';
 import { supabase } from '../utils/supabase';
 
 export type AccentType = 'blue' | 'violet' | 'green' | 'sunset';
@@ -22,6 +22,7 @@ export interface ThemePalette {
   electricBlue: string;
   neonViolet: string;
   glassBorder: string;
+  glassBorderSpecular?: string;
   glassBg: string;
   glassBorderSubtle: string;
   glassBorderStrong: string;
@@ -52,6 +53,7 @@ const PALETTES: Record<AccentType, ThemePalette> = {
     electricBlue: '#00F0FF',
     neonViolet: '#BD00FF',
     glassBorder: 'rgba(255, 255, 255, 0.08)',
+    glassBorderSpecular: 'rgba(255, 255, 255, 0.16)',
     glassBg: 'rgba(255, 255, 255, 0.03)',
     glassBorderSubtle: 'rgba(255, 255, 255, 0.05)',
     glassBorderStrong: 'rgba(0, 240, 255, 0.25)',
@@ -80,6 +82,7 @@ const PALETTES: Record<AccentType, ThemePalette> = {
     electricBlue: '#BD00FF',
     neonViolet: '#FF00A0',
     glassBorder: 'rgba(189, 0, 255, 0.15)',
+    glassBorderSpecular: 'rgba(255, 255, 255, 0.16)',
     glassBg: 'rgba(189, 0, 255, 0.04)',
     glassBorderSubtle: 'rgba(189, 0, 255, 0.08)',
     glassBorderStrong: 'rgba(189, 0, 255, 0.35)',
@@ -108,6 +111,7 @@ const PALETTES: Record<AccentType, ThemePalette> = {
     electricBlue: '#10B981',
     neonViolet: '#059669',
     glassBorder: 'rgba(16, 185, 129, 0.15)',
+    glassBorderSpecular: 'rgba(255, 255, 255, 0.16)',
     glassBg: 'rgba(16, 185, 129, 0.04)',
     glassBorderSubtle: 'rgba(16, 185, 129, 0.08)',
     glassBorderStrong: 'rgba(16, 185, 129, 0.35)',
@@ -136,6 +140,7 @@ const PALETTES: Record<AccentType, ThemePalette> = {
     electricBlue: '#F59E0B',
     neonViolet: '#F97316',
     glassBorder: 'rgba(245, 158, 11, 0.15)',
+    glassBorderSpecular: 'rgba(255, 255, 255, 0.16)',
     glassBg: 'rgba(245, 158, 11, 0.04)',
     glassBorderSubtle: 'rgba(245, 158, 11, 0.08)',
     glassBorderStrong: 'rgba(245, 158, 11, 0.35)',

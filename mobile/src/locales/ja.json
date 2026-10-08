@@ -127,6 +127,21 @@
     "step_commit": "コミット",
     "plan_language": "計画の言語"
   },
+  "plan_loader": {
+    "architect_badge": "LIFEPIVOT AI アーキテクト",
+    "ticker_1": "目標と学習分野を分析中...",
+    "ticker_2": "マイルストーンを構築中...",
+    "ticker_3": "難易度レベルを調整中...",
+    "ticker_4": "リカバリー日を追加中...",
+    "ticker_5": "日々のカリキュラムを統合中...",
+    "ticker_6": "学習ロードマップを完成中...",
+    "status_building": "プランを作成中",
+    "status_ready": "プランが完成しました",
+    "status_failed": "生成に失敗しました",
+    "btn_try_again": "再試行",
+    "btn_skip": "今はスキップ",
+    "day": "日"
+  },
   "profile": {
     "title": "探求者の経歴",
     "subtitle": "自己成長ハブ",
@@ -199,7 +214,12 @@
     "achievement_deep_learner_title": "ディープラーナー",
     "achievement_deep_learner_desc": "合計5時間のフォーカス学習時間を記録する。",
     "achievement_streak_starter_title": "継続の始まり",
-    "achievement_streak_starter_desc": "3日間の継続記録を維持する。"
+    "achievement_streak_starter_desc": "3日間の継続記録を維持する。",
+    "wardrobe_customization": "ワードローブのカスタマイズ",
+    "equip_unlocked_title": "解除した称号を装備",
+    "equip_unlocked_frame": "解除したフレームを装備",
+    "select_profile_avatar": "アバターを選択",
+    "streak": "連続日数"
   },
   "shop": {
     "wallet": "お財布",
@@ -314,7 +334,10 @@
         "desc": "集中用BGM：ガラス天井を叩く心地よい雨音の響き。",
         "badge": "学習用環境音"
       }
-    }
+    },
+    "tokens_balance": "トークン残高",
+    "token_store": "トークンストア",
+    "buy_tokens": "トークンを購入"
   },
   "circadian": {
     "celebration_title": "ブースター発動！",
@@ -856,7 +879,20 @@
     "tokens_one": "{count}トークン",
     "tokens_other": "{count}トークン",
     "hrs_per_week_one": "週 {count} 時間",
-    "hrs_per_week_other": "週 {count} 時間"
+    "hrs_per_week_other": "週 {count} 時間",
+    "title": "プランマーケット",
+    "subtitle": "コミュニティやチューターが作成した学習プランを発見してクローン",
+    "search_placeholder": "シラバスを検索...",
+    "all_filter": "すべて",
+    "intermediate": "中級",
+    "advanced": "上級",
+    "insufficient_tokens": "このプランを購入するためのトークンが不足しています！",
+    "clone_failed": "シラバスのクローンに失敗しました",
+    "view_blueprint": "詳細を見る",
+    "rating_submitted": "評価を送信しました！",
+    "duration": "期間",
+    "weekly": "週間",
+    "intent": "目的"
   },
   "workspaces": {
     "owned_by_you": "あなたが作成",
@@ -914,7 +950,28 @@
     "copy_prompt": "プロンプトをコピー",
     "copied": "コピー完了！",
     "shared": "共有完了！",
-    "import_plan_cta": "プランJSONをインポート"
+    "import_plan_cta": "プランJSONをインポート",
+    "step_label": "ステップ {n}",
+    "where_label": "使用場所",
+    "after_copying": "コピー後",
+    "prompt_label": "プロンプト",
+    "step1_where": "任意のAI（Claude、ChatGPT、Gemini）",
+    "step1_tip": "プロンプトを任意のAIアシスタントに貼り付けてください。最後にマスタープロンプトを受け取るまで、質問に一つずつ答えてください。",
+    "step2_where": "任意のAI（Claude、ChatGPT、Gemini）",
+    "step2_tip": "ステップ1と同じAIセッションを続けてください。AIはすでにあなたの学習者プロファイルを把握しています。",
+    "step3_where": "Gemini Notebook",
+    "step3_inst1": "gemini.google.com/notebook でGemini Notebookを開く",
+    "step3_inst2": "ステップ2で作成したノートブック（アップロードしたファイル付き）を開く",
+    "step3_inst3": "チャット入力エリアに移動し、ステップ1セッション終了時のマスタープロンプトを貼り付ける",
+    "step3_inst4": "送信 — Gemini Notebookがソースを読み込み、完全なJSONプランを出力します",
+    "step3_inst5": "JSONをコピーして、「プランをインポート」ボタンを使ってLifePivotにプランを作成する",
+    "note_label": "注意",
+    "step3_note": "個人の教科書がない場合、Gemini Notebookはアップロードされたソースを使ってカリキュラムを構成します — タスクは何ページを読むかではなく、何を練習・理解すべきかを説明します。",
+    "feature1": "すべてのタスクが実際の教科書に基づいている",
+    "feature2": "ピボットエンジン用のP0–P5優先度",
+    "feature3": "セッションを見逃しても自動回復",
+    "feature4": "すべてのタスクにXPとゲーミフィケーション",
+    "after_plan_cta": "プランを生成した後"
   },
   "plan_switcher": {
     "sub": "アクティブなカリキュラムを変更",
@@ -932,7 +989,9 @@
     "change": "変更",
     "mins": "{count}分",
     "mins_one": "{count}分",
-    "mins_other": "{count}分"
+    "mins_other": "{count}分",
+    "back": "戻る",
+    "where": "場所"
   },
   "plan_import": {
     "title": "JSONプランのインポート",
@@ -971,5 +1030,58 @@
     "yearly_price": "¥9,800 / 年",
     "btn_upgrade": "Solo Powerにアップグレード",
     "btn_manage": "現在のプランを管理"
+  },
+  "study_tips": {
+    "sponsored_insight": "スポンサード・インサイト",
+    "tokens_reward": "+{amount} トークン 🪙",
+    "reward_unlocked": "リワード獲得可能！",
+    "learning_interstitial": "学習インサイト",
+    "connecting": "インサイトネットワークに接続中...",
+    "generating": "検証済みリワードセッションを生成中",
+    "cooldown_active": "クールダウン中",
+    "cooldown_desc": "リワードインサイトは60分に1回トークンを獲得できます。",
+    "return_to_shop": "ショップに戻る",
+    "session_error": "セッションエラー",
+    "claim_reward": "+{amount} トークンを獲得",
+    "claiming": "トークンを獲得中…",
+    "tokens_claimed": "トークンを獲得しました！",
+    "tips": [
+      {
+        "tag": "認知科学",
+        "title": "アクティブリコール",
+        "description": "ノートを再読する前に記憶をテストすることで、受動的復習の3倍強固な神経回路が形成されます。"
+      },
+      {
+        "tag": "学習プロトコル",
+        "title": "分散学習・間隔反復",
+        "description": "忘却曲線が急激になる直前に復習することで、恒久的な長期記憶を達成します。"
+      },
+      {
+        "tag": "神経固定化",
+        "title": "戦略的ボイド・デイ",
+        "description": "計画的な休息日は、連続記録を崩すことなく脳が記憶を構造的理解へと整理するのを助けます。"
+      },
+      {
+        "tag": "ファインマン・テクニック",
+        "title": "概念の基礎づけ",
+        "description": "日常の平易な言葉で説明できない場合、根本的な理解のギャップが存在します。"
+      },
+      {
+        "tag": "エネルギー最適化",
+        "title": "優先順位シークエンス (P5/P4)",
+        "description": "最も負荷の高いマイルストーンには、朝の最高の集中力で取り組みましょう。"
+      }
+    ]
+  },
+  "tasks": {
+    "task_specification": "タスク仕様",
+    "saving": "保存中...",
+    "autosaved": "自動保存完了",
+    "locked": "ロック中",
+    "add_step": "ステップを追加",
+    "study_takeaways": "学習のまとめ",
+    "ambient_soundscapes": "環境音サウンドスケープ",
+    "need_intuition_check": "行き詰まりましたか？直感ヒントが必要ですか？",
+    "socratic_conceptual_guide": "ソクラテス式概念ガイド"
   }
 }

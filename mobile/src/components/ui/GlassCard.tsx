@@ -44,7 +44,7 @@ export function GlassCard({
 
   const handlePressIn = useCallback(() => {
     if (disabled || !onPress) return;
-    scale.value = withSpring(0.975, AnimationConfig.spring.scalePress);
+    scale.value = withSpring(0.98, AnimationConfig.spring.scalePress);
   }, [disabled, onPress, scale]);
 
   const handlePressOut = useCallback(() => {
@@ -63,6 +63,8 @@ export function GlassCard({
     borderRadius: BorderRadius.xxl,
     borderWidth: 1,
     borderColor: colors.glassBorder,
+    borderTopColor: colors.glassBorderSpecular || 'rgba(255, 255, 255, 0.14)',
+    overflow: 'hidden',
     ...(elevated ? Shadows.elevated : Shadows.card),
     ...(glowColor && Shadows.glowSmall(glowColor, 0.2)),
     ...(padded && { padding: Spacing.four }),
@@ -75,6 +77,7 @@ export function GlassCard({
         onPressIn={handlePressIn}
         onPressOut={handlePressOut}
         disabled={disabled}
+        accessibilityRole="button"
         style={[cardStyle, animatedScale, style]}
       >
         {children}

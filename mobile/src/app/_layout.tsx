@@ -5,6 +5,8 @@ import { ToastProvider } from '../components/ui'
 import { LanguageProvider } from '../context/LanguageContext'
 import { ThemeProvider } from '../context/ThemeContext'
 import { init as initSentry, Sentry } from '../utils/sentry'
+import { MobileErrorBoundary } from '../components/MobileErrorBoundary'
+import { MobileDebugPanel } from '../components/MobileDebugPanel'
 
 // Initialise Sentry crash reporting before any navigation or business
 // logic executes. Module-scope call ensures it fires on bundle load.
@@ -22,6 +24,7 @@ const queryClient = new QueryClient({
 
 function RootLayout() {
     return (
+        <MobileErrorBoundary boundaryId="root-layout">
         <QueryClientProvider client={queryClient}>
             <ThemeProvider>
                 <LanguageProvider>
@@ -60,10 +63,12 @@ function RootLayout() {
                                 }} 
                             />
                         </Stack>
+                        <MobileDebugPanel />
                     </ToastProvider>
                 </LanguageProvider>
             </ThemeProvider>
         </QueryClientProvider>
+        </MobileErrorBoundary>
     )
 }
 

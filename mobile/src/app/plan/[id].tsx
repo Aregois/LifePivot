@@ -12,6 +12,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { supabase } from '../../utils/supabase';
 import { C, Gradients } from '../../constants/theme';
 import { useTheme } from '../../context/ThemeContext';
@@ -106,6 +107,7 @@ function getPriorityInfo(priority: number, t: (key: string) => string) {
 export default function PlanDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
+  const insets = useSafeAreaInsets();
 
   const { colors } = useTheme();
   const { t, locale } = useLanguage();
@@ -389,7 +391,7 @@ export default function PlanDetail() {
           alignItems: 'center',
           justifyContent: 'space-between',
           paddingHorizontal: 20,
-          paddingTop: Platform.OS === 'ios' ? 50 : 20,
+          paddingTop: Math.max(insets.top, 20),
           paddingBottom: 12,
         }}
       >

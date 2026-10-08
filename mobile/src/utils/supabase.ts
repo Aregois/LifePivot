@@ -1,51 +1,11 @@
 import { createClient } from '@supabase/supabase-js'
-import * as SecureStore from 'expo-secure-store'
-import { Platform } from 'react-native'
+import { storage } from './storage'
 
-const isWeb = Platform.OS === 'web'
-
-// Custom storage adapter for React Native using Expo SecureStore with Web/SSR LocalStorage fallback
+// Custom storage adapter for React Native using universal storage with Web/SSR LocalStorage fallback
 const ExpoSecureStoreAdapter = {
-    getItem: async (key: string) => {
-        try {
-            if (isWeb) {
-                if (typeof window !== 'undefined' && window.localStorage) {
-                    return window.localStorage.getItem(key)
-                }
-                return null
-            }
-            return await SecureStore.getItemAsync(key)
-        } catch (err) {
-            console.error('Error reading secure token:', err)
-            return null
-        }
-    },
-    setItem: async (key: string, value: string) => {
-        try {
-            if (isWeb) {
-                if (typeof window !== 'undefined' && window.localStorage) {
-                    window.localStorage.setItem(key, value)
-                }
-                return
-            }
-            await SecureStore.setItemAsync(key, value)
-        } catch (err) {
-            console.error('Error writing secure token:', err)
-        }
-    },
-    removeItem: async (key: string) => {
-        try {
-            if (isWeb) {
-                if (typeof window !== 'undefined' && window.localStorage) {
-                    window.localStorage.removeItem(key)
-                }
-                return
-            }
-            await SecureStore.deleteItemAsync(key)
-        } catch (err) {
-            console.error('Error deleting secure token:', err)
-        }
-    }
+    getItem: (key: string) => storage.getItem(key),
+    setItem: (key: string, value: string) => storage.setItem(key, value),
+    removeItem: (key: string) => storage.deleteItem(key)
 }
 
 const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL || 'https://cxvyxbopdzfpkxsybpjr.supabase.co'

@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, type ViewStyle } from 'react-native';
-import { C, Shadows, Spacing, BorderRadius, Typography } from '../../constants/theme';
+import { useTheme } from '../../context/ThemeContext';
+import { Shadows, Spacing, BorderRadius, Typography } from '../../constants/theme';
 
 interface MetricCardProps {
   label: string;
@@ -11,14 +12,17 @@ interface MetricCardProps {
 }
 
 export function MetricCard({ label, value, icon, style, accentColor }: MetricCardProps) {
+  const { colors } = useTheme();
+
   return (
     <View
       style={[
         {
-          backgroundColor: C.background, // Obsidian Background
+          backgroundColor: colors.card,
           borderRadius: BorderRadius.xxl,
           borderWidth: 1,
-          borderColor: C.glassBorderSubtle,
+          borderColor: colors.glassBorder,
+          borderTopColor: colors.glassBorderSpecular || 'rgba(255, 255, 255, 0.16)',
           padding: Spacing.three,
           flex: 1,
           ...Shadows.card,
@@ -35,7 +39,7 @@ export function MetricCard({ label, value, icon, style, accentColor }: MetricCar
         style={[
           Typography.overline,
           {
-            color: C.textDim,
+            color: colors.textMuted,
             marginBottom: Spacing.one,
           }
         ]}
@@ -46,7 +50,7 @@ export function MetricCard({ label, value, icon, style, accentColor }: MetricCar
         style={[
           Typography.title,
           {
-            color: accentColor ?? '#FFFFFF',
+            color: accentColor ?? colors.textPrimary,
           }
         ]}
       >

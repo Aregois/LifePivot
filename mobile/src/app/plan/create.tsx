@@ -44,7 +44,7 @@ const DURATIONS = [7, 14, 30, 60];
 export default function CreatePlan() {
   const router = useRouter();
   const { colors } = useTheme();
-  const { t } = useLanguage();
+  const { t, locale } = useLanguage();
   const [title, setTitle] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('Coding');
   const [selectedDuration, setSelectedDuration] = useState(30);
@@ -88,6 +88,9 @@ export default function CreatePlan() {
         dailyTime: dailyHours.toString() + ' hours',
         style: selectedCategory,
         userId: user.id,
+        duration: selectedDuration,
+        intent: selectedIntent,
+        language: locale,
       });
       setIsGenerating(true);
     } catch (err: any) {

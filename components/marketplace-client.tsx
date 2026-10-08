@@ -167,7 +167,7 @@ export function MarketplaceClient({ user, initialProfile }: MarketplaceClientPro
                         type="text"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        placeholder={t('marketplace.search_placeholder') || 'Search syllabuses...'}
+                        placeholder={t('marketplace.search_placeholder')}
                         className="w-full bg-[#0B0D17]/80 border border-white/[0.06] rounded-xl pl-9 pr-4 py-2.5 text-xs text-white placeholder-gray-600 focus:outline-none focus:border-electric-blue transition-colors font-medium"
                     />
                 </div>
@@ -175,7 +175,7 @@ export function MarketplaceClient({ user, initialProfile }: MarketplaceClientPro
                 {/* Level / Difficulty Filter control */}
                 <div className="flex gap-1 bg-[#0B0D17] p-1 rounded-2xl border border-white/5 w-full md:w-auto overflow-x-auto">
                     {[
-                        { id: 'All', label: t('marketplace.all_filter') || 'All' },
+                        { id: 'All', label: t('marketplace.all_filter') },
                         { id: 'Beginner', label: t('marketplace.beginner') },
                         { id: 'Intermediate', label: t('marketplace.intermediate') },
                         { id: 'Advanced', label: t('marketplace.advanced') }
@@ -283,7 +283,7 @@ export function MarketplaceClient({ user, initialProfile }: MarketplaceClientPro
                                                 {t('marketplace.created_by', { author: plan.profiles?.id === user.id ? 'YOU' : plan.profiles?.id.slice(0, 5) })}
                                             </span>
                                             <div className="flex items-center gap-1 text-electric-blue font-black text-[10px] uppercase tracking-widest group-hover:translate-x-1 transition-transform">
-                                                {t('marketplace.view_blueprint') || 'View Blueprint'} <ChevronRight className="w-4 h-4" strokeWidth={2.5} />
+                                                {t('marketplace.view_blueprint')} <ChevronRight className="w-4 h-4" strokeWidth={2.5} />
                                             </div>
                                         </div>
                                     </div>
@@ -335,17 +335,17 @@ export function MarketplaceClient({ user, initialProfile }: MarketplaceClientPro
                                     <div className="grid grid-cols-3 gap-3">
                                         <div className="bg-[#0B0D17]/40 border border-white/5 p-4 rounded-2xl flex flex-col gap-1 items-center justify-center">
                                             <Calendar className="w-4 h-4 text-electric-blue" />
-                                            <span className="text-[9px] font-black text-gray-500 uppercase tracking-widest mt-1">{t('creator.duration') || 'Duration'}</span>
+                                            <span className="text-[9px] font-black text-gray-500 uppercase tracking-widest mt-1">{t('marketplace.duration')}</span>
                                             <span className="text-xs font-black text-white mt-0.5">{selectedPlan.duration_days} {t('marketplace.days')}</span>
                                         </div>
                                         <div className="bg-[#0B0D17]/40 border border-white/5 p-4 rounded-2xl flex flex-col gap-1 items-center justify-center">
                                             <Clock className="w-4 h-4 text-electric-blue" />
-                                            <span className="text-[9px] font-black text-gray-500 uppercase tracking-widest mt-1">{t('creator.daily_limit') || 'Weekly'}</span>
+                                            <span className="text-[9px] font-black text-gray-500 uppercase tracking-widest mt-1">{t('marketplace.weekly')}</span>
                                             <span className="text-xs font-black text-white mt-0.5">{selectedPlan.commitment_hours_per_week || 14} Hrs</span>
                                         </div>
                                         <div className="bg-[#0B0D17]/40 border border-white/5 p-4 rounded-2xl flex flex-col gap-1 items-center justify-center">
                                             <BookOpen className="w-4 h-4 text-electric-blue" />
-                                            <span className="text-[9px] font-black text-gray-500 uppercase tracking-widest mt-1">{t('creator.intent') || 'Intent'}</span>
+                                            <span className="text-[9px] font-black text-gray-500 uppercase tracking-widest mt-1">{t('marketplace.intent')}</span>
                                             <span className="text-xs font-black text-white mt-0.5 truncate max-w-[100px]">{selectedPlan.goal_intent}</span>
                                         </div>
                                     </div>
@@ -374,7 +374,7 @@ export function MarketplaceClient({ user, initialProfile }: MarketplaceClientPro
                                                 </button>
                                             ))}
                                             {ratingSuccess && (
-                                                <span className="text-[10px] font-bold text-emerald-400 ml-2 animate-pulse">Rating Submitted!</span>
+                                                <span className="text-[10px] font-bold text-emerald-400 ml-2 animate-pulse">{t('marketplace.rating_submitted')}</span>
                                             )}
                                         </div>
                                     </div>

@@ -10,6 +10,7 @@ import * as Haptics from 'expo-haptics';
 import { HapticsEngine } from '../utils/HapticsEngine';
 import { useLanguage } from '../context/LanguageContext';
 import { useTheme } from '../context/ThemeContext';
+import { Typography } from '../constants/theme';
 import { GlassCard, GlowBadge, FloatingXp } from './ui';
 
 export interface Subtask {
@@ -421,8 +422,7 @@ const styles = StyleSheet.create({
   },
   checkboxCompleted: {},
   taskTitle: {
-    fontSize: 13,
-    fontWeight: '800',
+    ...Typography.bodyBold,
     color: '#FFFFFF',
     marginBottom: 4,
   },
@@ -438,13 +438,13 @@ const styles = StyleSheet.create({
   },
   prioText: {
     fontSize: 9,
-    fontWeight: '900',
+    fontWeight: '800',
     letterSpacing: 0.5,
   },
   metaMutedText: {
-    fontSize: 9,
+    fontSize: 10,
     color: '#8A92A6',
-    fontWeight: '700',
+    fontWeight: '600',
   },
   subtaskPill: {
     paddingHorizontal: 6,
@@ -453,8 +453,8 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 255, 255, 0.05)',
   },
   subtaskPillText: {
-    fontSize: 8,
-    fontWeight: '900',
+    fontSize: 9,
+    fontWeight: '700',
     color: '#9CA3AF',
   },
   taskActionsRow: {
@@ -471,10 +471,10 @@ const styles = StyleSheet.create({
     borderRadius: 10,
   },
   focusActionText: {
-    fontSize: 9,
-    fontWeight: '900',
+    fontSize: 10,
+    fontWeight: '800',
     color: '#050508',
-    letterSpacing: 1,
+    letterSpacing: 0.5,
   },
   detailsChevronBtn: {
     padding: 4,
@@ -497,15 +497,16 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   celebrationTitle: {
-    fontSize: 11,
-    fontWeight: '900',
+    ...Typography.headline,
+    fontSize: 13,
+    fontWeight: '800',
     color: '#FFFFFF',
-    letterSpacing: 1,
+    letterSpacing: 0.2,
   },
   celebrationSubtitle: {
-    fontSize: 10,
+    ...Typography.footnote,
     color: '#8A92A6',
     marginTop: 2,
-    lineHeight: 14,
+    lineHeight: 16,
   },
 });

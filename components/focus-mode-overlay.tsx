@@ -23,22 +23,12 @@ import { useEconomy } from './economy-provider'
 import type { Task, Subtask } from '@/utils/types'
 import { SocraticMicroDrills } from './socratic-micro-drills'
 import { useLanguage } from './language-provider'
-import { useAmbientSynth, SoundType } from './use-ambient-synth'
 
 type FocusState = 'idle' | 'running' | 'paused' | 'drill' | 'finished'
 type TabType = 'timer' | 'notes' | 'resources'
 
 const TOKEN_REWARD: Record<number, number> = { 0: 0, 1: 1, 2: 1, 3: 1, 4: 2, 5: 3 }
 const ADD_TIME_SECONDS = 300 // 5 minutes
-
-const SOUNDSCAPES_LIST: { id: SoundType; label: string; icon: string }[] = [
-    { id: 'none', label: 'Off', icon: '🔇' },
-    { id: 'space', label: 'Space', icon: '🌌' },
-    { id: 'rain', label: 'Rain', icon: '🌧️' },
-    { id: 'binaural', label: 'Binaural', icon: '🧠' },
-    { id: 'cafe', label: 'Cafe', icon: '☕' },
-    { id: 'greenhouse', label: 'Greenhouse', icon: '🌿' },
-]
 
 interface FocusModeOverlayProps {
     task: Task
@@ -116,22 +106,6 @@ export function FocusModeOverlay({ task, goalTitle, onClose, onOptimisticTokenUp
     
     const [isPending, startTransition] = useTransition()
     const [isDesktop, setIsDesktop] = useState(false)
-
-    // Ambient Soundscape synthesizer hook & state
-    const [ambientSound, setAmbientSound] = useState<SoundType>('none')
-    const [ambientVolume, setAmbientVolume] = useState<number>(0.5)
-    const { startSound, stopSound, setVolume: setSynthVolume } = useAmbientSynth()
-
-    useEffect(() => {
-        if (state === 'running' && ambientSound !== 'none' && ambientSound !== 'off') {
-            startSound(ambientSound, ambientVolume)
-        } else {
-            stopSound()
-        }
-        return () => {
-            stopSound()
-        }
-    }, [state, ambientSound, ambientVolume])
 
     // Mount guard for SSR-safe portal & preferences initialization
     useEffect(() => {
@@ -694,57 +668,6 @@ export function FocusModeOverlay({ task, goalTitle, onClose, onOptimisticTokenUp
                                                         </div>
                                                     </button>
 
-                                                    {/* Soundscape Ambient Audio Bar */}
-                                                    <div className="flex flex-col items-center gap-2 w-full max-w-md z-10 px-2 py-1">
-                                                        <div className="flex items-center justify-between w-full text-[10px] font-black uppercase text-gray-500 tracking-wider">
-                                                            <span className="flex items-center gap-1.5">
-                                                                <Volume2 className="h-3 w-3 text-primary" /> Ambient Soundscapes
-                                                            </span>
-                                                            {ambientSound !== 'none' && ambientSound !== 'off' && (
-                                                                <span className="text-emerald-400 font-bold">{Math.round(ambientVolume * 100)}% Volume</span>
-                                                            )}
-                                                        </div>
-                                                        <div className="flex gap-1.5 w-full overflow-x-auto no-scrollbar p-1 rounded-2xl bg-black/30 border border-white/5">
-                                                            {SOUNDSCAPES_LIST.map((sc) => (
-                                                                <button
-                                                                    key={sc.id}
-                                                                    type="button"
-                                                                    onClick={() => {
-                                                                        haptics.light()
-                                                                        setAmbientSound(sc.id)
-                                                                    }}
-                                                                    className={`flex-1 min-w-[70px] py-1.5 px-2 rounded-xl text-[10px] font-black transition-all flex items-center justify-center gap-1 border ${
-                                                                        ambientSound === sc.id
-                                                                            ? 'bg-primary/15 border-primary/30 text-primary shadow-sm'
-                                                                            : 'border-transparent text-gray-500 hover:text-gray-300'
-                                                                    }`}
-                                                                >
-                                                                    <span>{sc.icon}</span>
-                                                                    <span>{sc.label}</span>
-                                                                </button>
-                                                            ))}
-                                                        </div>
-                                                        {ambientSound !== 'none' && ambientSound !== 'off' && (
-                                                            <div className="flex items-center gap-2 w-full px-3 py-1.5 bg-black/25 rounded-xl border border-white/5">
-                                                                <VolumeX className="h-3 w-3 text-gray-500 shrink-0" />
-                                                                <input
-                                                                    type="range"
-                                                                    min="0.05"
-                                                                    max="1"
-                                                                    step="0.05"
-                                                                    value={ambientVolume}
-                                                                    onChange={(e) => {
-                                                                        const vol = parseFloat(e.target.value)
-                                                                        setAmbientVolume(vol)
-                                                                        setSynthVolume(vol)
-                                                                    }}
-                                                                    className="w-full h-1.5 bg-white/10 rounded-lg appearance-none cursor-pointer accent-primary"
-                                                                />
-                                                                <Volume2 className="h-3 w-3 text-primary shrink-0" />
-                                                            </div>
-                                                        )}
-                                                    </div>
-
                                                     {/* Action Buttons Row */}
                                                     <div className="flex gap-4 z-10 mt-2">
                                                         {/* Stuck button */}
@@ -1140,57 +1063,6 @@ export function FocusModeOverlay({ task, goalTitle, onClose, onOptimisticTokenUp
                                                     </span>
                                                     <span className="text-[9px] text-gray-600 mt-1 font-semibold uppercase tracking-wider">{t('focus.duration_min_session').replace('{duration}', String(task.duration_mins ?? 30))}</span>
                                                 </div>
-                                            </div>
-
-                                            {/* Soundscape Ambient Audio Bar (Mobile) */}
-                                            <div className="flex flex-col items-center gap-2 w-full max-w-sm z-10">
-                                                <div className="flex items-center justify-between w-full text-[9px] font-black uppercase text-gray-500 tracking-wider">
-                                                    <span className="flex items-center gap-1">
-                                                        <Volume2 className="h-3 w-3 text-primary" /> Ambient Soundscapes
-                                                    </span>
-                                                    {ambientSound !== 'none' && ambientSound !== 'off' && (
-                                                        <span className="text-emerald-400 font-bold">{Math.round(ambientVolume * 100)}%</span>
-                                                    )}
-                                                </div>
-                                                <div className="flex gap-1.5 w-full overflow-x-auto no-scrollbar p-1 rounded-2xl bg-black/30 border border-white/5">
-                                                    {SOUNDSCAPES_LIST.map((sc) => (
-                                                        <button
-                                                            key={sc.id}
-                                                            type="button"
-                                                            onClick={() => {
-                                                                haptics.light()
-                                                                setAmbientSound(sc.id)
-                                                            }}
-                                                            className={`flex-1 min-w-[64px] py-1.5 px-2 rounded-xl text-[9px] font-black transition-all flex items-center justify-center gap-1 border ${
-                                                                ambientSound === sc.id
-                                                                    ? 'bg-primary/15 border-primary/30 text-primary shadow-sm'
-                                                                    : 'border-transparent text-gray-500 hover:text-gray-300'
-                                                            }`}
-                                                        >
-                                                            <span>{sc.icon}</span>
-                                                            <span>{sc.label}</span>
-                                                        </button>
-                                                    ))}
-                                                </div>
-                                                {ambientSound !== 'none' && ambientSound !== 'off' && (
-                                                    <div className="flex items-center gap-2 w-full px-2.5 py-1 bg-black/25 rounded-xl border border-white/5">
-                                                        <VolumeX className="h-2.5 w-2.5 text-gray-500 shrink-0" />
-                                                        <input
-                                                            type="range"
-                                                            min="0.05"
-                                                            max="1"
-                                                            step="0.05"
-                                                            value={ambientVolume}
-                                                            onChange={(e) => {
-                                                                const vol = parseFloat(e.target.value)
-                                                                setAmbientVolume(vol)
-                                                                setSynthVolume(vol)
-                                                            }}
-                                                            className="w-full h-1 bg-white/10 rounded-lg appearance-none cursor-pointer accent-primary"
-                                                        />
-                                                        <Volume2 className="h-2.5 w-2.5 text-primary shrink-0" />
-                                                    </div>
-                                                )}
                                             </div>
 
                                             {/* Live checklist HUD */}

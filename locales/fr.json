@@ -127,6 +127,21 @@
     "step_commit": "S'engager",
     "plan_language": "Langue du plan"
   },
+  "plan_loader": {
+    "architect_badge": "ARCHITECTE IA LIFEPIVOT",
+    "ticker_1": "Analyse de votre objectif...",
+    "ticker_2": "Structuration de vos étapes...",
+    "ticker_3": "Équilibrage des niveaux de difficulté...",
+    "ticker_4": "Ajout des jours de récupération...",
+    "ticker_5": "Synthèse du programme quotidien...",
+    "ticker_6": "Finalisation du parcours d'apprentissage...",
+    "status_building": "VOTRE PLAN EST EN COURS DE CRÉATION",
+    "status_ready": "VOTRE PLAN EST PRÊT",
+    "status_failed": "ÉCHEC DE LA GÉNÉRATION",
+    "btn_try_again": "RÉESSAYER",
+    "btn_skip": "PASSER POUR L'INSTANT",
+    "day": "JOUR"
+  },
   "profile": {
     "title": "Profil du Chercheur",
     "subtitle": "Centre de Progression Personnel",
@@ -199,7 +214,12 @@
     "achievement_deep_learner_title": "Grand Étudiant",
     "achievement_deep_learner_desc": "Accumulez 5 heures de concentration totale.",
     "achievement_streak_starter_title": "Série Lancée",
-    "achievement_streak_starter_desc": "Maintenez une régularité de 3 jours."
+    "achievement_streak_starter_desc": "Maintenez une régularité de 3 jours.",
+    "wardrobe_customization": "Personnalisation de Garde-Robe",
+    "equip_unlocked_title": "Équiper le Titre Débloqué",
+    "equip_unlocked_frame": "Équiper le Cadre Débloqué",
+    "select_profile_avatar": "Sélectionner l'Avatar de Profil",
+    "streak": "Série"
   },
   "shop": {
     "wallet": "Votre Portefeuille",
@@ -314,7 +334,10 @@
         "desc": "Sons d'étude : clics de gouttes de pluie sur les toits en verre.",
         "badge": "Ambiance étude"
       }
-    }
+    },
+    "tokens_balance": "Solde de Jetons",
+    "token_store": "Boutique de Jetons",
+    "buy_tokens": "Acheter des Jetons"
   },
   "circadian": {
     "celebration_title": "Booster Activé !",
@@ -855,7 +878,20 @@
     "success_cloned": "Ce programme a été cloné dans votre calendrier d'étude !",
     "import_failed": "ÉCHEC DE L'IMPORTATION",
     "rated_title": "NOTE ENREGISTRÉE",
-    "rated_updated": "Note du programme mise à jour : {rating}★"
+    "rated_updated": "Note du programme mise à jour : {rating}★",
+    "title": "Marché des Plans",
+    "subtitle": "Découvrez et clonez les programmes de la communauté et des tuteurs",
+    "search_placeholder": "Rechercher des programmes...",
+    "all_filter": "TOUS",
+    "intermediate": "INTERMÉDIAIRE",
+    "advanced": "AVANCÉ",
+    "insufficient_tokens": "Jetons insuffisants pour acheter ce plan !",
+    "clone_failed": "Échec du clonage du programme",
+    "view_blueprint": "VOIR LE PLAN",
+    "rating_submitted": "Évaluation envoyée !",
+    "duration": "DURÉE",
+    "weekly": "HEBDOMADAIRE",
+    "intent": "OBJECTIF"
   },
   "workspaces": {
     "owned_by_you": "CRÉÉ PAR VOUS",
@@ -913,7 +949,28 @@
     "copy_prompt": "COPIER LE PROMPT",
     "copied": "COPIÉ !",
     "shared": "PARTAGÉ !",
-    "import_plan_cta": "IMPORTER LE JSON DU PLAN"
+    "import_plan_cta": "IMPORTER LE JSON DU PLAN",
+    "step_label": "Étape {n}",
+    "where_label": "Où",
+    "after_copying": "Après avoir copié",
+    "prompt_label": "Prompt",
+    "step1_where": "Tout assistant IA (Claude, ChatGPT, Gemini)",
+    "step1_tip": "Collez le prompt dans n'importe quel assistant IA. Répondez à toutes les questions une par une jusqu'à recevoir le Master Prompt à la fin.",
+    "step2_where": "Tout assistant IA (Claude, ChatGPT, Gemini)",
+    "step2_tip": "Continuez dans la même session IA que l'Étape 1. L'IA connaît déjà votre profil d'apprenant.",
+    "step3_where": "Gemini Notebook",
+    "step3_inst1": "Ouvrez Gemini Notebook sur gemini.google.com/notebook",
+    "step3_inst2": "Ouvrez le notebook créé à l'Étape 2 (avec vos fichiers sources)",
+    "step3_inst3": "Allez dans la zone de chat et collez le Master Prompt de la fin de votre session Étape 1",
+    "step3_inst4": "Envoyez — Gemini Notebook lira vos sources et produira un plan JSON complet",
+    "step3_inst5": "Copiez le JSON et utilisez le bouton Importer le Plan pour créer votre plan dans LifePivot",
+    "note_label": "Note",
+    "step3_note": "Si vous n'avez pas de manuels personnels, Gemini Notebook utilisera les sources téléversées pour structurer votre programme — vos tâches décriront ce que vous devez pratiquer et comprendre, pas quelles pages lire.",
+    "feature1": "Chaque tâche ancrée dans vos vrais manuels",
+    "feature2": "Priorités P0–P5 pour le Moteur Pivot",
+    "feature3": "Récupération automatique si vous manquez des séances",
+    "feature4": "XP et gamification sur chaque tâche",
+    "after_plan_cta": "Après avoir généré votre plan"
   },
   "plan_switcher": {
     "sub": "CHANGER DE PROGRAMME ACTIF",
@@ -931,7 +988,9 @@
     "change": "MODIFIER",
     "mins": "{count} MIN",
     "mins_one": "{count} MIN",
-    "mins_other": "{count} MIN"
+    "mins_other": "{count} MIN",
+    "back": "Retour",
+    "where": "Où"
   },
   "plan_import": {
     "title": "Importer un plan JSON",
@@ -970,5 +1029,58 @@
     "yearly_price": "79,99 $ / an",
     "btn_upgrade": "Passer à Solo Power",
     "btn_manage": "Gérer le plan actuel"
+  },
+  "study_tips": {
+    "sponsored_insight": "APERÇU SPONSORISÉ",
+    "tokens_reward": "+{amount} JETONS 🪙",
+    "reward_unlocked": "RÉCOMPENSE DÉBLOQUÉE !",
+    "learning_interstitial": "INTERSTITIEL D'APPRENTISSAGE",
+    "connecting": "Connexion au réseau de connaissances...",
+    "generating": "Génération de la session de récompense vérifiée",
+    "cooldown_active": "Délai de Récupération Actif",
+    "cooldown_desc": "Les aperçus récompensés ont un intervalle de 60 minutes entre chaque attribution de jetons.",
+    "return_to_shop": "Retourner à la Boutique",
+    "session_error": "Erreur de Session",
+    "claim_reward": "Réclamer +{amount} Jetons",
+    "claiming": "Réclamation des jetons…",
+    "tokens_claimed": "Jetons Réclamés !",
+    "tips": [
+      {
+        "tag": "SCIENCE COGNITIVE",
+        "title": "Rappel Actif",
+        "description": "Tester votre mémoire avant de relire crée des voies neuronales 3 fois plus fortes que la révision passive."
+      },
+      {
+        "tag": "PROTOCOLE D'APPRENTISSAGE",
+        "title": "Répétition Espacée",
+        "description": "Révisez les concepts au moment où la courbe de l'oubli s'accentue pour une rétention durable."
+      },
+      {
+        "tag": "CONSOLIDATION NEURONALE",
+        "title": "Jours Vides Stratégiques",
+        "description": "Prendre des jours de repos permet au cerveau d'organiser les souvenirs sans briser votre série."
+      },
+      {
+        "tag": "TECHNIQUE FEYNMAN",
+        "title": "Ancrage Conceptuel",
+        "description": "Si vous ne pouvez pas expliquer un concept simplement, vous avez identifié une lacune fondamentale."
+      },
+      {
+        "tag": "GESTION DE L'ÉNERGIE",
+        "title": "Séquençage des Priorités (P5/P4)",
+        "description": "Attaquez les étapes les plus exigeantes pendant votre pic de vigilance matinale."
+      }
+    ]
+  },
+  "tasks": {
+    "task_specification": "SPÉCIFICATION DE LA TÂCHE",
+    "saving": "ENREGISTREMENT...",
+    "autosaved": "ENREGISTRÉ AUTOMATIQUEMENT",
+    "locked": "VERROUILLÉ",
+    "add_step": "AJOUTER UNE ÉTAPE",
+    "study_takeaways": "POINTS CLÉS D'ÉTUDE",
+    "ambient_soundscapes": "PAYSAGES SONORES",
+    "need_intuition_check": "Bloqué ou besoin d'une intuition ?",
+    "socratic_conceptual_guide": "Guide Conceptuel Socratique"
   }
 }

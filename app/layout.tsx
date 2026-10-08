@@ -1,4 +1,4 @@
-﻿import type { Metadata } from "next";
+import type { Metadata } from "next";
 import { Geist, Geist_Mono, Noto_Sans_Armenian } from "next/font/google";
 import "./globals.css";
 
@@ -23,6 +23,7 @@ import { RegisterServiceWorker } from "@/components/register-sw";
 import { PwaInstallPrompt } from "@/components/pwa-install-prompt";
 import { ThemeInitializer } from "@/components/theme-initializer";
 import { LanguageProvider } from "@/components/language-provider";
+import { WebDebugPanel } from "@/components/web-debug-panel";
 
 export const metadata: Metadata = {
   title: "LifePivot - Adaptive Learning",
@@ -107,6 +108,7 @@ export default async function RootLayout({
             children
           )}
         </LanguageProvider>
+        <WebDebugPanel />
       </body>
     </html>
   );

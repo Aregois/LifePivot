@@ -127,6 +127,21 @@
     "step_commit": "Comprometerse",
     "plan_language": "Idioma del plan"
   },
+  "plan_loader": {
+    "architect_badge": "ARQUITECTO AI LIFEPIVOT",
+    "ticker_1": "Analizando tu objetivo y dominio...",
+    "ticker_2": "Estructurando tus hitos...",
+    "ticker_3": "Equilibrando niveles de dificultad...",
+    "ticker_4": "Añadiendo días de recuperación...",
+    "ticker_5": "Sintetizando el currículo diario...",
+    "ticker_6": "Finalizando la ruta de aprendizaje...",
+    "status_building": "CONSTRUYENDO TU PLAN",
+    "status_ready": "TU PLAN ESTÁ LISTO",
+    "status_failed": "ERROR DE GENERACIÓN",
+    "btn_try_again": "REINTENTAR",
+    "btn_skip": "OMITIR POR AHORA",
+    "day": "DÍA"
+  },
   "profile": {
     "title": "Perfil del Buscador",
     "subtitle": "Centro de Progresión Personal",
@@ -199,7 +214,12 @@
     "achievement_deep_learner_title": "Gran Estudiante",
     "achievement_deep_learner_desc": "Registra 5 horas de enfoque total.",
     "achievement_streak_starter_title": "Racha Iniciada",
-    "achievement_streak_starter_desc": "Mantén una consistencia de 3 días."
+    "achievement_streak_starter_desc": "Mantén una consistencia de 3 días.",
+    "wardrobe_customization": "Personalización de Armario",
+    "equip_unlocked_title": "Equipar Título Desbloqueado",
+    "equip_unlocked_frame": "Equipar Marco Desbloqueado",
+    "select_profile_avatar": "Seleccionar Avatar de Perfil",
+    "streak": "Racha"
   },
   "shop": {
     "wallet": "Tu Monedero",
@@ -314,7 +334,10 @@
         "desc": "Sonidos de estudio: gotas de lluvia golpeando contra el techo de vidrio.",
         "badge": "Sonido de estudio"
       }
-    }
+    },
+    "tokens_balance": "Saldo de Fichas",
+    "token_store": "Tienda de Fichas",
+    "buy_tokens": "Comprar Fichas"
   },
   "circadian": {
     "celebration_title": "¡Potenciador Activado!",
@@ -855,7 +878,20 @@
     "success_cloned": "¡Este temario se ha clonado a tu calendario de estudio!",
     "import_failed": "ERROR AL IMPORTAR",
     "rated_title": "CALIFICADO",
-    "rated_updated": "Calificación actualizada a: {rating}★"
+    "rated_updated": "Calificación actualizada a: {rating}★",
+    "title": "Mercado de Planes",
+    "subtitle": "Descubre y clona planes de estudio de la comunidad y tutores",
+    "search_placeholder": "Buscar temarios...",
+    "all_filter": "TODOS",
+    "intermediate": "INTERMEDIO",
+    "advanced": "AVANZADO",
+    "insufficient_tokens": "¡Fichas insuficientes para comprar este plan!",
+    "clone_failed": "Error al clonar el temario",
+    "view_blueprint": "VER PLAN",
+    "rating_submitted": "¡Calificación enviada!",
+    "duration": "DURACIÓN",
+    "weekly": "SEMANAL",
+    "intent": "OBJETIVO"
   },
   "workspaces": {
     "owned_by_you": "CREADO POR TI",
@@ -913,7 +949,28 @@
     "copy_prompt": "COPIAR PROMPT",
     "copied": "¡COPIADO!",
     "shared": "¡COMPARTIDO!",
-    "import_plan_cta": "IMPORTAR JSON DEL PLAN"
+    "import_plan_cta": "IMPORTAR JSON DEL PLAN",
+    "step_label": "Paso {n}",
+    "where_label": "Dónde",
+    "after_copying": "Después de copiar",
+    "prompt_label": "Prompt",
+    "step1_where": "Cualquier IA (Claude, ChatGPT, Gemini)",
+    "step1_tip": "Pega el prompt en cualquier asistente de IA. Responde todas las preguntas una por una hasta recibir el Master Prompt al final.",
+    "step2_where": "Cualquier IA (Claude, ChatGPT, Gemini)",
+    "step2_tip": "Continúa en la misma sesión de IA del Paso 1. La IA ya conoce tu perfil de aprendiz.",
+    "step3_where": "Gemini Notebook",
+    "step3_inst1": "Abre Gemini Notebook en gemini.google.com/notebook",
+    "step3_inst2": "Abre el notebook que creaste en el Paso 2 (con tus archivos subidos)",
+    "step3_inst3": "Ve al área de chat y pega el Master Prompt del final de tu sesión del Paso 1",
+    "step3_inst4": "Envíalo — Gemini Notebook leerá tus fuentes y generará un plan JSON completo",
+    "step3_inst5": "Copia el JSON y usa el botón Importar Plan para crear tu plan en LifePivot",
+    "note_label": "Nota",
+    "step3_note": "Si no tienes libros de texto propios, Gemini Notebook usará las fuentes subidas para estructurar tu currículo — tus tareas describirán qué practicar y entender, no qué páginas leer.",
+    "feature1": "Cada tarea fundamentada en tus libros reales",
+    "feature2": "Prioridades P0–P5 para el Motor Pivot",
+    "feature3": "Recuperación automática si pierdes sesiones",
+    "feature4": "XP y gamificación en cada tarea",
+    "after_plan_cta": "Después de generar tu plan"
   },
   "plan_switcher": {
     "sub": "CAMBIAR PLAN ACTIVO",
@@ -931,7 +988,9 @@
     "change": "CAMBIAR",
     "mins": "{count} MIN",
     "mins_one": "{count} MIN",
-    "mins_other": "{count} MINS"
+    "mins_other": "{count} MINS",
+    "back": "Atrás",
+    "where": "Dónde"
   },
   "plan_import": {
     "title": "Importar Plan JSON",
@@ -970,5 +1029,58 @@
     "yearly_price": "$79.99 / año",
     "btn_upgrade": "Mejorar a Solo Power",
     "btn_manage": "Gestionar Plan Actual"
+  },
+  "study_tips": {
+    "sponsored_insight": "CONOCIMIENTO PATROCINADO",
+    "tokens_reward": "+{amount} FICHAS 🪙",
+    "reward_unlocked": "¡RECOMPENSA DESBLOQUEADA!",
+    "learning_interstitial": "INTERSTICIAL DE APRENDIZAJE",
+    "connecting": "Conectando con la red de conocimiento...",
+    "generating": "Generando sesión de recompensa verificada",
+    "cooldown_active": "Tiempo de Espera Activo",
+    "cooldown_desc": "Las sesiones de recompensa tienen un intervalo de 60 minutos entre entregas de fichas.",
+    "return_to_shop": "Volver a la Tienda",
+    "session_error": "Error de Sesión",
+    "claim_reward": "Reclamar +{amount} Fichas",
+    "claiming": "Reclamando Fichas…",
+    "tokens_claimed": "¡Fichas Reclamadas!",
+    "tips": [
+      {
+        "tag": "CIENCIA COGNITIVA",
+        "title": "Recuerdo Activo",
+        "description": "Poner a prueba tu memoria antes de releer crea vías neuronales 3 veces más fuertes que la revisión pasiva."
+      },
+      {
+        "tag": "PROTOCOLO DE APRENDIZAJE",
+        "title": "Repetición Espaciada",
+        "description": "Revisa conceptos justo cuando la curva del olvido comienza a pronunciarse para retención permanente."
+      },
+      {
+        "tag": "CONSOLIDACIÓN NEURONAL",
+        "title": "Días Vacíos Estratégicos",
+        "description": "Los días de descanso programados permiten al cerebro consolidar recuerdos sin romper tu racha."
+      },
+      {
+        "tag": "TÉCNICA FEYNMAN",
+        "title": "Comprensión Conceptual",
+        "description": "Si no puedes explicar un concepto en términos sencillos, has identificado una brecha fundamental."
+      },
+      {
+        "tag": "ALINEACIÓN DE ENERGÍA",
+        "title": "Secuenciación Prioritaria (P5/P4)",
+        "description": "Aborda los hitos más exigentes en tu momento de mayor alerta matutina."
+      }
+    ]
+  },
+  "tasks": {
+    "task_specification": "ESPECIFICACIÓN DE TAREA",
+    "saving": "GUARDANDO...",
+    "autosaved": "GUARDADO AUTOMÁTICO",
+    "locked": "BLOQUEADO",
+    "add_step": "AÑADIR PASO",
+    "study_takeaways": "CONCLUSIONES DEL ESTUDIO",
+    "ambient_soundscapes": "PAISAJES SONOROS",
+    "need_intuition_check": "¿Atascado o necesitas intuición?",
+    "socratic_conceptual_guide": "Guía Conceptual Socrática"
   }
 }

@@ -236,20 +236,20 @@ export default function ImportPlanPage() {
     return (
         <div className="min-h-screen bg-[#050508] text-white">
             {/* Background ambient glows */}
-            <div className="fixed inset-0 pointer-events-none overflow-hidden">
+            <div className="absolute inset-0 pointer-events-none overflow-hidden">
                 <div className="absolute -top-40 -right-40 w-[500px] h-[500px] rounded-full bg-[#00F0FF] opacity-[0.04] blur-[80px]" />
                 <div className="absolute top-1/2 -left-40 w-[400px] h-[400px] rounded-full bg-[#BD00FF] opacity-[0.04] blur-[80px]" />
             </div>
 
-            <div className="relative max-w-2xl mx-auto px-5 pt-6 pb-32">
+            <div className="relative max-w-2xl mx-auto px-5 pt-6 pb-32 pb-[max(8rem,calc(8rem+env(safe-area-inset-bottom)))]">
 
                 {/* ── Back button ──────────────────────────────────────────── */}
                 <button
-                    onClick={() => router.back()}
+                    onClick={() => router.push('/plan')}
                     className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 hover:text-[#00F0FF] transition-colors mb-8 group"
                 >
                     <ArrowLeft className="w-3.5 h-3.5 group-hover:-translate-x-0.5 transition-transform" />
-                    Back
+                    {t('common.back')}
                 </button>
 
                 {/* ── Header ───────────────────────────────────────────────── */}

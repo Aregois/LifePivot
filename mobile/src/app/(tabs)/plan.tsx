@@ -178,11 +178,11 @@ export default function PlanPortal() {
                         <Ionicons name="people" size={22} color={colors.primary} />
                     </View>
                     <View style={{ flex: 1, marginRight: 12 }}>
-                        <Text style={{ fontSize: 13, fontWeight: '900', color: '#FFFFFF', letterSpacing: 0.5, textTransform: 'uppercase' }}>
-                            {t('nav.cohorts') || 'STUDY COHORTS'}
+                        <Text style={{ fontSize: 14, fontWeight: '800', color: '#FFFFFF', letterSpacing: 0.2 }}>
+                            {t('nav.cohorts') || 'Study Cohorts'}
                         </Text>
-                        <Text style={{ fontSize: 10, color: colors.textMuted, marginTop: 2, textTransform: 'uppercase', letterSpacing: 0.5, lineHeight: 14 }}>
-                            {t('workspaces.subtitle') || 'JOIN STUDENT GROUPS, SYNC XP, AND SOLVE TUTOR TASKS'}
+                        <Text style={{ fontSize: 11, color: colors.textMuted, marginTop: 2, letterSpacing: -0.1, lineHeight: 16 }}>
+                            {t('workspaces.subtitle') || 'Join student groups, sync XP, and solve tutor tasks'}
                         </Text>
                     </View>
                     <Ionicons name="chevron-forward" size={18} color={colors.primary} />
@@ -204,11 +204,11 @@ export default function PlanPortal() {
                         <Ionicons name="grid" size={22} color={colors.secondary} />
                     </View>
                     <View style={{ flex: 1, marginRight: 12 }}>
-                        <Text style={{ fontSize: 13, fontWeight: '900', color: '#FFFFFF', letterSpacing: 0.5, textTransform: 'uppercase' }}>
-                            {t('nav.marketplace') || 'PLAN MARKETPLACE'}
+                        <Text style={{ fontSize: 14, fontWeight: '800', color: '#FFFFFF', letterSpacing: 0.2 }}>
+                            {t('nav.marketplace') || 'Plan Marketplace'}
                         </Text>
-                        <Text style={{ fontSize: 10, color: colors.textMuted, marginTop: 2, textTransform: 'uppercase', letterSpacing: 0.5, lineHeight: 14 }}>
-                            {t('marketplace.empty_desc') || 'BROWSE, BUY, AND IMPORT COMMUNITY CHOSEN STUDY SCHEMAS'}
+                        <Text style={{ fontSize: 11, color: colors.textMuted, marginTop: 2, letterSpacing: -0.1, lineHeight: 16 }}>
+                            {t('marketplace.empty_desc') || 'Browse, buy, and import community chosen study schemas'}
                         </Text>
                     </View>
                     <Ionicons name="chevron-forward" size={18} color={colors.secondary} />
