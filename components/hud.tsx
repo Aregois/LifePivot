@@ -37,10 +37,6 @@ export function HUD() {
     if (pathname === '/plan') routeTitle = t('nav.plan')
     else if (pathname === '/shop') routeTitle = t('nav.shop')
     else if (pathname === '/profile') routeTitle = t('nav.profile')
-    else if (pathname === '/workspaces') routeTitle = t('nav.cohorts') || 'Study Cohorts'
-    else if (pathname.startsWith('/workspaces/')) routeTitle = 'Cohort Portal'
-    else if (pathname === '/marketplace') routeTitle = t('nav.marketplace') || 'Plan Marketplace'
-    else if (pathname.startsWith('/marketplace/')) routeTitle = 'Plan Detail'
 
     return (
         <header role="banner" className="sticky top-0 z-[100] w-full bg-[#050508]/85 backdrop-blur-xl border-b border-white/5">

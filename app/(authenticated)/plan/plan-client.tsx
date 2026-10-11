@@ -9,7 +9,7 @@ import { LearningPlanCreator } from '@/components/learning-plan-creator'
 import { ResetPlanButton } from '@/components/reset-plan-button'
 import { PlanProgressCard } from '@/components/plan-progress-card'
 import { getLocalDateString } from '@/utils/date-utils'
-import { Users, Compass, Paperclip, ArrowRight, ChevronLeft, ChevronRight, Plus, Lock, Crown, AlertTriangle, Library, GraduationCap } from 'lucide-react'
+import { Calendar, Paperclip, ArrowRight, ChevronLeft, ChevronRight, Plus, Lock, Crown, AlertTriangle, Library, GraduationCap } from 'lucide-react'
 import Link from 'next/link'
 import { haptics } from '@/utils/haptics'
 import { useLanguage } from '@/components/language-provider'
@@ -213,30 +213,17 @@ export function PlanClient({ user, goals, goalsError, isSubscribed, subscription
             )}
 
             {/* ── Mobile Portal Subnav ────────────────────────────────────────── */}
-            <div className="flex justify-center gap-3 px-4 sm:px-6 pt-2 mb-2 md:hidden">
+            <div className="flex justify-center px-4 sm:px-6 pt-2 mb-2 md:hidden">
                 <Link
-                    href="/workspaces"
+                    href="/calendar"
                     onClick={() => haptics.light()}
-                    className="group flex-1 max-w-[170px] py-2.5 px-3 rounded-2xl bg-gradient-to-b from-white/[0.04] to-white/[0.01] backdrop-blur-xl border border-white/[0.06] flex items-center justify-between hover:border-electric-blue/30 transition-all shadow-[0_4px_20px_rgba(0,0,0,0.25)] hover:shadow-[0_4px_25px_rgba(var(--accent-rgb),0.08)] active:scale-[0.98]"
+                    className="group w-full max-w-sm py-2.5 px-4 rounded-2xl bg-gradient-to-b from-white/[0.04] to-white/[0.01] backdrop-blur-xl border border-white/[0.06] flex items-center justify-between hover:border-electric-blue/30 transition-all shadow-[0_4px_20px_rgba(0,0,0,0.25)] hover:shadow-[0_4px_25px_rgba(var(--accent-rgb),0.08)] active:scale-[0.98]"
                 >
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2.5">
                         <div className="w-7 h-7 rounded-xl bg-electric-blue/10 border border-electric-blue/20 flex items-center justify-center shadow-[0_0_15px_rgba(var(--accent-rgb),0.1)] group-hover:bg-electric-blue/25 transition-all">
-                            <Users className="w-3.5 h-3.5 text-electric-blue" />
+                            <Calendar className="w-3.5 h-3.5 text-electric-blue" />
                         </div>
-                        <span className="text-[10px] font-black text-white uppercase tracking-wider group-hover:text-electric-blue transition-colors">{t('nav.cohorts') || 'Cohorts'}</span>
-                    </div>
-                    <ArrowRight className="w-3.5 h-3.5 text-gray-500 group-hover:text-electric-blue group-hover:translate-x-0.5 transition-all" />
-                </Link>
-                <Link
-                    href="/marketplace"
-                    onClick={() => haptics.light()}
-                    className="group flex-1 max-w-[170px] py-2.5 px-3 rounded-2xl bg-gradient-to-b from-white/[0.04] to-white/[0.01] backdrop-blur-xl border border-white/[0.06] flex items-center justify-between hover:border-electric-blue/30 transition-all shadow-[0_4px_20px_rgba(0,0,0,0.25)] hover:shadow-[0_4px_25px_rgba(var(--accent-rgb),0.08)] active:scale-[0.98]"
-                >
-                    <div className="flex items-center gap-2">
-                        <div className="w-7 h-7 rounded-xl bg-electric-blue/10 border border-electric-blue/20 flex items-center justify-center shadow-[0_0_15px_rgba(var(--accent-rgb),0.1)] group-hover:bg-electric-blue/25 transition-all">
-                            <Compass className="w-3.5 h-3.5 text-electric-blue" />
-                        </div>
-                        <span className="text-[10px] font-black text-white uppercase tracking-wider group-hover:text-electric-blue transition-colors">{t('nav.marketplace') || 'Marketplace'}</span>
+                        <span className="text-[10px] font-black text-white uppercase tracking-wider group-hover:text-electric-blue transition-colors">{t('nav.calendar') || 'Interactive Schedule & Calendar'}</span>
                     </div>
                     <ArrowRight className="w-3.5 h-3.5 text-gray-500 group-hover:text-electric-blue group-hover:translate-x-0.5 transition-all" />
                 </Link>

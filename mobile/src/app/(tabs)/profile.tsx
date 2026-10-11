@@ -2,7 +2,6 @@ import React, { useEffect, useState, useCallback } from 'react';
 import {
   View,
   Text,
-  TextInput,
   ScrollView,
   Alert,
   ActivityIndicator,
@@ -40,13 +39,14 @@ import { ReactiveAvatarNative } from '../../components/ReactiveAvatarNative';
 import { OnboardingTourModal } from '../../components/OnboardingTourModal';
 import { WeeklyJourneyStrip } from '../../components/WeeklyJourneyStrip';
 import { MasteryAchievementsCard } from '../../components/MasteryAchievementsCard';
+import { VoidDayPlacementModal } from '../../components/VoidDayPlacementModal';
 import {
   LocalizationSelectorModal,
   SupportedLocale,
   LANGUAGES,
 } from '../../components/LocalizationSelectorModal';
 
-type SegmentTab = 'MASTERY' | 'SETTINGS' | 'COSMETICS';
+type SegmentTab = 'MASTERY' | 'UTILITIES' | 'SETTINGS';
 type PersonaType = 'feynman' | 'socrates' | 'stoic';
 
 const getRankTitle = (lvl: number): string => {
@@ -70,13 +70,6 @@ const ACCENT_OPTIONS: { id: AccentType; name: string; color: string }[] = [
   { id: 'sunset', name: 'Sunset Amber', color: '#F59E0B' },
 ];
 
-const AVATAR_FRAMES = [
-  { id: 'frame_standard', name: 'Standard Steel', color: 'rgba(255, 255, 255, 0.2)' },
-  { id: 'frame_cyan', name: 'Obsidian Neon', color: '#00F0FF' },
-  { id: 'frame_violet', name: 'Cyber Violet', color: '#BD00FF' },
-  { id: 'frame_gold', name: 'Solar Gold', color: '#F59E0B' },
-];
-
 export default function Profile() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -85,22 +78,24 @@ export default function Profile() {
 
   const [profile, setProfile] = useState<any>(null);
   const [email, setEmail] = useState('');
-  const [linkedinUrl, setLinkedinUrl] = useState('');
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [updating, setUpdating] = useState(false);
-  const [linkedinFocused, setLinkedinFocused] = useState(false);
 
   // Tab & Modal states
   const [activeSegmentIndex, setActiveSegmentIndex] = useState<number>(0);
   const [tourVisible, setTourVisible] = useState(false);
   const [langModalVisible, setLangModalVisible] = useState(false);
 
-  // Persona & Frame preferences
+  // Persona & Notification preferences
   const [persona, setPersona] = useState<PersonaType>('feynman');
-  const [selectedFrame, setSelectedFrame] = useState('frame_cyan');
   const [remindersEnabled, setRemindersEnabled] = useState(false);
   const [reminderHour, setReminderHour] = useState(9);
+
+  // Utilities state
+  const [voidModalVisible, setVoidModalVisible] = useState(false);
+  const [purchasingVoid, setPurchasingVoid] = useState(false);
+  const [purchasingItem, setPurchasingItem] = useState<string | null>(null);
 
   // Mastery metrics computed from tasks
   const [totalCompleted, setTotalCompleted] = useState(0);
@@ -129,7 +124,6 @@ export default function Profile() {
 
         if (prof) {
           setProfile(prof);
-          setLinkedinUrl(prof.linkedin_url || '');
           if (prof.persona_preference && ['feynman', 'socrates', 'stoic'].includes(prof.persona_preference)) {
             setPersona(prof.persona_preference as PersonaType);
           }
@@ -156,10 +150,6 @@ export default function Profile() {
       const savedPersona = await SecureStore.getItemAsync('lifepivot_persona');
       if (savedPersona && ['feynman', 'socrates', 'stoic'].includes(savedPersona)) {
         setPersona(savedPersona as PersonaType);
-      }
-      const savedFrame = await SecureStore.getItemAsync('lifepivot_frame');
-      if (savedFrame) {
-        setSelectedFrame(savedFrame);
       }
       const savedReminders = await SecureStore.getItemAsync('lifepivot_reminder_enabled');
       if (savedReminders) {
@@ -211,59 +201,6 @@ export default function Profile() {
     await setAccent(a);
   };
 
-  const handleSelectFrame = async (frameId: string) => {
-    HapticsEngine.tier1.selection();
-    setSelectedFrame(frameId);
-    await SecureStore.setItemAsync('lifepivot_frame', frameId);
-  };
-
-  const handleRoleToggle = async () => {
-    if (!profile) return;
-    const nextRole = profile.role === 'student' ? 'tutor' : 'student';
-
-    HapticsEngine.tier2.action();
-    setUpdating(true);
-    try {
-      const json = await apiRequest('/api/profile/role', {
-        method: 'POST',
-        body: JSON.stringify({
-          role: nextRole,
-          linkedinUrl: nextRole === 'tutor' ? linkedinUrl : '',
-        }),
-      });
-
-      HapticsEngine.tier3.success();
-      Alert.alert('SUCCESS', `Your role has been updated to ${nextRole.toUpperCase()}`);
-      setProfile(json.profile);
-    } catch (err: any) {
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user) {
-          const { data: updated, error } = await supabase
-            .from('profiles')
-            .update({
-              role: nextRole,
-              linkedin_url: nextRole === 'tutor' ? linkedinUrl : '',
-            })
-            .eq('id', user.id)
-            .select()
-            .single();
-
-          if (!error && updated) {
-            setProfile(updated);
-            HapticsEngine.tier3.success();
-            Alert.alert('SUCCESS', `Your role has been updated to ${nextRole.toUpperCase()}`);
-          }
-        }
-      } catch (fbErr) {
-        HapticsEngine.tier4.error();
-        Alert.alert('ERROR', 'Role update failed');
-      }
-    } finally {
-      setUpdating(false);
-    }
-  };
-
   const handleToggleReminder = async (enabled: boolean) => {
     HapticsEngine.tier1.selection();
     if (enabled) {
@@ -311,12 +248,232 @@ export default function Profile() {
           0
         );
       } catch {}
-      HapticsEngine.tier3.success();
     }
   };
 
-  const handleLogout = async () => {
-    HapticsEngine.tier1.light();
+  /* ── In-App Utilities Handlers ── */
+  const handleBuyShield = async () => {
+    const tokens = profile?.tokens_balance ?? 0;
+    const streakShields = profile?.streak_shields_count ?? 0;
+
+    if (tokens < 15) {
+      HapticsEngine.tier4.error();
+      Alert.alert('INSUFFICIENT TOKENS', 'You need 15 tokens to purchase a Streak Shield.');
+      return;
+    }
+
+    if (streakShields >= 2) {
+      HapticsEngine.tier2.action();
+      Alert.alert('SHIELDS FULL', 'You already have the maximum capacity of 2 Streak Shields equipped.');
+      return;
+    }
+
+    HapticsEngine.tier2.action();
+    Alert.alert(
+      'EQUIP STREAK SHIELD',
+      'Spend 15 tokens to equip a Streak Shield? It will automatically protect your study streak on your next missed day.',
+      [
+        { text: 'CANCEL', style: 'cancel' },
+        {
+          text: 'BUY (15 🪙)',
+          onPress: async () => {
+            setPurchasingItem('shield');
+            try {
+              const res = await apiRequest<{ success: boolean; message: string }>('/api/shop/purchase', {
+                method: 'POST',
+                body: JSON.stringify({ itemType: 'shield' }),
+              });
+              HapticsEngine.tier3.success();
+              Alert.alert('SHIELD EQUIPPED', res.message || 'Streak Shield equipped successfully!');
+              fetchProfileAndStats();
+            } catch (err: any) {
+              const { data: { user } } = await supabase.auth.getUser();
+              if (user) {
+                await supabase
+                  .from('profiles')
+                  .update({
+                    tokens_balance: tokens - 15,
+                    streak_shields_count: streakShields + 1,
+                  })
+                  .eq('id', user.id);
+                setProfile((prev: any) => ({
+                  ...prev,
+                  tokens_balance: tokens - 15,
+                  streak_shields_count: streakShields + 1,
+                }));
+                HapticsEngine.tier3.success();
+                Alert.alert('SHIELD EQUIPPED', 'Streak Shield successfully activated!');
+              }
+            } finally {
+              setPurchasingItem(null);
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const handleBuyVoidDay = () => {
+    const tokens = profile?.tokens_balance ?? 0;
+    if (tokens < 10) {
+      HapticsEngine.tier4.error();
+      Alert.alert('INSUFFICIENT TOKENS', 'You need 10 tokens to schedule a Void Day.');
+      return;
+    }
+    setVoidModalVisible(true);
+  };
+
+  const handleConfirmVoidPlacement = async (placement: 'tomorrow' | 'end') => {
+    setPurchasingVoid(true);
+    try {
+      const res = await apiRequest<{ success: boolean; message: string }>('/api/shop/purchase', {
+        method: 'POST',
+        body: JSON.stringify({ itemType: 'void', voidPlacement: placement }),
+      });
+      setVoidModalVisible(false);
+      HapticsEngine.tier3.success();
+      Alert.alert('VOID DAY SCHEDULED', res.message || 'Void Day successfully added to your schedule!');
+      fetchProfileAndStats();
+    } catch (err: any) {
+      setVoidModalVisible(false);
+      HapticsEngine.tier4.error();
+      Alert.alert('ERROR', err.message || 'Failed to schedule Void Day');
+    } finally {
+      setPurchasingVoid(false);
+    }
+  };
+
+  const handleBuyStreakRepair = async () => {
+    const tokens = profile?.tokens_balance ?? 0;
+    const currentStreak = profile?.current_streak ?? 0;
+    const highStreak = profile?.high_streak ?? 0;
+
+    if (tokens < 30) {
+      HapticsEngine.tier4.error();
+      Alert.alert('INSUFFICIENT TOKENS', 'You need 30 tokens to repair your streak.');
+      return;
+    }
+
+    if (currentStreak > 0) {
+      HapticsEngine.tier2.action();
+      Alert.alert('STREAK ACTIVE', `Your current streak (${currentStreak} days) is active and does not need repair.`);
+      return;
+    }
+
+    if (highStreak <= 0) {
+      HapticsEngine.tier2.action();
+      Alert.alert('NO STREAK RECORD', 'You do not have a previous high streak record to restore.');
+      return;
+    }
+
+    HapticsEngine.tier2.action();
+    Alert.alert(
+      'REPAIR STREAK',
+      `Spend 30 tokens to restore your broken streak to your record of ${highStreak} days?`,
+      [
+        { text: 'CANCEL', style: 'cancel' },
+        {
+          text: 'REPAIR (30 🪙)',
+          onPress: async () => {
+            setPurchasingItem('repair');
+            try {
+              const res = await apiRequest<{ success: boolean; message: string }>('/api/shop/purchase', {
+                method: 'POST',
+                body: JSON.stringify({ itemType: 'repair' }),
+              });
+              HapticsEngine.tier3.success();
+              Alert.alert('STREAK REPAIRED', res.message || `Streak restored to ${highStreak} days!`);
+              fetchProfileAndStats();
+            } catch (err: any) {
+              const { data: { user } } = await supabase.auth.getUser();
+              if (user) {
+                await supabase
+                  .from('profiles')
+                  .update({
+                    tokens_balance: tokens - 30,
+                    current_streak: highStreak,
+                  })
+                  .eq('id', user.id);
+                setProfile((prev: any) => ({
+                  ...prev,
+                  tokens_balance: tokens - 30,
+                  current_streak: highStreak,
+                }));
+                HapticsEngine.tier3.success();
+                Alert.alert('STREAK REPAIRED', `Streak restored to ${highStreak} days!`);
+              }
+            } finally {
+              setPurchasingItem(null);
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const handleBuyMultiplier = async () => {
+    const tokens = profile?.tokens_balance ?? 0;
+    const multiplierActive = profile?.multiplier_active ?? false;
+
+    if (tokens < 15) {
+      HapticsEngine.tier4.error();
+      Alert.alert('INSUFFICIENT TOKENS', 'You need 15 tokens to activate a Focus Multiplier.');
+      return;
+    }
+
+    if (multiplierActive) {
+      HapticsEngine.tier2.action();
+      Alert.alert('ALREADY ACTIVE', 'Focus Multiplier is already active for your next study session.');
+      return;
+    }
+
+    HapticsEngine.tier2.action();
+    Alert.alert(
+      'ACTIVATE MULTIPLIER',
+      'Spend 15 tokens to activate Focus Multiplier? Your next focus session and Socratic drill will grant double token and XP rewards.',
+      [
+        { text: 'CANCEL', style: 'cancel' },
+        {
+          text: 'ACTIVATE (15 🪙)',
+          onPress: async () => {
+            setPurchasingItem('multiplier');
+            try {
+              const res = await apiRequest<{ success: boolean; message: string }>('/api/shop/purchase', {
+                method: 'POST',
+                body: JSON.stringify({ itemType: 'multiplier' }),
+              });
+              HapticsEngine.tier3.success();
+              Alert.alert('MULTIPLIER ACTIVE', res.message || 'Focus Multiplier activated for your next session!');
+              fetchProfileAndStats();
+            } catch (err: any) {
+              const { data: { user } } = await supabase.auth.getUser();
+              if (user) {
+                await supabase
+                  .from('profiles')
+                  .update({
+                    tokens_balance: tokens - 15,
+                    multiplier_active: true,
+                  })
+                  .eq('id', user.id);
+                setProfile((prev: any) => ({
+                  ...prev,
+                  tokens_balance: tokens - 15,
+                  multiplier_active: true,
+                }));
+                HapticsEngine.tier3.success();
+                Alert.alert('MULTIPLIER ACTIVE', 'Focus Multiplier activated for your next session!');
+              }
+            } finally {
+              setPurchasingItem(null);
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const handleLogout = () => {
+    HapticsEngine.tier2.action();
     Alert.alert(
       t('profile.logout') || 'SIGN OUT',
       'Are you sure you want to end your current session?',
@@ -385,11 +542,13 @@ export default function Profile() {
   const highStreak = profile?.high_streak ?? currentStreak;
   const tokens = profile?.tokens_balance ?? 0;
   const streakShields = profile?.streak_shields_count ?? 0;
+  const multiplierActive = profile?.multiplier_active ?? false;
   const displayName = profile?.username || email.split('@')[0] || 'PATHSEEKER';
   const rankTitle = getRankTitle(level);
 
   const activeLangObj = LANGUAGES.find((l) => l.code === currentLocale) || LANGUAGES[0];
-  const activeFrameObj = AVATAR_FRAMES.find((f) => f.id === selectedFrame) || AVATAR_FRAMES[1];
+  const totalFocusHoursFormatted = (totalFocusMins / 60).toFixed(1);
+  const dailyAvgMins = Math.round(totalFocusMins / Math.max(1, completedDates.length));
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
@@ -430,8 +589,7 @@ export default function Profile() {
           >
             {/* Header row: User Avatar + Rank & Info */}
             <View style={styles.heroRow}>
-              {/* Reactive Avatar */}
-              <View style={[styles.avatarWrapper, { borderColor: activeFrameObj.color }]}>
+              <View style={[styles.avatarWrapper, { borderColor: colors.glassBorderSpecular || colors.primary }]}>
                 <ReactiveAvatarNative
                   size={68}
                   level={level}
@@ -439,11 +597,10 @@ export default function Profile() {
                 />
               </View>
 
-              {/* User text details */}
               <View style={styles.heroDetails}>
                 <View style={styles.roleBadgeRow}>
                   <Text style={[styles.roleBadge, { color: colors.primary }]}>
-                    {profile?.role === 'tutor' ? 'VERIFIED TUTOR' : 'PATHSEEKER'}
+                    {profile?.is_subscribed ? 'PRO ARCHITECT' : 'PATHSEEKER'}
                   </Text>
                   {profile?.is_subscribed && (
                     <GlowBadge label="PRO ARCHITECT" colorScheme="violet" />
@@ -505,7 +662,11 @@ export default function Profile() {
         {/* ================================================================= */}
         <FadeInView delay={80} style={styles.segmentedContainer}>
           <SegmentedControl
-            options={[t('profile.stats') || 'MASTERY', t('profile.settings') || 'SETTINGS', t('profile.theme_accent') || 'COSMETICS']}
+            options={[
+              t('profile.stats') || 'MASTERY',
+              t('profile.utilities') || 'UTILITIES',
+              t('profile.settings') || 'SETTINGS',
+            ]}
             selectedIndex={activeSegmentIndex}
             onChange={(idx) => {
               HapticsEngine.tier1.selection();
@@ -515,10 +676,45 @@ export default function Profile() {
         </FadeInView>
 
         {/* ================================================================= */}
-        {/* 4. TAB 1: MASTERY & ACHIEVEMENTS                                  */}
+        {/* 4. TAB 1: MASTERY & COGNITIVE ANALYTICS (Apple Fitness Style)     */}
         {/* ================================================================= */}
         {activeSegmentIndex === 0 && (
           <FadeInView delay={100}>
+            {/* Apple Fitness-grade study metrics */}
+            <View style={styles.analyticsGrid}>
+              <GlassCard style={styles.analyticsCard}>
+                <Text style={styles.analyticsCardLabel}>TOTAL FOCUS</Text>
+                <Text style={[styles.analyticsCardValue, { color: colors.primary }]}>
+                  {totalFocusHoursFormatted} <Text style={styles.analyticsCardUnit}>hrs</Text>
+                </Text>
+                <Text style={styles.analyticsCardSub}>Across all deep study sprints</Text>
+              </GlassCard>
+
+              <GlassCard style={styles.analyticsCard}>
+                <Text style={styles.analyticsCardLabel}>DAILY AVERAGE</Text>
+                <Text style={[styles.analyticsCardValue, { color: colors.secondary }]}>
+                  {dailyAvgMins} <Text style={styles.analyticsCardUnit}>min/d</Text>
+                </Text>
+                <Text style={styles.analyticsCardSub}>On active study days</Text>
+              </GlassCard>
+
+              <GlassCard style={styles.analyticsCard}>
+                <Text style={styles.analyticsCardLabel}>TASKS SECURED</Text>
+                <Text style={[styles.analyticsCardValue, { color: colors.emerald }]}>
+                  {totalCompleted}
+                </Text>
+                <Text style={styles.analyticsCardSub}>Curriculum items finished</Text>
+              </GlassCard>
+
+              <GlassCard style={styles.analyticsCard}>
+                <Text style={styles.analyticsCardLabel}>DEEP FOCUS P5</Text>
+                <Text style={[styles.analyticsCardValue, { color: colors.amber }]}>
+                  {p5Completed}
+                </Text>
+                <Text style={styles.analyticsCardSub}>High-priority cognitive blocks</Text>
+              </GlassCard>
+            </View>
+
             {/* Weekly Journey Strip */}
             <WeeklyJourneyStrip
               completedDates={completedDates}
@@ -540,9 +736,153 @@ export default function Profile() {
         )}
 
         {/* ================================================================= */}
-        {/* 5. TAB 2: SETTINGS & ACCOUNT                                      */}
+        {/* 5. TAB 2: IN-APP UTILITIES & STORE                                */}
         {/* ================================================================= */}
         {activeSegmentIndex === 1 && (
+          <FadeInView delay={100}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>SYLLABUS RESILIENCE & BOOSTS</Text>
+            </View>
+
+            <View style={styles.utilitiesList}>
+              {/* Utility 1: Streak Shield (15 tokens) */}
+              <GlassCard style={styles.utilityCard}>
+                <View style={styles.utilityHeader}>
+                  <View style={styles.utilityIconBox}>
+                    <Text style={{ fontSize: 24 }}>🛡️</Text>
+                  </View>
+                  <View style={{ flex: 1, marginRight: 8 }}>
+                    <View style={styles.utilityTitleRow}>
+                      <Text style={styles.utilityName}>{t('shop.items.shield.title') || 'STREAK SHIELD'}</Text>
+                      {streakShields >= 2 && <GlowBadge label="MAX (2/2)" colorScheme="violet" />}
+                    </View>
+                    <Text style={styles.utilityDesc}>
+                      {t('shop.items.shield.desc') || 'Automatically absorbs 1 missed study day and safeguards your active streak. Maximum 2 equipped.'}
+                    </Text>
+                  </View>
+                  <GlowBadge label="15 🪙" colorScheme="amber" />
+                </View>
+
+                <PremiumButton
+                  title={
+                    purchasingItem === 'shield'
+                      ? 'EQUIPPING...'
+                      : streakShields >= 2
+                      ? 'SHIELDS AT CAPACITY (2/2)'
+                      : `${t('shop.items.shield.title') || 'EQUIP SHIELD'} (15 🪙)`
+                  }
+                  onPress={handleBuyShield}
+                  disabled={streakShields >= 2 || purchasingItem === 'shield'}
+                  variant={streakShields >= 2 ? 'ghost' : 'primary'}
+                  style={{ minHeight: 42, marginTop: 12 }}
+                />
+              </GlassCard>
+
+              {/* Utility 2: Void Day (10 tokens) */}
+              <GlassCard style={styles.utilityCard}>
+                <View style={styles.utilityHeader}>
+                  <View style={styles.utilityIconBox}>
+                    <Text style={{ fontSize: 24 }}>🌌</Text>
+                  </View>
+                  <View style={{ flex: 1, marginRight: 8 }}>
+                    <Text style={styles.utilityName}>{t('shop.items.void.title') || 'VOID DAY (REST)'}</Text>
+                    <Text style={styles.utilityDesc}>
+                      {t('shop.items.void.desc') || 'Injects an intentional rest day tomorrow or at plan completion. Shifts syllabus without streak penalty.'}
+                    </Text>
+                  </View>
+                  <GlowBadge label="10 🪙" colorScheme="amber" />
+                </View>
+
+                <PremiumButton
+                  title={
+                    purchasingVoid
+                      ? 'CONFIGURING...'
+                      : `${t('shop.items.void.title') || 'SCHEDULE VOID DAY'} (10 🪙)`
+                  }
+                  onPress={handleBuyVoidDay}
+                  disabled={purchasingVoid}
+                  variant="primary"
+                  style={{ minHeight: 42, marginTop: 12 }}
+                />
+              </GlassCard>
+
+              {/* Utility 3: Streak Repair (30 tokens) */}
+              <GlassCard style={styles.utilityCard}>
+                <View style={styles.utilityHeader}>
+                  <View style={styles.utilityIconBox}>
+                    <Text style={{ fontSize: 24 }}>⚡</Text>
+                  </View>
+                  <View style={{ flex: 1, marginRight: 8 }}>
+                    <View style={styles.utilityTitleRow}>
+                      <Text style={styles.utilityName}>{t('shop.items.repair.title') || 'STREAK REPAIR'}</Text>
+                      {currentStreak === 0 && highStreak > 0 && (
+                        <GlowBadge label="REPAIRABLE" colorScheme="rose" glow />
+                      )}
+                    </View>
+                    <Text style={styles.utilityDesc}>
+                      {t('shop.items.repair.desc') || `Restores your broken streak back to your high streak (${highStreak} days) after an unexpected disruption.`}
+                    </Text>
+                  </View>
+                  <GlowBadge label="30 🪙" colorScheme="amber" />
+                </View>
+
+                <PremiumButton
+                  title={
+                    purchasingItem === 'repair'
+                      ? 'REPAIRING...'
+                      : currentStreak > 0
+                      ? 'STREAK ACTIVE'
+                      : highStreak === 0
+                      ? 'NO HIGH STREAK TO RESTORE'
+                      : `${t('shop.items.repair.title') || 'REPAIR STREAK'} (${highStreak} D)`
+                  }
+                  onPress={handleBuyStreakRepair}
+                  disabled={currentStreak > 0 || highStreak === 0 || purchasingItem === 'repair'}
+                  variant={currentStreak === 0 && highStreak > 0 ? 'primary' : 'ghost'}
+                  style={{ minHeight: 42, marginTop: 12 }}
+                />
+              </GlassCard>
+
+              {/* Utility 4: Focus Multiplier (15 tokens) */}
+              <GlassCard style={styles.utilityCard}>
+                <View style={styles.utilityHeader}>
+                  <View style={styles.utilityIconBox}>
+                    <Text style={{ fontSize: 24 }}>✨</Text>
+                  </View>
+                  <View style={{ flex: 1, marginRight: 8 }}>
+                    <View style={styles.utilityTitleRow}>
+                      <Text style={styles.utilityName}>{t('shop.items.multiplier.title') || 'FOCUS MULTIPLIER'}</Text>
+                      {multiplierActive && <GlowBadge label="ACTIVE" colorScheme="cyan" glow />}
+                    </View>
+                    <Text style={styles.utilityDesc}>
+                      {t('shop.items.multiplier.desc') || 'Doubles both token and XP payouts for your next completed focus session and Socratic verification.'}
+                    </Text>
+                  </View>
+                  <GlowBadge label="15 🪙" colorScheme="amber" />
+                </View>
+
+                <PremiumButton
+                  title={
+                    purchasingItem === 'multiplier'
+                      ? 'ACTIVATING...'
+                      : multiplierActive
+                      ? 'MULTIPLIER ALREADY ACTIVE'
+                      : `${t('shop.items.multiplier.title') || 'ACTIVATE 2X BOOST'} (15 🪙)`
+                  }
+                  onPress={handleBuyMultiplier}
+                  disabled={multiplierActive || purchasingItem === 'multiplier'}
+                  variant={multiplierActive ? 'ghost' : 'primary'}
+                  style={{ minHeight: 42, marginTop: 12 }}
+                />
+              </GlassCard>
+            </View>
+          </FadeInView>
+        )}
+
+        {/* ================================================================= */}
+        {/* 6. TAB 3: SETTINGS & ACCOUNT PREFERENCES                          */}
+        {/* ================================================================= */}
+        {activeSegmentIndex === 2 && (
           <FadeInView delay={100}>
             {/* Language Selector Trigger */}
             <View style={styles.sectionHeader}>
@@ -646,7 +986,7 @@ export default function Profile() {
               </View>
             </GlassCard>
 
-            {/* Daily Study Notifications (Phone First & Native Plus) */}
+            {/* Daily Study Notifications */}
             <View style={[styles.sectionHeader, { marginTop: 20 }]}>
               <Text style={styles.sectionTitle}>DAILY STUDY NOTIFICATIONS</Text>
             </View>
@@ -708,56 +1048,6 @@ export default function Profile() {
               )}
             </GlassCard>
 
-            {/* Student / Tutor Role Settings */}
-            <View style={[styles.sectionHeader, { marginTop: 20 }]}>
-              <Text style={styles.sectionTitle}>TUTOR & COHORT PRIVILEGES</Text>
-            </View>
-            <GlassCard style={styles.roleCard}>
-              {profile?.role === 'student' ? (
-                <View>
-                  <Text style={styles.roleDesc}>
-                    INPUT LINKEDIN PROFILE URL TO REQUEST VERIFIED TUTOR COHORT PRIVILEGES.
-                  </Text>
-                  <TextInput
-                    value={linkedinUrl}
-                    onChangeText={setLinkedinUrl}
-                    placeholder="https://linkedin.com/in/username"
-                    placeholderTextColor={colors.placeholder}
-                    onFocus={() => setLinkedinFocused(true)}
-                    onBlur={() => setLinkedinFocused(false)}
-                    style={[
-                      styles.linkedinInput,
-                      linkedinFocused && { borderColor: colors.primary },
-                    ]}
-                  />
-                  <PremiumButton
-                    title="VERIFY & BECOME COHORT TUTOR"
-                    onPress={handleRoleToggle}
-                    variant="primary"
-                    loading={updating}
-                    disabled={updating}
-                  />
-                </View>
-              ) : (
-                <View>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10 }}>
-                    <Ionicons name="shield-checkmark" size={20} color={colors.secondary} style={{ marginRight: 8 }} />
-                    <Text style={styles.tutorActiveBadge}>TUTOR PRIVILEGES ACTIVE</Text>
-                  </View>
-                  <Text style={styles.roleDesc}>
-                    You can create workspaces, lead cohorts, and push customized study tasks to enrolled students.
-                  </Text>
-                  <PremiumButton
-                    title="SWITCH BACK TO STUDENT"
-                    onPress={handleRoleToggle}
-                    variant="destructive"
-                    loading={updating}
-                    disabled={updating}
-                  />
-                </View>
-              )}
-            </GlassCard>
-
             {/* Replay App Tour */}
             <View style={{ marginTop: 20 }}>
               <TouchableOpacity
@@ -805,66 +1095,6 @@ export default function Profile() {
             </View>
           </FadeInView>
         )}
-
-        {/* ================================================================= */}
-        {/* 6. TAB 3: COSMETICS / WARDROBE TAB                                */}
-        {/* ================================================================= */}
-        {activeSegmentIndex === 2 && (
-          <FadeInView delay={100}>
-            {/* Active Aura Preview Card */}
-            <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>ACTIVE AURA PREVIEW</Text>
-            </View>
-            <GlassCard style={styles.auraPreviewCard}>
-              <View style={[styles.auraCircle, { borderColor: activeFrameObj.color }]}>
-                <ReactiveAvatarNative
-                  size={96}
-                  level={level}
-                  streak={currentStreak}
-                />
-              </View>
-              <Text style={styles.auraTitle}>
-                {rankTitle}
-              </Text>
-              <Text style={styles.auraSubtitle}>
-                Aura intensity scales automatically with your active study streak and mastery level.
-              </Text>
-            </GlassCard>
-
-            {/* Avatar Frame Selector */}
-            <View style={[styles.sectionHeader, { marginTop: 20 }]}>
-              <Text style={styles.sectionTitle}>AVATAR FRAME</Text>
-            </View>
-            <View style={styles.framesGrid}>
-              {AVATAR_FRAMES.map((f) => {
-                const isSelected = selectedFrame === f.id;
-                return (
-                  <TouchableOpacity
-                    key={f.id}
-                    activeOpacity={0.7}
-                    onPress={() => handleSelectFrame(f.id)}
-                    style={[
-                      styles.frameBtn,
-                      isSelected && { borderColor: f.color, backgroundColor: `${f.color}15` },
-                    ]}
-                  >
-                    <View style={[styles.framePreviewRing, { borderColor: f.color }]}>
-                      <Ionicons name="person" size={16} color="#FFFFFF" />
-                    </View>
-                    <Text style={[styles.frameName, isSelected && { color: '#FFFFFF', fontWeight: '900' }]}>
-                      {f.name}
-                    </Text>
-                    {isSelected && (
-                      <Ionicons name="checkmark" size={14} color={colors.primary} style={{ marginTop: 2 }} />
-                    )}
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-
-            <View style={{ height: 40 }} />
-          </FadeInView>
-        )}
       </ScrollView>
 
       {/* Localization Selector Modal */}
@@ -879,6 +1109,14 @@ export default function Profile() {
       <OnboardingTourModal
         visible={tourVisible}
         onClose={() => setTourVisible(false)}
+      />
+
+      {/* Void Day Placement Modal */}
+      <VoidDayPlacementModal
+        visible={voidModalVisible}
+        onClose={() => setVoidModalVisible(false)}
+        onConfirm={handleConfirmVoidPlacement}
+        loading={purchasingVoid}
       />
     </View>
   );
@@ -898,32 +1136,31 @@ const styles = StyleSheet.create({
   ambientGlowTop: {
     position: 'absolute',
     top: -100,
-    right: -100,
+    right: -80,
     width: 320,
     height: 320,
     borderRadius: 160,
-    opacity: 0.06,
+    opacity: 0.08,
   },
   ambientGlowBottom: {
     position: 'absolute',
-    bottom: 120,
+    bottom: 40,
     left: -100,
-    width: 320,
-    height: 320,
-    borderRadius: 160,
+    width: 300,
+    height: 300,
+    borderRadius: 150,
     opacity: 0.05,
   },
   scrollContent: {
     paddingHorizontal: 20,
     paddingTop: 16,
-    paddingBottom: Platform.OS === 'ios' ? 120 : 96,
   },
   heroCard: {
     borderRadius: 24,
-    padding: 20,
     borderWidth: 1,
-    overflow: 'hidden',
+    padding: 20,
     marginBottom: 16,
+    overflow: 'hidden',
   },
   heroRow: {
     flexDirection: 'row',
@@ -936,42 +1173,41 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 16,
     backgroundColor: 'rgba(0, 0, 0, 0.4)',
   },
   heroDetails: {
+    marginLeft: 16,
     flex: 1,
   },
   roleBadgeRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 6,
     marginBottom: 4,
   },
   roleBadge: {
-    fontSize: 9,
+    fontSize: 10,
     fontWeight: '900',
-    letterSpacing: 2,
+    letterSpacing: 1.5,
     textTransform: 'uppercase',
   },
   userName: {
     fontSize: 20,
     fontWeight: '900',
     color: '#FFFFFF',
-    letterSpacing: -0.5,
-    textTransform: 'uppercase',
+    letterSpacing: -0.3,
   },
   rankTitleText: {
-    fontSize: 10,
-    fontWeight: '900',
-    letterSpacing: 1.5,
+    fontSize: 11,
+    fontWeight: '800',
+    letterSpacing: 1.2,
     marginTop: 2,
   },
   xpSection: {
     marginTop: 18,
     paddingTop: 14,
     borderTopWidth: 1,
-    borderTopColor: 'rgba(255, 255, 255, 0.06)',
+    borderTopColor: 'rgba(255, 255, 255, 0.08)',
   },
   xpTextRow: {
     flexDirection: 'row',
@@ -981,14 +1217,14 @@ const styles = StyleSheet.create({
   },
   xpLabel: {
     fontSize: 9,
-    fontWeight: '900',
+    fontWeight: '800',
     color: '#8A92A6',
-    letterSpacing: 1.5,
+    letterSpacing: 1.2,
   },
   xpValue: {
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: '900',
-    letterSpacing: 1,
+    letterSpacing: 0.5,
   },
   metricsRow: {
     flexDirection: 'row',
@@ -996,11 +1232,44 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   segmentedContainer: {
+    marginBottom: 20,
+  },
+  analyticsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
     marginBottom: 16,
+  },
+  analyticsCard: {
+    width: '48%',
+    padding: 14,
+  },
+  analyticsCardLabel: {
+    fontSize: 9,
+    fontWeight: '900',
+    color: '#8A92A6',
+    letterSpacing: 1.2,
+    textTransform: 'uppercase',
+  },
+  analyticsCardValue: {
+    fontSize: 22,
+    fontWeight: '900',
+    marginTop: 4,
+    letterSpacing: -0.5,
+  },
+  analyticsCardUnit: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#8A92A6',
+  },
+  analyticsCardSub: {
+    fontSize: 10,
+    color: '#8A92A6',
+    marginTop: 4,
+    lineHeight: 14,
   },
   sectionHeader: {
     marginBottom: 10,
-    marginTop: 8,
   },
   sectionTitle: {
     fontSize: 10,
@@ -1009,10 +1278,49 @@ const styles = StyleSheet.create({
     letterSpacing: 2,
     textTransform: 'uppercase',
   },
+  utilitiesList: {
+    gap: 12,
+    marginBottom: 24,
+  },
+  utilityCard: {
+    padding: 16,
+  },
+  utilityHeader: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+  },
+  utilityIconBox: {
+    width: 44,
+    height: 44,
+    borderRadius: 14,
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.08)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 14,
+  },
+  utilityTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 4,
+  },
+  utilityName: {
+    fontSize: 13,
+    fontWeight: '900',
+    color: '#FFFFFF',
+    letterSpacing: 0.5,
+  },
+  utilityDesc: {
+    fontSize: 11,
+    color: '#8A92A6',
+    lineHeight: 16,
+  },
   languageTriggerCard: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
+    justifyContent: 'space-between',
     padding: 16,
   },
   langNameText: {
@@ -1021,10 +1329,9 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
   langCodeText: {
-    fontSize: 10,
+    fontSize: 11,
     color: '#8A92A6',
     marginTop: 2,
-    textTransform: 'uppercase',
   },
   langChangeBtn: {
     flexDirection: 'row',
@@ -1032,7 +1339,7 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   langChangeText: {
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: '900',
     letterSpacing: 1,
   },
@@ -1052,7 +1359,7 @@ const styles = StyleSheet.create({
   personaIconBox: {
     width: 36,
     height: 36,
-    borderRadius: 10,
+    borderRadius: 12,
     backgroundColor: 'rgba(255, 255, 255, 0.05)',
     alignItems: 'center',
     justifyContent: 'center',
@@ -1060,7 +1367,7 @@ const styles = StyleSheet.create({
   personaTitle: {
     fontSize: 13,
     fontWeight: '800',
-    color: '#E1E4EA',
+    color: '#D1D5DB',
   },
   personaSubtitle: {
     fontSize: 10,
@@ -1072,56 +1379,29 @@ const styles = StyleSheet.create({
   },
   accentsRow: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: 8,
   },
   accentBtn: {
-    flex: 1,
-    flexDirection: 'column',
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
     paddingVertical: 10,
+    paddingHorizontal: 14,
     borderRadius: 12,
     backgroundColor: 'rgba(255, 255, 255, 0.03)',
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.06)',
-    gap: 6,
   },
   accentDot: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    marginRight: 8,
   },
   accentLabel: {
-    fontSize: 9,
+    fontSize: 11,
     fontWeight: '700',
     color: '#8A92A6',
-    textAlign: 'center',
-  },
-  roleCard: {
-    padding: 16,
-  },
-  roleDesc: {
-    fontSize: 11,
-    color: '#8A92A6',
-    lineHeight: 16,
-    marginBottom: 14,
-  },
-  linkedinInput: {
-    height: 44,
-    borderRadius: 12,
-    backgroundColor: 'rgba(255, 255, 255, 0.04)',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
-    paddingHorizontal: 14,
-    color: '#FFFFFF',
-    fontSize: 12,
-    marginBottom: 12,
-  },
-  tutorActiveBadge: {
-    fontSize: 11,
-    fontWeight: '900',
-    color: '#BD00FF',
-    letterSpacing: 1,
   },
   tourButton: {
     flexDirection: 'row',
@@ -1139,61 +1419,6 @@ const styles = StyleSheet.create({
     fontWeight: '900',
     letterSpacing: 1,
     textTransform: 'uppercase',
-  },
-  auraPreviewCard: {
-    alignItems: 'center',
-    padding: 24,
-  },
-  auraCircle: {
-    width: 112,
-    height: 112,
-    borderRadius: 56,
-    borderWidth: 3,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 16,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-  },
-  auraTitle: {
-    fontSize: 13,
-    fontWeight: '900',
-    color: '#FFFFFF',
-    letterSpacing: 1.5,
-  },
-  auraSubtitle: {
-    fontSize: 10,
-    color: '#8A92A6',
-    textAlign: 'center',
-    marginTop: 6,
-    lineHeight: 15,
-  },
-  framesGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 10,
-  },
-  frameBtn: {
-    width: '48%',
-    alignItems: 'center',
-    padding: 14,
-    borderRadius: 16,
-    backgroundColor: 'rgba(255, 255, 255, 0.03)',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.06)',
-  },
-  framePreviewRing: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    borderWidth: 2,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 8,
-  },
-  frameName: {
-    fontSize: 10,
-    fontWeight: '700',
-    color: '#8A92A6',
   },
   notificationsCard: {
     padding: 16,

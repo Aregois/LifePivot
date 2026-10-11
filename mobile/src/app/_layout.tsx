@@ -36,11 +36,6 @@ function RootLayout() {
                             {/* Main Tab Screens (Dashboard, Plan, Shop, Profile) */}
                             <Stack.Screen name="(tabs)" />
                             
-                            {/* Workspaces Stack */}
-                            <Stack.Screen name="workspaces" />
-                            
-                            {/* Marketplace Stack */}
-                            <Stack.Screen name="marketplace" />
 
                             {/* Personal Plans Stack */}
                             <Stack.Screen name="plan" />

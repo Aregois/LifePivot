@@ -155,34 +155,27 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: t('nav.home') || 'DASHBOARD',
+          title: t('nav.today') || 'TODAY',
         }}
       />
       <Tabs.Screen
         name="plan"
         options={{
-          title: t('nav.plan') || 'PLANS',
+          title: t('nav.plan') || 'CURRICULUM',
         }}
       />
       <Tabs.Screen
         name="calendar"
         options={{
+          href: null,
           title: t('nav.calendar') || 'CALENDAR',
         }}
       />
       <Tabs.Screen
         name="shop"
         options={{
-          title: t('nav.shop') || 'EXCHANGE',
-        }}
-        listeners={{
-          tabPress: (e) => {
-            if (level < 2) {
-              e.preventDefault();
-              Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
-              Alert.alert('FEATURE LOCKED', 'Reach Level 2 to unlock the Exchange Store.');
-            }
-          },
+          href: null,
+          title: t('nav.shop') || 'UTILITIES',
         }}
       />
       <Tabs.Screen

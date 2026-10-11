@@ -163,40 +163,7 @@ export function DashboardClient({
       </div>
 
       {/* Main Dashboard Grid */}
-      {userLevel < 2 ? (
-        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#141824] to-[#0B0D17] border border-white/5 p-8 text-center flex flex-col items-center justify-center min-h-[350px] shadow-2xl glass-card w-full">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-electric-blue/5 rounded-full blur-[80px] -translate-y-1/2 translate-x-1/4 pointer-events-none" />
-          <div className="w-16 h-16 rounded-2xl bg-electric-blue/10 flex items-center justify-center border border-electric-blue/20 mb-6 shadow-[0_0_15px_rgba(var(--accent-rgb),0.1)]">
-            <Zap className="h-8 w-8 text-electric-blue" />
-          </div>
-          <h2 className="text-xl font-black text-white uppercase tracking-wider mb-2">{t('dashboard.next_checkpoint')}</h2>
-          <p className="text-gray-400 text-sm max-w-md leading-relaxed mb-6">
-            {t('dashboard.next_checkpoint_desc')}
-          </p>
-
-          {/* Progress Bar towards Level 2 (1000 XP) */}
-          <div className="w-full max-w-sm mb-8 bg-white/[0.02] p-4 rounded-2xl border border-white/5">
-            <div className="flex justify-between items-baseline mb-2">
-              <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{t('marketplace.progress_level', { level: 2 })}</span>
-              <span className="text-xs font-black text-electric-blue">{profile?.xp ?? 0} / 1000 XP</span>
-            </div>
-            <div className="w-full bg-[#0B0D17] h-2 rounded-full overflow-hidden border border-white/5 shadow-inner">
-              <div 
-                className="h-full bg-gradient-to-r from-electric-blue to-neon-violet transition-all duration-1000 ease-out shadow-[0_0_12px_rgba(var(--accent-rgb),0.4)]"
-                style={{ width: `${Math.min(100, Math.max(0, ((profile?.xp ?? 0) / 1000) * 100))}%` }}
-              />
-            </div>
-          </div>
-
-          <Link
-            href="/plan"
-            className="px-6 py-3.5 rounded-xl border border-electric-blue/30 text-electric-blue bg-electric-blue/5 font-black text-xs tracking-widest uppercase hover:bg-electric-blue hover:text-black transition-all duration-300 shadow-[0_0_15px_rgba(var(--accent-rgb),0.08)] active:scale-95 animate-pulse"
-          >
-            {t('dashboard.go_plan_portal')}
-          </Link>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 flex-1">
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 flex-1">
           
           {/* Left/Center Column: Progress & Daily Quests */}
           <div className="xl:col-span-2 flex flex-col gap-6">
@@ -322,10 +289,9 @@ export function DashboardClient({
                   </p>
                 </Link>
               </div>
-            </div>
           </div>
         </div>
-      )}
+      </div>
     </div>
   )
 }

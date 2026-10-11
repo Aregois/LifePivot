@@ -7,7 +7,6 @@ import { useEconomy } from './economy-provider'
 import { verifyShopPurchase, purchaseCustomization } from '@/app/actions'
 import { haptics } from '@/utils/haptics'
 import { motion, AnimatePresence } from 'framer-motion'
-import { EarnTokensCard } from './earn-tokens-card'
 
 interface ShopItem {
     id: string
@@ -160,72 +159,6 @@ export function ShopClient() {
             badge: t('shop.items.repair.badge')
         },
         {
-            id: 'title_alchemist',
-            type: 'title',
-            title: t('shop.items.title_alchemist.title'),
-            description: t('shop.items.title_alchemist.desc'),
-            cost: 15,
-            icon: Crown,
-            color: 'from-violet-500 to-fuchsia-600 text-violet-400',
-            glowColor: 'rgba(168,85,247,0.3)',
-            badge: t('shop.items.title_alchemist.badge')
-        },
-        {
-            id: 'title_navigator',
-            type: 'title',
-            title: t('shop.items.title_navigator.title'),
-            description: t('shop.items.title_navigator.desc'),
-            cost: 20,
-            icon: Crown,
-            color: 'from-cyan-500 to-blue-600 text-cyan-400',
-            glowColor: 'rgba(6,182,212,0.3)',
-            badge: t('shop.items.title_navigator.badge')
-        },
-        {
-            id: 'title_legend',
-            type: 'title',
-            title: t('shop.items.title_legend.title'),
-            description: t('shop.items.title_legend.desc'),
-            cost: 25,
-            icon: Crown,
-            color: 'from-yellow-400 to-amber-500 text-yellow-400',
-            glowColor: 'rgba(234,179,8,0.3)',
-            badge: t('shop.items.title_legend.badge')
-        },
-        {
-            id: 'frame_neon',
-            type: 'frame',
-            title: t('shop.items.frame_neon.title'),
-            description: t('shop.items.frame_neon.desc'),
-            cost: 20,
-            icon: Palette,
-            color: 'from-emerald-400 to-cyan-500 text-cyan-400',
-            glowColor: 'rgba(52,211,153,0.3)',
-            badge: t('shop.items.frame_neon.badge')
-        },
-        {
-            id: 'frame_sunset',
-            type: 'frame',
-            title: t('shop.items.frame_sunset.title'),
-            description: t('shop.items.frame_sunset.desc'),
-            cost: 25,
-            icon: Palette,
-            color: 'from-amber-500 to-rose-600 text-amber-500',
-            glowColor: 'rgba(249,115,22,0.3)',
-            badge: t('shop.items.frame_sunset.badge')
-        },
-        {
-            id: 'frame_cosmic',
-            type: 'frame',
-            title: t('shop.items.frame_cosmic.title'),
-            description: t('shop.items.frame_cosmic.desc'),
-            cost: 30,
-            icon: Palette,
-            color: 'from-indigo-500 to-purple-600 text-indigo-400',
-            glowColor: 'rgba(99,102,241,0.3)',
-            badge: t('shop.items.frame_cosmic.badge')
-        },
-        {
             id: 'sound_cafe',
             type: 'soundscape',
             title: t('shop.items.sound_cafe.title'),
@@ -370,9 +303,6 @@ export function ShopClient() {
                     <span className="text-lg font-black text-white tabular-nums">{tokens}</span>
                 </div>
             </div>
-
-            {/* Secured Ad Integration */}
-            <EarnTokensCard tokens={tokens} setTokens={setTokens} />
 
             {/* ── Buy Tokens with Real Money ─────────────────────────────────── */}
             <div className="bg-[#141824] border border-white/5 rounded-[2.2rem] p-6 shadow-xl relative overflow-hidden flex flex-col gap-5">

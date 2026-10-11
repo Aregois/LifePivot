@@ -29,7 +29,6 @@ import {
   GradientText,
 } from '../../components/ui';
 import { VoidDayPlacementModal } from '../../components/VoidDayPlacementModal';
-import { StudyTipCarouselModal } from '../../components/StudyTipCarouselModal';
 
 function getRankTitle(level: number): string {
   if (level >= 11) return 'GRANDMASTER';
@@ -56,14 +55,6 @@ export default function ShopScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
-  // Rewarded Ad State
-  const [adModalVisible, setAdModalVisible] = useState(false);
-  const [currentSessionToken, setCurrentSessionToken] = useState<string | null>(null);
-  const [cooldownSecs, setCooldownSecs] = useState(0);
-  const [earnError, setEarnError] = useState<string | null>(null);
-  const [earnSuccess, setEarnSuccess] = useState(false);
-  const [loadingAdSession, setLoadingAdSession] = useState(false);
-
   // Void Day Modal State
   const [voidModalVisible, setVoidModalVisible] = useState(false);
   const [purchasingVoid, setPurchasingVoid] = useState(false);
@@ -82,7 +73,7 @@ export default function ShopScreen() {
         const { data, error } = await supabase
           .from('profiles')
           .select(
-            'tokens_balance, level, xp, streak_shields_count, current_streak, high_streak, multiplier_active, last_ad_reward_at'
+            'tokens_balance, level, xp, streak_shields_count, current_streak, high_streak, multiplier_active'
           )
           .eq('id', user.id)
           .single();
@@ -95,17 +86,6 @@ export default function ShopScreen() {
           setCurrentStreak(data.current_streak ?? 0);
           setHighStreak(data.high_streak ?? 0);
           setMultiplierActive(data.multiplier_active ?? false);
-
-          if (data.last_ad_reward_at) {
-            const lastReward = new Date(data.last_ad_reward_at).getTime();
-            const elapsed = Date.now() - lastReward;
-            const sixtyMinutes = 60 * 60 * 1000;
-            if (elapsed < sixtyMinutes) {
-              setCooldownSecs(Math.ceil((sixtyMinutes - elapsed) / 1000));
-            } else {
-              setCooldownSecs(0);
-            }
-          }
         }
       }
     } catch (err) {
@@ -125,87 +105,7 @@ export default function ShopScreen() {
     fetchProfileData();
   };
 
-  /* ── 2. Cooldown Timer Countdown ───────────────────────────────────────── */
-
-  useEffect(() => {
-    if (cooldownSecs <= 0) return;
-    const timer = setTimeout(() => {
-      setCooldownSecs((prev) => Math.max(0, prev - 1));
-    }, 1000);
-    return () => clearTimeout(timer);
-  }, [cooldownSecs]);
-
-  const formatCooldown = (secs: number) => {
-    const m = Math.floor(secs / 60);
-    const s = secs % 60;
-    return m > 0 ? `${m}m ${s}s` : `${s}s`;
-  };
-
-  /* ── 3. Rewarded Ad Handling ───────────────────────────────────────────── */
-
-  const handleStartAd = async () => {
-    if (cooldownSecs > 0 || loadingAdSession) {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
-      return;
-    }
-
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    setLoadingAdSession(true);
-    setEarnError(null);
-
-    try {
-      // 1. Request signed ad session token
-      const sessionJson = await apiRequest<{ sessionToken: string; cooldownRemaining?: number }>(
-        '/api/tokens/ad-session',
-        { method: 'POST' }
-      );
-
-      setCurrentSessionToken(sessionJson.sessionToken);
-      setLoadingAdSession(false);
-      setAdModalVisible(true);
-    } catch (err: any) {
-      console.error('Ad session request error:', err);
-      if (err.message?.includes('cooldown') || err.message?.includes('429')) {
-        setCooldownSecs(3600);
-      } else {
-        setEarnError(err.message || 'Failed to start ad session');
-        setTimeout(() => setEarnError(null), 3000);
-      }
-      setLoadingAdSession(false);
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-    }
-  };
-
-  const handleCompleteAdReward = async () => {
-    if (!currentSessionToken) return;
-
-    try {
-      const rewardJson = await apiRequest<{ newTokensBalance: number; rewardedAmount: number }>(
-        '/api/tokens/reward',
-        {
-          method: 'POST',
-          body: JSON.stringify({ sessionToken: currentSessionToken }),
-        }
-      );
-
-      setTokens(rewardJson.newTokensBalance ?? tokens + 5);
-      setCooldownSecs(3600);
-      setEarnSuccess(true);
-      setAdModalVisible(false);
-      setCurrentSessionToken(null);
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      setTimeout(() => setEarnSuccess(false), 4000);
-    } catch (err: any) {
-      console.error('Error claiming ad reward:', err);
-      setAdModalVisible(false);
-      setCurrentSessionToken(null);
-      setEarnError(err.message || 'Failed to redeem reward');
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      setTimeout(() => setEarnError(null), 3000);
-    }
-  };
-
-  /* ── 4. Utility Purchases ─────────────────────────────────────────────── */
+  /* ── 2. Utility Purchases ─────────────────────────────────────────────── */
 
   // a. Streak Shield (15 tokens, cap 2)
   const handleBuyShield = async () => {
@@ -412,9 +312,6 @@ export default function ShopScreen() {
     );
   };
 
-  const isLocked = level < 2;
-  const xpRequirement = Math.max(100, level * 100);
-  const xpProgress = Math.min(1, Math.max(0, xp) / xpRequirement);
   const rankTitle = getRankTitle(level);
 
   return (
@@ -489,93 +386,7 @@ export default function ShopScreen() {
           </GlassCard>
         </FadeInView>
 
-        {/* 2. Level 2 Lock Gate Card (if level < 2) */}
-        {isLocked && (
-          <FadeInView delay={60} style={{ marginTop: 16 }}>
-            <GlassCard elevated style={[styles.lockGateCard, { borderColor: colors.glassBorder }]}>
-              <View style={styles.lockHeader}>
-                <View style={[styles.lockIconCircle, { backgroundColor: `${colors.amber}20` }]}>
-                  <Ionicons name="lock-closed" size={24} color={colors.amber} />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.lockTitle}>{t('socratic.milestone_checkpoint') || 'LEVEL 2 CHECKPOINT REQUIRED'}</Text>
-                  <Text style={styles.lockSubtitle}>
-                    {t('socratic.intro_desc') ||
-                      `Reach Level 2 (${xpRequirement} XP) to unlock item transactions and utility purchases.`}
-                  </Text>
-                </View>
-              </View>
 
-              {/* XP Progress towards Level 2 */}
-              <View style={styles.xpProgressContainer}>
-                <View style={styles.xpTextRow}>
-                  <Text style={styles.xpProgressLabel}>{t('profile.xp_needed', { level: 2 }) || 'PROGRESS TO LEVEL 2'}</Text>
-                  <Text style={[styles.xpProgressValue, { color: colors.primary }]}>{xp} / {xpRequirement} XP</Text>
-                </View>
-                <AnimatedProgressBar progress={xpProgress} height={8} colors={colors.primaryGradient} />
-              </View>
-
-              <PremiumButton
-                title={t('plan.learning_map') || 'EARN XP IN PLAN PORTAL'}
-                onPress={() => router.push('/(tabs)/calendar')}
-                variant="primary"
-                style={{ marginTop: 16 }}
-              />
-            </GlassCard>
-          </FadeInView>
-        )}
-
-        {/* 3. Rewarded Ad Token Earner */}
-        <FadeInView delay={100} style={{ marginTop: 20 }}>
-          <GlassCard style={[styles.adCard, { borderColor: colors.glassBorder }]}>
-            <View style={styles.adHeaderRow}>
-              <View style={styles.adIconWrapper}>
-                <Text style={{ fontSize: 26 }}>🎬</Text>
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.adTitle}>{t('profile.claim_reward') || 'EARN FREE TOKENS'}</Text>
-                <Text style={styles.adSubtitle}>
-                  WATCH A 15-SECOND STUDY INSIGHT · EARN 5 TOKENS
-                </Text>
-              </View>
-              <GlowBadge label="+5 🪙" colorScheme="amber" glow />
-            </View>
-
-            {earnSuccess && (
-              <View style={styles.adSuccessNotice}>
-                <Ionicons name="checkmark-circle" size={16} color={colors.emerald} />
-                <Text style={[styles.adSuccessText, { color: colors.emerald }]}>+5 TOKENS CREDITED TO YOUR WALLET!</Text>
-              </View>
-            )}
-
-            {earnError && (
-              <View style={styles.adErrorNotice}>
-                <Ionicons name="alert-circle" size={16} color={colors.rose} />
-                <Text style={[styles.adErrorText, { color: colors.rose }]}>{earnError}</Text>
-              </View>
-            )}
-
-            {cooldownSecs > 0 && !earnSuccess && (
-              <Text style={styles.cooldownText}>
-                ⏱ NEXT AD READY IN {formatCooldown(cooldownSecs)}
-              </Text>
-            )}
-
-            <PremiumButton
-              title={
-                loadingAdSession
-                  ? 'PREPARING AD SESSION...'
-                  : cooldownSecs > 0
-                  ? `COOLDOWN — ${formatCooldown(cooldownSecs)}`
-                  : '▶  WATCH INSIGHT (+5 TOKENS)'
-              }
-              onPress={handleStartAd}
-              disabled={cooldownSecs > 0 || loadingAdSession}
-              variant={cooldownSecs > 0 || loadingAdSession ? 'ghost' : 'primary'}
-              style={{ minHeight: 46, marginTop: 12 }}
-            />
-          </GlassCard>
-        </FadeInView>
 
         {/* 4. In-App Utilities Catalog */}
         <FadeInView delay={140} style={{ marginTop: 28, marginBottom: 12 }}>
@@ -611,13 +422,11 @@ export default function ShopScreen() {
                     ? 'EQUIPPING...'
                     : streakShields >= 2
                     ? 'SHIELDS AT CAPACITY'
-                    : isLocked
-                    ? 'LOCKED (LEVEL 2)'
                     : `${t('shop.items.shield.title') || 'EQUIP SHIELD'} (15 🪙)`
                 }
                 onPress={handleBuyShield}
-                disabled={isLocked || streakShields >= 2 || purchasingItem === 'shield'}
-                variant={streakShields >= 2 || isLocked ? 'ghost' : 'primary'}
+                disabled={streakShields >= 2 || purchasingItem === 'shield'}
+                variant={streakShields >= 2 ? 'ghost' : 'primary'}
                 style={{ minHeight: 42, marginTop: 12 }}
               />
             </GlassCard>
@@ -643,13 +452,11 @@ export default function ShopScreen() {
                 title={
                   purchasingVoid
                     ? 'CONFIGURING...'
-                    : isLocked
-                    ? 'LOCKED (LEVEL 2)'
                     : `${t('shop.items.void.title') || 'SCHEDULE VOID DAY'} (10 🪙)`
                 }
                 onPress={handleBuyVoidDay}
-                disabled={isLocked || purchasingVoid}
-                variant={isLocked ? 'ghost' : 'primary'}
+                disabled={purchasingVoid}
+                variant="primary"
                 style={{ minHeight: 42, marginTop: 12 }}
               />
             </GlassCard>
@@ -680,8 +487,6 @@ export default function ShopScreen() {
                 title={
                   purchasingItem === 'repair'
                     ? 'REPAIRING...'
-                    : isLocked
-                    ? 'LOCKED (LEVEL 2)'
                     : currentStreak > 0
                     ? 'STREAK ACTIVE'
                     : highStreak === 0
@@ -689,8 +494,8 @@ export default function ShopScreen() {
                     : `${t('shop.items.repair.title') || 'REPAIR STREAK'} (${highStreak} D)`
                 }
                 onPress={handleBuyStreakRepair}
-                disabled={isLocked || currentStreak > 0 || highStreak === 0 || purchasingItem === 'repair'}
-                variant={currentStreak === 0 && highStreak > 0 && !isLocked ? 'primary' : 'ghost'}
+                disabled={currentStreak > 0 || highStreak === 0 || purchasingItem === 'repair'}
+                variant={currentStreak === 0 && highStreak > 0 ? 'primary' : 'ghost'}
                 style={{ minHeight: 42, marginTop: 12 }}
               />
             </GlassCard>
@@ -721,13 +526,11 @@ export default function ShopScreen() {
                     ? 'ACTIVATING...'
                     : multiplierActive
                     ? 'MULTIPLIER ALREADY ACTIVE'
-                    : isLocked
-                    ? 'LOCKED (LEVEL 2)'
                     : `${t('shop.items.multiplier.title') || 'ACTIVATE 2X BOOST'} (15 🪙)`
                 }
                 onPress={handleBuyMultiplier}
-                disabled={isLocked || multiplierActive || purchasingItem === 'multiplier'}
-                variant={multiplierActive || isLocked ? 'ghost' : 'primary'}
+                disabled={multiplierActive || purchasingItem === 'multiplier'}
+                variant={multiplierActive ? 'ghost' : 'primary'}
                 style={{ minHeight: 42, marginTop: 12 }}
               />
             </GlassCard>
@@ -741,17 +544,6 @@ export default function ShopScreen() {
         onClose={() => setVoidModalVisible(false)}
         onConfirm={handleConfirmVoidPlacement}
         loading={purchasingVoid}
-      />
-
-      {/* Rewarded Ad 15s Study Tip Carousel Modal */}
-      <StudyTipCarouselModal
-        visible={adModalVisible}
-        onClose={() => {
-          setAdModalVisible(false);
-          setCurrentSessionToken(null);
-        }}
-        onComplete={handleCompleteAdReward}
-        rewardAmount={5}
       />
     </View>
   );

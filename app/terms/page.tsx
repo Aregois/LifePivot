@@ -35,7 +35,7 @@ export default function TermsPage() {
         <section className="space-y-4 text-sm leading-relaxed">
           <h2 className="text-lg font-bold text-white uppercase tracking-wider">3. Acceptable Use &amp; Community Standards</h2>
           <p>
-            Users participating in Tutor Cohorts and Public Marketplace Curriculums must not publish defamatory, abusive, infringing, or harmful content. LifePivot reserves the right to terminate accounts that violate academic integrity or acceptable community guidelines.
+            Users creating study plans or utilizing AI Socratic dialogues must not submit defamatory, abusive, infringing, or harmful content. LifePivot reserves the right to terminate accounts that violate academic integrity or acceptable community guidelines.
           </p>
         </section>
 

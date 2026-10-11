@@ -107,23 +107,7 @@ export function BottomNav() {
                     const isLeftCenter = idx === 1
                     const isRightCenter = idx === 2
 
-                    const isLocked = tab.href === '/shop' && level < 2
 
-                    if (isLocked) {
-                        return (
-                            <div
-                                key={tab.name}
-                                className={`flex flex-col items-center justify-center min-w-[50px] h-full gap-1 opacity-35 cursor-not-allowed text-gray-600 ${isLeftCenter ? 'mr-5' : ''
-                                    } ${isRightCenter ? 'ml-5' : ''
-                                    }`}
-                            >
-                                <Icon className="h-5 w-5" strokeWidth={2} />
-                                <span className="text-[9px] font-bold tracking-wide">
-                                    {tab.name}
-                                </span>
-                            </div>
-                        )
-                    }
 
                     return (
                         <Link

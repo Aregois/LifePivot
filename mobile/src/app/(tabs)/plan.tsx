@@ -162,10 +162,13 @@ export default function PlanPortal() {
                 </TouchableOpacity>
             </FadeInView>
 
-            {/* Cohorts & Marketplace Shortcuts */}
-            <FadeInView delay={100} style={{ marginBottom: 14 }}>
+            {/* Interactive Schedule & Calendar Shortcut */}
+            <FadeInView delay={100} style={{ marginBottom: 20 }}>
                 <GlassCard
-                    onPress={() => router.push('/workspaces')}
+                    onPress={() => {
+                        HapticsEngine.tier1.selection();
+                        router.push('/(tabs)/calendar');
+                    }}
                     style={{
                         padding: 16,
                         flexDirection: 'row',
@@ -175,43 +178,17 @@ export default function PlanPortal() {
                     }}
                 >
                     <View style={{ marginRight: 16, backgroundColor: `${colors.primary}15`, padding: 10, borderRadius: 12, borderWidth: 1, borderColor: `${colors.primary}30` }}>
-                        <Ionicons name="people" size={22} color={colors.primary} />
+                        <Ionicons name="calendar" size={22} color={colors.primary} />
                     </View>
                     <View style={{ flex: 1, marginRight: 12 }}>
                         <Text style={{ fontSize: 14, fontWeight: '800', color: '#FFFFFF', letterSpacing: 0.2 }}>
-                            {t('nav.cohorts') || 'Study Cohorts'}
+                            {t('calendar.title') || 'Interactive Study Calendar'}
                         </Text>
                         <Text style={{ fontSize: 11, color: colors.textMuted, marginTop: 2, letterSpacing: -0.1, lineHeight: 16 }}>
-                            {t('workspaces.subtitle') || 'Join student groups, sync XP, and solve tutor tasks'}
+                            {t('calendar.view_schedule_desc') || '3D Task timeline, daily schedule, and Void Day distribution'}
                         </Text>
                     </View>
                     <Ionicons name="chevron-forward" size={18} color={colors.primary} />
-                </GlassCard>
-            </FadeInView>
-
-            <FadeInView delay={150} style={{ marginBottom: 20 }}>
-                <GlassCard
-                    onPress={() => router.push('/marketplace')}
-                    style={{
-                        padding: 16,
-                        flexDirection: 'row',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        borderColor: colors.glassBorder,
-                    }}
-                >
-                    <View style={{ marginRight: 16, backgroundColor: `${colors.secondary}15`, padding: 10, borderRadius: 12, borderWidth: 1, borderColor: `${colors.secondary}30` }}>
-                        <Ionicons name="grid" size={22} color={colors.secondary} />
-                    </View>
-                    <View style={{ flex: 1, marginRight: 12 }}>
-                        <Text style={{ fontSize: 14, fontWeight: '800', color: '#FFFFFF', letterSpacing: 0.2 }}>
-                            {t('nav.marketplace') || 'Plan Marketplace'}
-                        </Text>
-                        <Text style={{ fontSize: 11, color: colors.textMuted, marginTop: 2, letterSpacing: -0.1, lineHeight: 16 }}>
-                            {t('marketplace.empty_desc') || 'Browse, buy, and import community chosen study schemas'}
-                        </Text>
-                    </View>
-                    <Ionicons name="chevron-forward" size={18} color={colors.secondary} />
                 </GlassCard>
             </FadeInView>
 
