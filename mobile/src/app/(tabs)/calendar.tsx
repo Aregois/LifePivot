@@ -24,7 +24,7 @@ import { CalendarGrid3D } from '../../components/CalendarGrid3D';
 import { PivotRecoveryModal } from '../../components/PivotRecoveryModal';
 import { SwipeableTaskCard } from '../../components/SwipeableTaskCard';
 import { FocusModeModal } from '../../components/FocusModeModal';
-import { SocraticMicroDrillsModal } from '../../components/SocraticMicroDrillsModal';
+
 
 interface Subtask {
   id: string;
@@ -129,9 +129,8 @@ export default function CalendarPortal() {
   const [animatingXpValue, setAnimatingXpValue] = useState<number>(0);
   const [selectedDateFilter, setSelectedDateFilter] = useState<string | null>(null);
 
-  // Focus Mode & Drills Modal state
+  // Focus Mode Modal state
   const [focusModalVisible, setFocusModalVisible] = useState(false);
-  const [drillModalVisible, setDrillModalVisible] = useState(false);
   const [focusTask, setFocusTask] = useState<{
     id?: string;
     title: string;
@@ -547,22 +546,9 @@ export default function CalendarPortal() {
         aiHint={focusTask.ai_hint}
         initialMinutes={focusTask.duration}
         onUpdateTask={handleUpdateTask}
-        onCompleteSession={(mins) => {
+        onCompleteSession={(_mins) => {
           setFocusModalVisible(false);
-          setDrillModalVisible(true);
-        }}
-      />
-
-      {/* Socratic Micro Drills Modal */}
-      <SocraticMicroDrillsModal
-        visible={drillModalVisible}
-        onClose={() => {
-          setDrillModalVisible(false);
-          fetchTasksData(true);
-        }}
-        taskTitle={focusTask.title}
-        completedMinutes={focusTask.duration}
-        onDrillFinished={() => {
+          HapticsEngine.tier3.success();
           fetchTasksData(true);
         }}
       />

@@ -22,8 +22,8 @@ import { FileUploadSheet } from '../../components/FileUploadSheet';
 import { TaskInteractionSheet } from '../../components/TaskInteractionSheet';
 import { SwipeableTaskCard } from '../../components/SwipeableTaskCard';
 import { FocusModeModal } from '../../components/FocusModeModal';
-import { SocraticMicroDrillsModal } from '../../components/SocraticMicroDrillsModal';
 import { API_BASE_URL } from '../../utils/api';
+import { HapticsEngine } from '../../utils/HapticsEngine';
 
 interface Task {
   id: string;
@@ -120,7 +120,6 @@ export default function PlanDetail() {
   const [selectedTask, setSelectedTask] = useState<any>(null);
   const [sheetVisible, setSheetVisible] = useState(false);
   const [focusModalVisible, setFocusModalVisible] = useState(false);
-  const [drillModalVisible, setDrillModalVisible] = useState(false);
   const [focusTask, setFocusTask] = useState<{
     id?: string;
     title: string;
@@ -779,20 +778,7 @@ export default function PlanDetail() {
         }}
         onCompleteSession={() => {
           setFocusModalVisible(false);
-          setDrillModalVisible(true);
-        }}
-      />
-
-      {/* Socratic Micro Drills Modal */}
-      <SocraticMicroDrillsModal
-        visible={drillModalVisible}
-        onClose={() => {
-          setDrillModalVisible(false);
-          fetchPlanData();
-        }}
-        taskTitle={focusTask.title}
-        completedMinutes={focusTask.duration}
-        onDrillFinished={() => {
+          HapticsEngine.tier3.success();
           fetchPlanData();
         }}
       />

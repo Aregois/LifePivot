@@ -1,7 +1,7 @@
 'use client'
 
 import { useRouter, useSearchParams } from 'next/navigation'
-import { Mail, Lock, Eye, EyeOff, User, ArrowRight, Loader2, GraduationCap, BookOpenCheck, Globe } from 'lucide-react'
+import { Mail, Lock, Eye, EyeOff, User, ArrowRight, Loader2, Globe } from 'lucide-react'
 import { haptics } from '@/utils/haptics'
 import { createClient } from '@/utils/supabase/client'
 import { useState, useEffect } from 'react'
@@ -105,7 +105,6 @@ export default function RegisterPage() {
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
     const [confirm, setConfirm] = useState('')
-    const [role, setRole] = useState<'student' | 'tutor'>('student')
     const [showPw, setShowPw] = useState(false)
     const [showConfirm, setShowConfirm] = useState(false)
     const [fieldErrors, setFieldErrors] = useState<FormErrors>({})
@@ -151,7 +150,7 @@ export default function RegisterPage() {
                 options: {
                     data: { 
                         full_name: name.trim(),
-                        role: role
+                        role: 'student'
                     },
                 },
             })
@@ -211,38 +210,6 @@ export default function RegisterPage() {
 
                 <form onSubmit={handleSubmit} className="flex flex-col gap-4" noValidate>
 
-                    {/* Role Selector (Student vs Tutor) */}
-                    <div className="flex flex-col gap-1.5">
-                        <label className="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1">
-                            {t('auth.account_type')}
-                        </label>
-                        <div className="grid grid-cols-2 gap-2">
-                            <button
-                                type="button"
-                                onClick={() => { haptics.light(); setRole('student') }}
-                                className={`flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl border text-xs font-bold transition-all ${
-                                    role === 'student'
-                                        ? 'bg-electric-blue/15 border-electric-blue text-white shadow-[0_0_12px_rgba(var(--accent-rgb),0.2)]'
-                                        : 'bg-white/[0.03] border-white/10 text-gray-400 hover:border-white/20'
-                                }`}
-                            >
-                                <GraduationCap className="w-4 h-4 text-electric-blue" />
-                                {t('auth.role_student')}
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => { haptics.light(); setRole('tutor') }}
-                                className={`flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl border text-xs font-bold transition-all ${
-                                    role === 'tutor'
-                                        ? 'bg-neon-violet/15 border-neon-violet text-white shadow-[0_0_12px_rgba(var(--violet-rgb),0.2)]'
-                                        : 'bg-white/[0.03] border-white/10 text-gray-400 hover:border-white/20'
-                                }`}
-                            >
-                                <BookOpenCheck className="w-4 h-4 text-neon-violet" />
-                                {t('auth.role_tutor')}
-                            </button>
-                        </div>
-                    </div>
 
                     {/* Full Name */}
                     <div className="flex flex-col gap-1.5">

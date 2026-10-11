@@ -40,7 +40,6 @@ import { ActivePlanSwitcherModal } from '../../components/ActivePlanSwitcherModa
 import { DailyTasksHub, TaskItem } from '../../components/DailyTasksHub';
 import { TaskInteractionSheet } from '../../components/TaskInteractionSheet';
 import { FocusModeModal } from '../../components/FocusModeModal';
-import { SocraticMicroDrillsModal } from '../../components/SocraticMicroDrillsModal';
 
 /* ────────────────────────────────────────────────────────────────────────── */
 /*  Helpers & Constants                                                       */
@@ -146,7 +145,6 @@ export default function Dashboard() {
   const [selectedTask, setSelectedTask] = useState<TaskItem | null>(null);
   const [sheetVisible, setSheetVisible] = useState(false);
   const [focusModalVisible, setFocusModalVisible] = useState(false);
-  const [drillModalVisible, setDrillModalVisible] = useState(false);
   const [focusTask, setFocusTask] = useState<{
     id?: string;
     title: string;
@@ -694,22 +692,9 @@ export default function Dashboard() {
         onUpdateTask={(updated) => {
           handleUpdateTask(updated as TaskItem);
         }}
-        onCompleteSession={(mins) => {
+        onCompleteSession={(_mins) => {
           setFocusModalVisible(false);
-          setDrillModalVisible(true);
-        }}
-      />
-
-      {/* Socratic Micro Drills Modal */}
-      <SocraticMicroDrillsModal
-        visible={drillModalVisible}
-        onClose={() => {
-          setDrillModalVisible(false);
-          fetchDashboardData(true);
-        }}
-        taskTitle={focusTask.title}
-        completedMinutes={focusTask.duration}
-        onDrillFinished={() => {
+          HapticsEngine.tier3.success();
           fetchDashboardData(true);
         }}
       />

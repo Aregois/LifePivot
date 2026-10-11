@@ -169,7 +169,11 @@ export function FocusModeOverlay({ task, goalTitle, onClose, onOptimisticTokenUp
                 setRemaining(prev => {
                     if (prev <= 1) {
                         clearInterval(intervalRef.current!)
-                        setState('drill')
+                        setState('finished')
+                        setQuizResult('Pass')
+                        setQuizFeedback(t('focus.comprehension_passed') || 'Focus session completed!')
+                        setEarnedTokens(TOKEN_REWARD[task.priority] ?? 1)
+                        setEarnedXp(task.priority * 10 + 10)
                         haptics.medium()
                         return 0
                     }
@@ -205,7 +209,11 @@ export function FocusModeOverlay({ task, goalTitle, onClose, onOptimisticTokenUp
 
     const handleAlreadyDone = () => {
         haptics.medium()
-        setState('drill') // Route to verification drills!
+        setState('finished')
+        setQuizResult('Pass')
+        setQuizFeedback(t('focus.comprehension_passed') || 'Focus session completed!')
+        setEarnedTokens(TOKEN_REWARD[task.priority] ?? 1)
+        setEarnedXp(task.priority * 10 + 10)
     }
 
     const handleClaimBaseRewardOnly = () => {

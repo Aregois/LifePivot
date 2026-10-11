@@ -15,7 +15,6 @@ export default function Signup() {
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
     const [confirm, setConfirm] = useState('')
-    const [role, setRole] = useState<'student' | 'tutor'>('student')
     const [loading, setLoading] = useState(false)
     const [nameFocused, setNameFocused] = useState(false)
     const [emailFocused, setEmailFocused] = useState(false)
@@ -99,7 +98,7 @@ export default function Signup() {
             options: {
                 data: {
                     full_name: trimmedName,
-                    role: role
+                    role: 'student'
                 }
             }
         })
@@ -156,44 +155,6 @@ export default function Signup() {
                     <FadeInView delay={150}>
                         <GlassCard style={{ padding: 20 }}>
 
-                            {/* Account Role Selector */}
-                            <Text style={{ fontSize: 10, color: C.textDim, fontWeight: '700', letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 8 }}>
-                                {t('auth.account_type')}
-                            </Text>
-                            <View style={{ flexDirection: 'row', gap: 10, marginBottom: 16 }}>
-                                <TouchableOpacity
-                                    onPress={() => setRole('student')}
-                                    style={{
-                                        flex: 1,
-                                        paddingVertical: 12,
-                                        borderRadius: 12,
-                                        backgroundColor: role === 'student' ? 'rgba(0, 240, 255, 0.15)' : 'rgba(5, 5, 8, 0.6)',
-                                        borderWidth: 1,
-                                        borderColor: role === 'student' ? C.electricBlue : C.glassBorder,
-                                        alignItems: 'center',
-                                    }}
-                                >
-                                    <Text style={{ fontSize: 11, fontWeight: '900', color: role === 'student' ? '#FFFFFF' : C.textMuted, letterSpacing: 1 }}>
-                                        {t('auth.role_student').toUpperCase()}
-                                    </Text>
-                                </TouchableOpacity>
-                                <TouchableOpacity
-                                    onPress={() => setRole('tutor')}
-                                    style={{
-                                        flex: 1,
-                                        paddingVertical: 12,
-                                        borderRadius: 12,
-                                        backgroundColor: role === 'tutor' ? 'rgba(189, 0, 255, 0.15)' : 'rgba(5, 5, 8, 0.6)',
-                                        borderWidth: 1,
-                                        borderColor: role === 'tutor' ? C.neonViolet : C.glassBorder,
-                                        alignItems: 'center',
-                                    }}
-                                >
-                                    <Text style={{ fontSize: 11, fontWeight: '900', color: role === 'tutor' ? '#FFFFFF' : C.textMuted, letterSpacing: 1 }}>
-                                        {t('auth.role_tutor').toUpperCase()}
-                                    </Text>
-                                </TouchableOpacity>
-                            </View>
 
                             {/* Full Name */}
                             <Text style={{ fontSize: 10, color: C.textDim, fontWeight: '700', letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 6 }}>
