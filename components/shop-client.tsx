@@ -319,7 +319,7 @@ export function ShopClient() {
                 </div>
 
                 <p className="text-gray-400 text-xs leading-relaxed">
-                    Top up your token balance instantly. Tokens are used in the shop for power-ups, cosmetics, and more.
+                    Top up your token balance instantly. Tokens are used for streak shields, void days, focus soundscapes, and study multipliers.
                 </p>
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
