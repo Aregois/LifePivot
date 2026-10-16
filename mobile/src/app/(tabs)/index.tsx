@@ -253,6 +253,11 @@ export default function Dashboard() {
   const translatedActiveGoal = useMemo(() => translateGoal(activeGoal, locale), [activeGoal, locale]);
   const translatedTasks = useMemo(() => translateTasksArray(tasks, locale), [tasks, locale]);
 
+  const activePlanTasks = useMemo(() => {
+    if (!activeGoal) return translatedTasks;
+    return translatedTasks.filter((t) => t.goal_id === activeGoal.id);
+  }, [translatedTasks, activeGoal]);
+
   const activeGoalStats = useMemo<PlanStats | null>(() => {
     if (!activeGoal) return null;
 
@@ -390,8 +395,11 @@ export default function Dashboard() {
         ai_hint: task.ai_hint,
       });
     } else {
-      const firstPending = tasks.find(
-        (t) => t.due_date === todayStr && t.status === 'pending'
+      const candidateList = activeGoal ? tasks.filter((t) => t.goal_id === activeGoal.id) : tasks;
+      const firstPending = candidateList.find(
+        (t) => t.due_date === todayStr && t.status === 'pending' && t.task_type !== 'void'
+      ) || candidateList.find(
+        (t) => t.status === 'pending' && t.task_type !== 'void'
       );
       if (firstPending) {
         setFocusTask({
@@ -567,18 +575,18 @@ export default function Dashboard() {
           </View>
         </FadeInView>
 
-        {/* ── 3. Level 1 Milestone Checkpoint Gate vs Full Dashboard ──── */}
-        {level < 2 ? (
+        {/* ── 3. Level 1 Milestone Checkpoint Guidance (for new users) ──── */}
+        {level < 2 && (
           <FadeInView delay={200} style={{ marginBottom: 16 }}>
             <GlassCard elevated style={[styles.checkpointCard, { borderColor: colors.glassBorder }]}>
               <View style={[styles.checkpointIconBox, { backgroundColor: `${colors.primary}20` }]}>
                 <Ionicons name="flash" size={28} color={colors.primary} />
               </View>
 
-              <Text style={styles.checkpointTitle}>{t('socratic.milestone_checkpoint') || 'LEVEL 1 MILESTONE GATE'}</Text>
+              <Text style={styles.checkpointTitle}>{t('socratic.milestone_checkpoint') || 'LEVEL 1 MILESTONE CHECKPOINT'}</Text>
               <Text style={styles.checkpointSubtitle}>
                 {t('socratic.intro_desc') ||
-                  'Complete your initial curriculum focus sessions and reach Level 2 (1,000 XP) to unlock the full Daily Tasks Hub, Exchange Store, and Socratic drills.'}
+                  `Complete your initial curriculum focus sessions to reach Level 2 (${xpNeeded} XP) and unlock the Exchange Store.`}
               </Text>
 
               {/* Progress to Level 2 */}
@@ -610,31 +618,29 @@ export default function Dashboard() {
               </TouchableOpacity>
             </GlassCard>
           </FadeInView>
-        ) : (
-          <>
-            {/* ── 4. Dynamic Active Plan Card ─────────────────────────── */}
-            <FadeInView delay={200} style={{ marginBottom: 16 }}>
-              <ActivePlanCard
-                activeGoal={translatedActiveGoal}
-                stats={activeGoalStats}
-                onOpenSwitcher={() => setSwitcherVisible(true)}
-                onOpenPortal={() => router.push('/plan')}
-              />
-            </FadeInView>
-
-            {/* ── 5. Today's Daily Tasks Hub ──────────────────────────── */}
-            <FadeInView delay={300} style={{ marginBottom: 16 }}>
-              <DailyTasksHub
-                tasks={translatedTasks}
-                todayStr={todayStr}
-                onToggleTask={handleToggleTask}
-                onOpenTaskDetails={handleOpenTaskDetails}
-                onStartFocus={handleStartFocus}
-                onOpenPlanPortal={() => router.push('/plan')}
-              />
-            </FadeInView>
-          </>
         )}
+
+        {/* ── 4. Dynamic Active Plan Card ─────────────────────────── */}
+        <FadeInView delay={220} style={{ marginBottom: 16 }}>
+          <ActivePlanCard
+            activeGoal={translatedActiveGoal}
+            stats={activeGoalStats}
+            onOpenSwitcher={() => setSwitcherVisible(true)}
+            onOpenPortal={() => router.push('/plan')}
+          />
+        </FadeInView>
+
+        {/* ── 5. Today's Daily Tasks Hub ──────────────────────────── */}
+        <FadeInView delay={280} style={{ marginBottom: 16 }}>
+          <DailyTasksHub
+            tasks={activePlanTasks}
+            todayStr={todayStr}
+            onToggleTask={handleToggleTask}
+            onOpenTaskDetails={handleOpenTaskDetails}
+            onStartFocus={handleStartFocus}
+            onOpenPlanPortal={() => router.push('/plan')}
+          />
+        </FadeInView>
 
         {/* ── 6. XP Progress & Rank HUD ────────────────────────────────── */}
         <FadeInView delay={400} style={{ marginBottom: 16 }}>
@@ -692,9 +698,12 @@ export default function Dashboard() {
         onUpdateTask={(updated) => {
           handleUpdateTask(updated as TaskItem);
         }}
-        onCompleteSession={(_mins) => {
+        onCompleteSession={async (_mins) => {
           setFocusModalVisible(false);
           HapticsEngine.tier3.success();
+          if (focusTask.id) {
+            await handleToggleTask(focusTask.id, 'pending', focusTask.priority ?? 1);
+          }
           fetchDashboardData(true);
         }}
       />

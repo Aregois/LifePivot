@@ -1,18 +1,18 @@
-﻿'use client'
+'use client'
 
 import { Trash2 } from 'lucide-react'
 import { deletePlan } from '@/app/actions'
 import { useTransition } from 'react'
 import { useLanguage } from './language-provider'
 
-export function ResetPlanButton() {
+export function ResetPlanButton({ planId }: { planId?: string } = {}) {
     const { t } = useLanguage()
     const [isPending, startTransition] = useTransition()
 
     const handleReset = () => {
         if (window.confirm(t('plan.reset_confirm'))) {
             startTransition(async () => {
-                await deletePlan()
+                await deletePlan(planId)
             })
         }
     }

@@ -287,23 +287,8 @@ export default function Profile() {
               Alert.alert('SHIELD EQUIPPED', res.message || 'Streak Shield equipped successfully!');
               fetchProfileAndStats();
             } catch (err: any) {
-              const { data: { user } } = await supabase.auth.getUser();
-              if (user) {
-                await supabase
-                  .from('profiles')
-                  .update({
-                    tokens_balance: tokens - 15,
-                    streak_shields_count: streakShields + 1,
-                  })
-                  .eq('id', user.id);
-                setProfile((prev: any) => ({
-                  ...prev,
-                  tokens_balance: tokens - 15,
-                  streak_shields_count: streakShields + 1,
-                }));
-                HapticsEngine.tier3.success();
-                Alert.alert('SHIELD EQUIPPED', 'Streak Shield successfully activated!');
-              }
+              HapticsEngine.tier4.error();
+              Alert.alert('PURCHASE FAILED', err.message || 'Could not equip Streak Shield. Please try again.');
             } finally {
               setPurchasingItem(null);
             }

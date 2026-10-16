@@ -71,6 +71,7 @@ export function FocusModeOverlay({ task, goalTitle, onClose, onOptimisticTokenUp
     const [remaining, setRemaining] = useState((task.duration_mins ?? 30) * 60)
     const [persona, setPersona] = useState<string>('feynman')
     const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
+    const endTimeRef = useRef<number | null>(null)
 
     // Subtasks states
     const [localSubtasks, setLocalSubtasks] = useState<Subtask[]>(task.subtasks ?? [])
@@ -162,34 +163,60 @@ export function FocusModeOverlay({ task, goalTitle, onClose, onOptimisticTokenUp
         }
     }, [activeTab])
 
-    // Timer tick
+    // Wall-clock timer tick with visibilitychange & window focus sync
     useEffect(() => {
         if (state === 'running') {
-            intervalRef.current = setInterval(() => {
-                setRemaining(prev => {
-                    if (prev <= 1) {
-                        clearInterval(intervalRef.current!)
-                        setState('finished')
-                        setQuizResult('Pass')
-                        setQuizFeedback(t('focus.comprehension_passed') || 'Focus session completed!')
-                        setEarnedTokens(TOKEN_REWARD[task.priority] ?? 1)
-                        setEarnedXp(task.priority * 10 + 10)
-                        haptics.medium()
-                        return 0
-                    }
-                    return prev - 1
-                })
-            }, 1000)
+            if (!endTimeRef.current) {
+                endTimeRef.current = Date.now() + remaining * 1000
+            }
+
+            const updateRemaining = () => {
+                if (!endTimeRef.current) return
+                const secsLeft = Math.max(0, Math.round((endTimeRef.current - Date.now()) / 1000))
+                setRemaining(secsLeft)
+                if (secsLeft <= 0) {
+                    if (intervalRef.current) clearInterval(intervalRef.current)
+                    endTimeRef.current = null
+                    setState('finished')
+                    setEarnedTokens(TOKEN_REWARD[task.priority] ?? 1)
+                    setEarnedXp(task.priority * 10 + 10)
+                    haptics.medium()
+                }
+            }
+
+            intervalRef.current = setInterval(updateRemaining, 1000)
+
+            const handleVisibility = () => {
+                if (document.visibilityState === 'visible') {
+                    updateRemaining()
+                }
+            }
+            document.addEventListener('visibilitychange', handleVisibility)
+            window.addEventListener('focus', handleVisibility)
+
+            return () => {
+                if (intervalRef.current) clearInterval(intervalRef.current)
+                document.removeEventListener('visibilitychange', handleVisibility)
+                window.removeEventListener('focus', handleVisibility)
+            }
         } else {
             if (intervalRef.current) clearInterval(intervalRef.current)
+            endTimeRef.current = null
         }
         return () => { if (intervalRef.current) clearInterval(intervalRef.current) }
-    }, [state])
+    }, [state, task.priority])
 
     const formatTime = (secs: number) => {
         const m = Math.floor(secs / 60).toString().padStart(2, '0')
         const s = (secs % 60).toString().padStart(2, '0')
         return `${m}:${s}`
+    }
+
+    const getIsCatalystActive = () => {
+        if (typeof window === 'undefined') return false
+        const end = localStorage.getItem('lifepivot_chest_multiplier_end')
+        if (!end) return false
+        return Date.now() < Number(end)
     }
 
     const radius = 80
@@ -210,8 +237,6 @@ export function FocusModeOverlay({ task, goalTitle, onClose, onOptimisticTokenUp
     const handleAlreadyDone = () => {
         haptics.medium()
         setState('finished')
-        setQuizResult('Pass')
-        setQuizFeedback(t('focus.comprehension_passed') || 'Focus session completed!')
         setEarnedTokens(TOKEN_REWARD[task.priority] ?? 1)
         setEarnedXp(task.priority * 10 + 10)
     }
@@ -951,8 +976,13 @@ export function FocusModeOverlay({ task, goalTitle, onClose, onOptimisticTokenUp
                                         <div className="flex flex-col gap-2.5">
                                             {quizResult === 'Pass' ? (
                                                 <button 
-                                                    onClick={() => { 
+                                                    onClick={async () => { 
                                                         haptics.medium(); 
+                                                        try {
+                                                            await completeTaskFocusMode(task.id, true, getIsCatalystActive());
+                                                        } catch (err) {
+                                                            console.error('Failed to complete task in focus mode:', err);
+                                                        }
                                                         onTaskUpdate?.({
                                                             ...task,
                                                             notes,
@@ -961,7 +991,7 @@ export function FocusModeOverlay({ task, goalTitle, onClose, onOptimisticTokenUp
                                                             subtasks: localSubtasks,
                                                             status: 'completed'
                                                         });
-                                                        onClose() 
+                                                        onClose();
                                                     }}
                                                     className="w-full py-3.5 rounded-xl font-black text-xs uppercase tracking-wider text-black bg-emerald-500 hover:bg-emerald-400 active:scale-[0.98] transition-all flex items-center justify-center gap-2 shadow-[0_0_15px_rgba(16,185,129,0.2)]"
                                                 >
@@ -1378,8 +1408,13 @@ export function FocusModeOverlay({ task, goalTitle, onClose, onOptimisticTokenUp
                             {state === 'finished' && (
                                 <>
                                     {quizResult === 'Pass' ? (
-                                        <button onClick={() => { 
+                                        <button onClick={async () => { 
                                             haptics.medium(); 
+                                            try {
+                                                await completeTaskFocusMode(task.id, true, getIsCatalystActive());
+                                            } catch (err) {
+                                                console.error('Failed to complete task in focus mode:', err);
+                                            }
                                             onTaskUpdate?.({
                                                 ...task,
                                                 notes,
@@ -1388,7 +1423,7 @@ export function FocusModeOverlay({ task, goalTitle, onClose, onOptimisticTokenUp
                                                 subtasks: localSubtasks,
                                                 status: 'completed'
                                             });
-                                            onClose() 
+                                            onClose();
                                         }}
                                             className="w-full py-4 rounded-2xl font-black text-sm text-black bg-emerald-500 hover:bg-emerald-400 active:scale-[0.98] transition-all flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(16,185,129,0.2)]"
                                         >

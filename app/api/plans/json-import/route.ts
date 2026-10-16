@@ -130,8 +130,13 @@ export async function POST(request: Request) {
             }
         }
 
-        // totalDays = max day number in the array
-        const totalDays = Math.max(...tasks.map((t: any) => t.day ?? t.day_number ?? 1))
+        if (tasks.length > 500) {
+            return NextResponse.json({ error: 'Import exceeds maximum of 500 tasks per plan' }, { status: 400 })
+        }
+
+        // totalDays = max day number in the array (capped between 1 and 365 days)
+        const rawTotalDays = Math.max(...tasks.map((t: any) => t.day ?? t.day_number ?? 1))
+        const totalDays = Math.min(Math.max(1, isFinite(rawTotalDays) ? rawTotalDays : 1), 365)
 
         // Derive a plan title from the tasks if not provided
         const resolvedTitle = (planTitle && planTitle.trim())
@@ -183,7 +188,8 @@ export async function POST(request: Request) {
 
         // ── Map JSON tasks → DB rows ─────────────────────────────────────────
         const tasksToInsert = tasks.map((task: any) => {
-            const dayNum = task.day ?? task.day_number ?? 1
+            const parsedDay = Number(task.day ?? task.day_number ?? 1) || 1
+            const dayNum = Math.min(Math.max(1, parsedDay), 365)
             const targetDate = new Date(baseDate)
             targetDate.setDate(targetDate.getDate() + (dayNum - 1))
 

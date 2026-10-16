@@ -10,10 +10,12 @@ import { supabase } from '../../utils/supabase'
 import { C, Shadows } from '../../constants/theme'
 import { FadeInView, GlassCard, PremiumButton, GradientText } from '../../components/ui'
 import { useTheme } from '../../context/ThemeContext'
+import { useLanguage } from '../../context/LanguageContext'
 
 export default function SubscribeModal() {
     const router = useRouter()
     const { colors } = useTheme()
+    const { t } = useLanguage()
     const { mutate: subscribe, isPending } = useSubscribe()
     const [selectedPlan, setSelectedPlan] = useState<'monthly' | 'yearly'>('monthly')
     const [restoring, setRestoring] = useState(false)
@@ -122,13 +124,13 @@ export default function SubscribeModal() {
                             marginBottom: 4,
                         }}
                     >
-                        LIFEPIVOT POWER TIER
+                        {t('subscribe.solo_power') || 'LIFEPIVOT POWER TIER'}
                     </GradientText>
                     <Text style={{ fontSize: 24, fontWeight: '900', color: '#FFFFFF', textTransform: 'uppercase', letterSpacing: 1.5 }}>
-                        UPGRADE STATUS
+                        {t('subscribe.standard_tier') || 'UPGRADE STATUS'}
                     </Text>
                     <Text style={{ fontSize: 10, color: colors.textMuted, marginTop: 8, textTransform: 'uppercase', letterSpacing: 1, textAlign: 'center', lineHeight: 14 }}>
-                        UNLEASH UNLIMITED STUDY EFFICIENCY & CUSTOMIZATIONS
+                        {t('subscribe.desc') || 'UNLEASH UNLIMITED STUDY EFFICIENCY & CUSTOMIZATIONS'}
                     </Text>
                 </FadeInView>
 
@@ -139,7 +141,7 @@ export default function SubscribeModal() {
                             <Ionicons name="checkmark-circle" size={18} color={colors.primary} style={{ marginRight: 12, marginTop: 1 }} />
                             <View style={{ flex: 1 }}>
                                 <Text style={{ fontSize: 11, fontWeight: '900', color: '#FFFFFF', letterSpacing: 0.5, textTransform: 'uppercase' }}>
-                                    UNLIMITED ACTIVE PLANS
+                                    {t('subscribe.benefit_unlimited_plans') || 'UNLIMITED ACTIVE PLANS'}
                                 </Text>
                                 <Text style={{ fontSize: 9, color: colors.textSecondary, marginTop: 2, textTransform: 'uppercase', letterSpacing: 0.5, lineHeight: 13 }}>
                                     TRACK MULTIPLE CURRICULUMS CONCURRENTLY (STANDARD LIMIT: 1 ACTIVE PLAN)
@@ -151,7 +153,7 @@ export default function SubscribeModal() {
                             <Ionicons name="checkmark-circle" size={18} color={colors.primary} style={{ marginRight: 12, marginTop: 1 }} />
                             <View style={{ flex: 1 }}>
                                 <Text style={{ fontSize: 11, fontWeight: '900', color: '#FFFFFF', letterSpacing: 0.5, textTransform: 'uppercase' }}>
-                                    NEON GLOW CUSTOMIZATIONS
+                                    {t('subscribe.benefit_cosmetics') || 'NEON GLOW CUSTOMIZATIONS'}
                                 </Text>
                                 <Text style={{ fontSize: 9, color: colors.textSecondary, marginTop: 2, textTransform: 'uppercase', letterSpacing: 0.5, lineHeight: 13 }}>
                                     IRIDESCENT PROFILE BORDERS FOR YOUR REACTIVE AVATAR MONOGRAM
@@ -163,7 +165,7 @@ export default function SubscribeModal() {
                             <Ionicons name="checkmark-circle" size={18} color={colors.primary} style={{ marginRight: 12, marginTop: 1 }} />
                             <View style={{ flex: 1 }}>
                                 <Text style={{ fontSize: 11, fontWeight: '900', color: '#FFFFFF', letterSpacing: 0.5, textTransform: 'uppercase' }}>
-                                    UNLIMITED SOCRATIC AI HINTS
+                                    {t('subscribe.benefit_priority_tutor') || 'UNLIMITED SOCRATIC AI HINTS'}
                                 </Text>
                                 <Text style={{ fontSize: 9, color: colors.textSecondary, marginTop: 2, textTransform: 'uppercase', letterSpacing: 0.5, lineHeight: 13 }}>
                                     REAL-TIME FEYNMAN MENTAL MODELS & COMPREHENSION MICRO-DRILLS
@@ -192,7 +194,7 @@ export default function SubscribeModal() {
                     >
                         <View>
                             <Text style={{ fontSize: 12, fontWeight: '900', color: '#FFFFFF', letterSpacing: 0.5, textTransform: 'uppercase' }}>
-                                MONTHLY SUB
+                                {t('subscribe.monthly_billing') || 'MONTHLY SUB'}
                             </Text>
                             <Text style={{ fontSize: 9, color: colors.textSecondary, marginTop: 2, textTransform: 'uppercase', letterSpacing: 0.5 }}>
                                 CANCEL ANYTIME
@@ -218,7 +220,7 @@ export default function SubscribeModal() {
                     >
                         <View>
                             <Text style={{ fontSize: 12, fontWeight: '900', color: '#FFFFFF', letterSpacing: 0.5, textTransform: 'uppercase' }}>
-                                YEARLY SAVINGS (50% OFF)
+                                {t('subscribe.yearly_billing') || 'YEARLY SAVINGS (50% OFF)'}
                             </Text>
                             <Text style={{ fontSize: 9, color: colors.secondary, fontWeight: '900', marginTop: 2, textTransform: 'uppercase', letterSpacing: 0.5 }}>
                                 BEST VALUE
@@ -232,7 +234,7 @@ export default function SubscribeModal() {
             {/* Apple/Google Pay trigger button */}
             <FadeInView delay={200} style={{ gap: 10 }}>
                 <PremiumButton
-                    title={selectedPlan === 'monthly' ? "SUBSCRIBE $9.99 / MO" : "SUBSCRIBE $59.99 / YR"}
+                    title={selectedPlan === 'monthly' ? (t('subscribe.btn_upgrade') ? `${t('subscribe.btn_upgrade')} ($9.99/mo)` : "SUBSCRIBE $9.99 / MO") : (t('subscribe.btn_upgrade') ? `${t('subscribe.btn_upgrade')} ($59.99/yr)` : "SUBSCRIBE $59.99 / YR")}
                     onPress={handleSubscribe}
                     variant="primary"
                     loading={isPending}
@@ -246,12 +248,12 @@ export default function SubscribeModal() {
                     disabled={restoring}
                 >
                     <Text style={{ fontSize: 11, fontWeight: '800', color: colors.primary, letterSpacing: 1, textTransform: 'uppercase' }}>
-                        {restoring ? 'RESTORING...' : 'RESTORE PURCHASES'}
+                        {restoring ? 'RESTORING...' : (t('common.ready') ? t('common.ready').toUpperCase() : 'RESTORE PURCHASES')}
                     </Text>
                 </TouchableOpacity>
 
                 <PremiumButton
-                    title="NOT NOW"
+                    title={t('common.cancel') ? t('common.cancel').toUpperCase() : "NOT NOW"}
                     onPress={() => {
                         HapticsEngine.tier1.light()
                         router.back()

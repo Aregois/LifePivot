@@ -39,6 +39,7 @@ interface Task {
   task_type: 'task' | 'void';
   pivoted_count: number;
   subtasks: any[];
+  ai_hint?: string;
 }
 
 const TOKEN_REWARD: Record<number, number> = {
@@ -229,7 +230,16 @@ export default function PlanDetail() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setShowAllDates(false);
 
-    const baseDate = selectedDate ? new Date(selectedDate) : new Date();
+    if (selectedDate) {
+      const parts = selectedDate.split('-').map(Number);
+      if (parts.length === 3) {
+        const baseDate = new Date(parts[0], parts[1] - 1, parts[2]);
+        baseDate.setDate(baseDate.getDate() + deltaDays);
+        setSelectedDate(getLocalDateString(baseDate));
+        return;
+      }
+    }
+    const baseDate = new Date();
     baseDate.setDate(baseDate.getDate() + deltaDays);
     setSelectedDate(getLocalDateString(baseDate));
   };
@@ -287,7 +297,7 @@ export default function PlanDetail() {
         if (nextStatus === 'completed') {
           newTokens += tokenDelta;
           newXp += baseXp;
-          const xpNeeded = newLevel * 1000;
+          const xpNeeded = newLevel * 100;
           if (newXp >= xpNeeded) {
             newXp -= xpNeeded;
             newLevel += 1;
@@ -466,6 +476,21 @@ export default function PlanDetail() {
               <TouchableOpacity
                 onPress={() => {
                   Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                  const candidateTask =
+                    tasks.find((t) => (selectedDate ? t.due_date === selectedDate : true) && t.status === 'pending' && t.task_type !== 'void') ||
+                    tasks.find((t) => t.status === 'pending' && t.task_type !== 'void');
+                  if (candidateTask) {
+                    setFocusTask({
+                      id: candidateTask.id,
+                      title: candidateTask.title,
+                      subject: candidateTask.subject,
+                      priority: candidateTask.priority,
+                      duration: candidateTask.duration_mins || 25,
+                      subtasks: candidateTask.subtasks,
+                      notes: candidateTask.notes,
+                      ai_hint: candidateTask.ai_hint,
+                    });
+                  }
                   setFocusModalVisible(true);
                 }}
                 style={{
@@ -776,9 +801,12 @@ export default function PlanDetail() {
             prev.map((t) => (t.id === updated.id ? { ...t, ...updated } : t))
           );
         }}
-        onCompleteSession={() => {
+        onCompleteSession={async () => {
           setFocusModalVisible(false);
           HapticsEngine.tier3.success();
+          if (focusTask.id) {
+            await handleToggleTask(focusTask.id, 'pending', focusTask.priority ?? 1);
+          }
           fetchPlanData();
         }}
       />

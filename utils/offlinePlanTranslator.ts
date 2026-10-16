@@ -162,7 +162,7 @@ const SUBJECT_DICTIONARY: Record<string, Record<SupportedLocale, string>> = {
 
 interface ActionPattern {
   regex: RegExp;
-  template: Record<SupportedLocale, (topic: string) => string>;
+  template: Record<SupportedLocale, (topic: string, extra?: string) => string>;
 }
 
 const ACTION_PATTERNS: ActionPattern[] = [
@@ -181,13 +181,13 @@ const ACTION_PATTERNS: ActionPattern[] = [
   {
     regex: /^Enhancing (.+) with (.+)$/i,
     template: {
-      en: (t) => `Enhancing ${t}`,
-      es: (t) => `Mejora de ${t}`,
-      ru: (t) => `Улучшение ${t}`,
-      fr: (t) => `Amélioration de ${t}`,
-      hy: (t) => `${t}-ի բարելավում`,
-      ja: (t) => `${t}の拡張`,
-      zh: (t) => `增强 ${t}`,
+      en: (t, w) => `Enhancing ${t} with ${w || ''}`,
+      es: (t, w) => `Mejora de ${t} con ${w || ''}`,
+      ru: (t, w) => `Улучшение ${t} с помощью ${w || ''}`,
+      fr: (t, w) => `Amélioration de ${t} avec ${w || ''}`,
+      hy: (t, w) => `${t}-ի բարելավում ${w || ''}-ով`,
+      ja: (t, w) => `${w || ''}による${t}の拡張`,
+      zh: (t, w) => `使用 ${w || ''} 增强 ${t}`,
     },
   },
   {
@@ -326,9 +326,10 @@ export function translateTaskTitle(title: string | undefined, locale: string): s
     const match = title.match(pattern.regex);
     if (match && match[1]) {
       const topic = match[1];
+      const extra = match[2];
       const fn = pattern.template[loc];
       if (fn) {
-        return fn(topic);
+        return fn(topic, extra);
       }
     }
   }

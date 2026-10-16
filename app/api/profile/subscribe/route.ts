@@ -1,4 +1,4 @@
-﻿import { createClient } from '@/utils/supabase/server'
+import { createClient } from '@/utils/supabase/server'
 import { verifyUserSession } from '@/utils/auth'
 import { NextResponse } from 'next/server'
 
@@ -12,6 +12,13 @@ export async function POST(request: Request) {
 
         const body = await request.json()
         const { transactionId, mockSuccess } = body
+
+        if (process.env.NODE_ENV === 'production' && process.env.ENABLE_MOCK_PAYMENTS !== 'true') {
+            return NextResponse.json(
+                { error: 'Direct mock subscription is disabled in production. Please complete checkout via Stripe or In-App Purchase.' },
+                { status: 403 }
+            )
+        }
 
         if (mockSuccess === false) {
             return NextResponse.json({ error: 'Mock payment checkout cancelled or failed' }, { status: 400 })

@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useState, useEffect, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
@@ -119,13 +119,13 @@ export function PlansClient({ user, goals, goalsError, isSubscribed, subscriptio
                         <div className="h-9 w-9 rounded-2xl bg-gradient-to-tr from-electric-blue to-neon-violet flex items-center justify-center border border-white/10 text-white shadow-[0_0_15px_rgba(var(--accent-rgb),0.25)]">
                             <Library className="h-5 w-5 text-white" />
                         </div>
-                        <span className="text-[10px] font-black text-electric-blue uppercase tracking-widest">Syllabus Registry</span>
+                        <span className="text-[10px] font-black text-electric-blue uppercase tracking-widest">{t('plan_switcher.sub') || 'Syllabus Registry'}</span>
                     </div>
                     <h1 className="text-3xl font-extrabold text-white tracking-tight mt-1.5 uppercase title-glow">
-                        My Learning Plans
+                        {t('plan_switcher.title') || 'My Learning Plans'}
                     </h1>
                     <p className="text-gray-400 text-xs mt-1">
-                        Select an active focus syllabus, review stats, or forge a new curriculum.
+                        {t('plan_switcher.select_active_desc') || 'Select an active focus syllabus, review stats, or forge a new curriculum.'}
                     </p>
                 </div>
 
@@ -134,7 +134,7 @@ export function PlansClient({ user, goals, goalsError, isSubscribed, subscriptio
                     className="flex items-center justify-center gap-2 px-5 py-3 rounded-2xl bg-gradient-to-r from-neon-violet to-electric-blue text-white font-black text-[11px] tracking-widest uppercase shadow-[0_0_20px_rgba(var(--accent-rgb),0.25)] hover:scale-[1.02] active:scale-95 transition-all self-start md:self-auto"
                 >
                     <Plus className="w-4 h-4" />
-                    Forge New Plan
+                    {t('plan_switcher.create_new') || 'Forge New Plan'}
                 </button>
             </div>
 
@@ -147,7 +147,7 @@ export function PlansClient({ user, goals, goalsError, isSubscribed, subscriptio
                         type="text"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        placeholder="Search plans by name..."
+                        placeholder={t('common.search_placeholder') || 'Search plans by name...'}
                         className="w-full bg-[#0B0D17]/80 border border-white/[0.06] rounded-2xl pl-11 pr-4 py-3 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-electric-blue transition-colors font-medium"
                     />
                 </div>
@@ -164,7 +164,7 @@ export function PlansClient({ user, goals, goalsError, isSubscribed, subscriptio
                                     : 'bg-white/[0.02] border-white/5 text-gray-400 hover:text-white hover:bg-white/[0.04]'
                             }`}
                         >
-                            {intent === 'ALL' ? 'All Schemes' : intent}
+                            {intent === 'ALL' ? (t('common.all_schemes') || 'All Schemes') : intent}
                         </button>
                     ))}
                 </div>
@@ -189,14 +189,14 @@ export function PlansClient({ user, goals, goalsError, isSubscribed, subscriptio
             {/* Plans Grid */}
             {goalsError ? (
                 <div className="p-8 rounded-3xl border border-red-500/20 bg-red-500/5 text-center text-red-400">
-                    Failed to load learning plans. Please reload the page.
+                    {t('common.error_load_plans') || 'Failed to load learning plans. Please reload the page.'}
                 </div>
             ) : filteredGoals.length === 0 ? (
                 <div className="flex flex-col items-center justify-center text-center p-12 border border-white/5 rounded-3xl bg-white/[0.01]">
                     <Layers className="w-12 h-12 text-gray-600 mb-3" />
-                    <h3 className="text-white font-bold text-base">No learning plans found</h3>
+                    <h3 className="text-white font-bold text-base">{t('plan_switcher.empty_title') || 'No learning plans found'}</h3>
                     <p className="text-gray-500 text-xs mt-1 max-w-sm">
-                        Create a plan to get started on your customized study sessions.
+                        {t('plan_switcher.empty_desc') || 'Create a plan to get started on your customized study sessions.'}
                     </p>
                 </div>
             ) : (
@@ -232,7 +232,7 @@ export function PlansClient({ user, goals, goalsError, isSubscribed, subscriptio
                                             className="cursor-pointer bg-[#141824] border border-neon-violet/30 px-4 py-3 rounded-2xl flex items-center gap-2 text-neon-violet hover:bg-neon-violet/10 transition-colors shadow-2xl active:scale-95"
                                         >
                                             <Lock className="w-3.5 h-3.5" />
-                                            <span className="text-[10px] font-black uppercase tracking-widest">Upgrade to Unlock</span>
+                                            <span className="text-[10px] font-black uppercase tracking-widest">{t('subscribe.title') || 'Upgrade to Unlock'}</span>
                                         </div>
                                     </div>
                                 )}
@@ -263,7 +263,7 @@ export function PlansClient({ user, goals, goalsError, isSubscribed, subscriptio
                                     {isActive ? (
                                         <span className="flex items-center gap-1 text-electric-blue text-[9px] font-black uppercase tracking-widest bg-electric-blue/10 border border-electric-blue/20 px-2.5 py-1 rounded-xl shrink-0">
                                             <CheckCircle2 className="w-3 h-3 text-electric-blue" />
-                                            Active
+                                            {t('plan_switcher.active_track') || 'Active'}
                                         </span>
                                     ) : (
                                         <button
@@ -271,7 +271,7 @@ export function PlansClient({ user, goals, goalsError, isSubscribed, subscriptio
                                             className="flex items-center gap-1 text-[9px] font-black text-gray-400 uppercase tracking-widest bg-white/5 border border-white/10 hover:border-white/20 hover:text-white px-2.5 py-1 rounded-xl transition-all shrink-0 active:scale-90"
                                         >
                                             <Play className="w-2.5 h-2.5" />
-                                            Activate
+                                            {t('plan_switcher.activate') || 'Activate'}
                                         </button>
                                     )}
                                 </div>
@@ -280,7 +280,7 @@ export function PlansClient({ user, goals, goalsError, isSubscribed, subscriptio
                                 <div className="space-y-3 mt-auto border-t border-white/5 pt-4">
                                     {/* Progress label */}
                                     <div className="flex justify-between items-baseline text-[9px] font-black text-gray-500 uppercase tracking-wider">
-                                        <span>Progress Details</span>
+                                        <span>{t('plan.syllabus_progress') || 'Progress Details'}</span>
                                         <span className="text-white font-bold">{goal.progress}%</span>
                                     </div>
 
@@ -296,10 +296,10 @@ export function PlansClient({ user, goals, goalsError, isSubscribed, subscriptio
                                     <div className="flex justify-between items-center text-[10px] text-gray-400 font-semibold pt-1">
                                         <span className="flex items-center gap-1">
                                             <Target className="w-3.5 h-3.5 text-electric-blue" />
-                                            {goal.completedTasks} / {goal.totalTasks} Tasks
+                                            {goal.completedTasks} / {goal.totalTasks} {t('plan.tasks_count') || 'Tasks'}
                                         </span>
                                         <span className="text-gray-500 font-medium">
-                                            {goal.duration_days} Days Plan
+                                            {goal.duration_days} {t('plan.day_count') || 'Days Plan'}
                                         </span>
                                     </div>
                                 </div>
@@ -309,7 +309,7 @@ export function PlansClient({ user, goals, goalsError, isSubscribed, subscriptio
                                     onClick={() => handleSelectActivePlan(goal.id, !!isLocked)}
                                     className="mt-4 flex items-center justify-between w-full p-3 rounded-2xl bg-white/[0.02] border border-white/[0.04] hover:bg-white/[0.04] text-[10px] font-bold text-gray-400 hover:text-white transition-all uppercase tracking-widest"
                                 >
-                                    <span>Open Study Domain</span>
+                                    <span>{t('plan.curriculum_arch') || 'Open Study Domain'}</span>
                                     <ChevronRight className="w-3.5 h-3.5 text-electric-blue" />
                                 </button>
                             </motion.div>

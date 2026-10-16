@@ -42,7 +42,9 @@
     "tutor": "Tutor",
     "open_tutor": "Abrir Tutor Socrático",
     "cohorts": "Cohortes",
-    "marketplace": "Mercado"
+    "marketplace": "Mercado",
+    "today": "Hoy",
+    "plans": "Mis Planes"
   },
   "hud": {
     "level": "Niv",
@@ -219,7 +221,8 @@
     "equip_unlocked_title": "Equipar Título Desbloqueado",
     "equip_unlocked_frame": "Equipar Marco Desbloqueado",
     "select_profile_avatar": "Seleccionar Avatar de Perfil",
-    "streak": "Racha"
+    "streak": "Racha",
+    "utilities": "Utilidades"
   },
   "shop": {
     "wallet": "Tu Monedero",
@@ -337,7 +340,20 @@
     },
     "tokens_balance": "Saldo de Fichas",
     "token_store": "Tienda de Fichas",
-    "buy_tokens": "Comprar Fichas"
+    "buy_tokens": "Comprar Fichas",
+    "purchased_success": "Compra exitosa: ¡obtuviste {name}!",
+    "unlocked_success": "Desbloqueo exitoso: ¡{name} equipado!",
+    "not_enough_gems": "Gemas insuficientes. Necesitas {count} más.",
+    "purchase_failed_error": "Transacción fallida: {error}",
+    "wager_insufficient_gems": "Gemas insuficientes para la apuesta.",
+    "wager_success_placed": "¡Apuesta colocada! Apuesta {amount} gemas para alcanzar {target} días.",
+    "wager_reward_claimed": "¡Recompensa reclamada! +{amount} gemas añadidas.",
+    "hearts_full": "¡Tus vidas ya están llenas!",
+    "multiplier_active": "¡El catalizador de enfoque ya está activo!",
+    "shields_full": "¡Los escudos de racha están al máximo!",
+    "streak_active": "Racha activa. No se requiere reparación.",
+    "no_repair": "No hay racha rota para reparar.",
+    "purchase_failed": "Error en la compra. Inténtalo de nuevo."
   },
   "circadian": {
     "celebration_title": "¡Potenciador Activado!",
@@ -448,7 +464,8 @@
     "todays_agenda": "Agenda de hoy ({count} tareas)",
     "all_dates_title": "TODAS LAS FECHAS",
     "all_dates_count": "{count} tareas en total",
-    "yesterday": "AYER"
+    "yesterday": "AYER",
+    "void_day": "Día de Vacío"
   },
   "socratic": {
     "milestone_checkpoint": "Punto de Control",
@@ -497,7 +514,8 @@
     "next_question": "Siguiente pregunta",
     "verify_answers": "Verificar respuestas",
     "consulting_syllabus": "Consultando el programa...",
-    "back": "Atrás"
+    "back": "Atrás",
+    "comprehension_passed": "Comprensión Verificada (+{xp} XP)"
   },
   "tutor": {
     "title": "Tutor Socrático",
@@ -576,7 +594,7 @@
     "title_priority": "Prioridad de tareas (P1 a P5)",
     "desc_priority": "Los planes alternan entre ejercicios ligeros (P1), lectura de síntesis (P2) y teoría profunda (P5). Las prioridades altas otorgan más XP y gemas.",
     "title_pivot": "Motor Pivot de 3 niveles",
-    "desc_pivot": "Cuando se pierden tareas, el motor se recupera. Intenta un desplazamiento (usando los días de descanso), reduce el calendario (pierde 1 vida) o acumula deuda.",
+    "desc_pivot": "Cuando se retrasan tareas, el motor las recupera. Intenta un Desplazamiento (usando Días Vacíos por 0 Tokens), una Compresión IA (por 10 Tokens) o una Consolidación Avalancha.",
     "title_circadian": "Multiplicadores circadianos",
     "desc_circadian": "Estudia en el bloque de la mañana (6am-11am) o tarde (6pm-10pm) para obtener llaves. Abre cofres para un potenciador de 20 minutos.",
     "title_active_recall": "Evocación activa y fichas",
@@ -586,7 +604,7 @@
     "button_next": "Siguiente consejo"
   },
   "blitz": {
-    "title": "Blitz Match",
+    "title": "Partida Blitz",
     "streak": "Racha de {streak}",
     "cleared": "Parejas resueltas",
     "victory": "¡Victoria Blitz!",
@@ -731,7 +749,9 @@
     "live_progress_check": "Control de progreso en vivo",
     "comprehension_passed": "¡Verificación de comprensión aprobada! Recompensas de maestría desbloqueadas.",
     "focus_gems": "Gemas de enfoque",
-    "evaluation_reflection": "Evaluación y Reflexión"
+    "evaluation_reflection": "Evaluación y Reflexión",
+    "reflection_tab": "Reflexión",
+    "focus_minutes": "MINUTOS DE ENFOQUE"
   },
   "sidebar": {
     "upgrade": "MEJORAR A PRO"
@@ -769,7 +789,9 @@
   "calendar": {
     "view_all": "Ver Todo",
     "yesterday": "AYER",
-    "tomorrow": "MAÑANA"
+    "tomorrow": "MAÑANA",
+    "title": "Matriz de Horario Temporal",
+    "view_schedule_desc": "Inspecciona curvas de aprendizaje dinámicas e hitos temporales."
   },
   "missed_session": {
     "restored": "Horario Restaurado",
@@ -852,9 +874,9 @@
     "days_study": "{count} DÍAS DE ESTUDIO",
     "free": "GRATIS",
     "free_clone": "CLONAR GRATIS",
-    "tokens": "{count} TOKENS",
-    "tokens_one": "{count} TOKEN",
-    "tokens_other": "{count} TOKENS",
+    "tokens": "{count} FICHAS",
+    "tokens_one": "{count} FICHA",
+    "tokens_other": "{count} FICHAS",
     "created_by": "CREADO POR: {author}",
     "locked_title": "Mercado Bloqueado",
     "locked_desc": "Alcanza el Nivel 2 para explorar e importar planes de la comunidad. ¡Completa tareas para ganar XP!",
@@ -953,7 +975,7 @@
     "step_label": "Paso {n}",
     "where_label": "Dónde",
     "after_copying": "Después de copiar",
-    "prompt_label": "Prompt",
+    "prompt_label": "Instrucción",
     "step1_where": "Cualquier IA (Claude, ChatGPT, Gemini)",
     "step1_tip": "Pega el prompt en cualquier asistente de IA. Responde todas las preguntas una por una hasta recibir el Master Prompt al final.",
     "step2_where": "Cualquier IA (Claude, ChatGPT, Gemini)",
@@ -990,7 +1012,16 @@
     "mins_one": "{count} MIN",
     "mins_other": "{count} MINS",
     "back": "Atrás",
-    "where": "Dónde"
+    "where": "Dónde",
+    "error": "Error",
+    "ready": "Listo",
+    "done": "Hecho",
+    "skip": "Omitir",
+    "cancel": "Cancelar",
+    "confirm": "Confirmar",
+    "save": "Guardar",
+    "loading": "Cargando...",
+    "success": "Éxito"
   },
   "plan_import": {
     "title": "Importar Plan JSON",

@@ -546,9 +546,15 @@ export default function CalendarPortal() {
         aiHint={focusTask.ai_hint}
         initialMinutes={focusTask.duration}
         onUpdateTask={handleUpdateTask}
-        onCompleteSession={(_mins) => {
+        onCompleteSession={async (_mins) => {
           setFocusModalVisible(false);
           HapticsEngine.tier3.success();
+          if (focusTask.id) {
+            const task = tasks.find((t) => t.id === focusTask.id);
+            if (task && task.status !== 'completed') {
+              await handleToggleTask(task);
+            }
+          }
           fetchTasksData(true);
         }}
       />

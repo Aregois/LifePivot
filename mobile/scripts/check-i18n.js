@@ -9,7 +9,15 @@ function flattenKeys(obj, prefix = '') {
   let result = {};
   for (const [key, value] of Object.entries(obj)) {
     const fullPath = prefix ? `${prefix}.${key}` : key;
-    if (value && typeof value === 'object' && !Array.isArray(value)) {
+    if (Array.isArray(value)) {
+      value.forEach((item, index) => {
+        if (item && typeof item === 'object') {
+          Object.assign(result, flattenKeys(item, `${fullPath}.${index}`));
+        } else if (typeof item === 'string') {
+          result[`${fullPath}.${index}`] = item;
+        }
+      });
+    } else if (value && typeof value === 'object') {
       Object.assign(result, flattenKeys(value, fullPath));
     } else if (typeof value === 'string') {
       result[fullPath] = value;

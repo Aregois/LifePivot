@@ -42,7 +42,9 @@
     "tutor": "Tuteur",
     "open_tutor": "Ouvrir le Tuteur Socratique",
     "cohorts": "Cohortes",
-    "marketplace": "Marché"
+    "marketplace": "Marché",
+    "today": "Aujourd'hui",
+    "plans": "Mes Plans"
   },
   "hud": {
     "level": "Niv",
@@ -72,7 +74,7 @@
       "desc": "Textes critiques, analyses, dissertations."
     },
     "Arts": {
-      "name": "Arts & Design",
+      "name": "Arts et Design",
       "desc": "Croquis techniques, design, portfolios."
     },
     "Business": {
@@ -219,7 +221,8 @@
     "equip_unlocked_title": "Équiper le Titre Débloqué",
     "equip_unlocked_frame": "Équiper le Cadre Débloqué",
     "select_profile_avatar": "Sélectionner l'Avatar de Profil",
-    "streak": "Série"
+    "streak": "Série",
+    "utilities": "Utilitaires"
   },
   "shop": {
     "wallet": "Votre Portefeuille",
@@ -337,7 +340,20 @@
     },
     "tokens_balance": "Solde de Jetons",
     "token_store": "Boutique de Jetons",
-    "buy_tokens": "Acheter des Jetons"
+    "buy_tokens": "Acheter des Jetons",
+    "purchased_success": "Achat réussi: {name} obtenu !",
+    "unlocked_success": "Déblocage réussi: {name} équipé !",
+    "not_enough_gems": "Gemmes insuffisantes. Il en faut {count} de plus.",
+    "purchase_failed_error": "Transaction échouée: {error}",
+    "wager_insufficient_gems": "Gemmes insuffisantes pour le pari de série.",
+    "wager_success_placed": "Pari placé ! {amount} gemmes misées pour atteindre {target} jours.",
+    "wager_reward_claimed": "Récompense de pari réclamée ! +{amount} gemmes ajoutées.",
+    "hearts_full": "Les vies sont déjà pleines !",
+    "multiplier_active": "Le boost de concentration is déjà actif !",
+    "shields_full": "Les boucliers de série sont au maximum !",
+    "streak_active": "La série est active. Réparation inutile.",
+    "no_repair": "Aucune série cassée à réparer.",
+    "purchase_failed": "Échec de l'achat. Réessayez."
   },
   "circadian": {
     "celebration_title": "Booster Activé !",
@@ -448,7 +464,8 @@
     "todays_agenda": "Ordre du jour ({count} tâches)",
     "all_dates_title": "TOUTES LES DATES",
     "all_dates_count": "{count} tâches au total",
-    "yesterday": "HIER"
+    "yesterday": "HIER",
+    "void_day": "Jour de Vide"
   },
   "socratic": {
     "milestone_checkpoint": "Point de contrôle",
@@ -497,7 +514,8 @@
     "next_question": "Question suivante",
     "verify_answers": "Vérifier les réponses",
     "consulting_syllabus": "Consultation du programme...",
-    "back": "Retour"
+    "back": "Retour",
+    "comprehension_passed": "Compréhension Vérifiée (+{xp} XP)"
   },
   "tutor": {
     "title": "Tuteur Socratique",
@@ -586,7 +604,7 @@
     "button_next": "Conseil suivant"
   },
   "blitz": {
-    "title": "Blitz Match",
+    "title": "Partie Blitz",
     "streak": "Série de {streak}",
     "cleared": "Paires résolues",
     "victory": "Victoire Blitz !",
@@ -684,7 +702,7 @@
     "ready": "Prêt",
     "paused": "En pause",
     "focusing": "Concentration",
-    "min_session": "min session",
+    "min_session": "min de session",
     "curated_materials": "Matériaux d'étude recommandés",
     "curated_desc": "Nous avons sélectionné ces liens spécifiquement pour vous aider à étudier les concepts de cette tâche.",
     "soundscape": "Ambiance d'étude",
@@ -699,7 +717,7 @@
     "sources_tab": "Sources",
     "tutor_thinking": "Le tuteur réfléchit...",
     "timer_tab": "Focus",
-    "duration_min_session": "{duration} min session",
+    "duration_min_session": "{duration} min de session",
     "claim_base_reward": "Passer le rappel (réclamer uniquement les gemmes de base)",
     "bonus_gems": "GEMMES BONUS",
     "minutes_abbrev": "{mins}m",
@@ -732,7 +750,8 @@
     "live_progress_check": "Suivi du progrès en direct",
     "comprehension_passed": "Vérification de compréhension réussie ! Récompenses de maîtrise débloquées.",
     "focus_gems": "Gemmes de focus",
-    "evaluation_reflection": "Évaluation & Réflexion"
+    "evaluation_reflection": "Évaluation & Réflexion",
+    "focus_minutes": "MINUTES DE CONCENTRATION"
   },
   "sidebar": {
     "upgrade": "PASSER À LA VERSION PRO"
@@ -761,7 +780,7 @@
     "reset_layout": "Réinitialiser disposition",
     "p5_label": "P5 Théorie Profonde",
     "p4_label": "P4 Application Difficile",
-    "p3_label": "P3 Standard",
+    "p3_label": "Standard P3",
     "p2_label": "P2 Synthèse",
     "p1_label": "P1 Exercices",
     "p0_label": "Jour de Repos",
@@ -770,7 +789,9 @@
   "calendar": {
     "view_all": "Voir Tout",
     "yesterday": "HIER",
-    "tomorrow": "DEMAIN"
+    "tomorrow": "DEMAIN",
+    "title": "Matrice de Planification Temporelle",
+    "view_schedule_desc": "Inspectez les courbes d'apprentissage dynamiques et les jalons temporels."
   },
   "missed_session": {
     "restored": "Calendrier Restauré",
@@ -954,7 +975,7 @@
     "step_label": "Étape {n}",
     "where_label": "Où",
     "after_copying": "Après avoir copié",
-    "prompt_label": "Prompt",
+    "prompt_label": "Invite",
     "step1_where": "Tout assistant IA (Claude, ChatGPT, Gemini)",
     "step1_tip": "Collez le prompt dans n'importe quel assistant IA. Répondez à toutes les questions une par une jusqu'à recevoir le Master Prompt à la fin.",
     "step2_where": "Tout assistant IA (Claude, ChatGPT, Gemini)",
@@ -991,7 +1012,16 @@
     "mins_one": "{count} MIN",
     "mins_other": "{count} MIN",
     "back": "Retour",
-    "where": "Où"
+    "where": "Où",
+    "error": "Erreur",
+    "ready": "Prêt",
+    "done": "Terminé",
+    "skip": "Passer",
+    "cancel": "Annuler",
+    "confirm": "Confirmer",
+    "save": "Enregistrer",
+    "loading": "Chargement...",
+    "success": "Succès"
   },
   "plan_import": {
     "title": "Importer un plan JSON",

@@ -146,7 +146,7 @@ export default function GeneratingPage() {
             const dailyTime = profile?.onboarding_daily_time || '1 Hour'
             const style = profile?.onboarding_style || 'Coding'
 
-            const res = await fetch('/api/plan/generate', {
+            const res = await fetch('/api/plans/generate', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ goal, level, dailyTime, style, userId: user.id }),
@@ -176,9 +176,12 @@ export default function GeneratingPage() {
                 for (const line of lines) {
                     if (line.startsWith('data: ')) {
                         try {
-                            const data = JSON.parse(line.replace('data: ', ''))
+                            const raw = line.replace('data: ', '').trim()
+                            if (raw === '[DONE]') continue
+                            const data = JSON.parse(raw)
+                            const evtType = (data.type || '').toUpperCase()
 
-                            if (data.type === 'TASK') {
+                            if (evtType === 'TASK' && data.task) {
                                 taskCount++
                                 const newTask: StreamTask = {
                                     id: `${data.task.day}-${data.task.title}`,
@@ -190,7 +193,7 @@ export default function GeneratingPage() {
                                 setVisibleTasks(prev => [...prev.slice(-3), newTask])
                                 setProgress(Math.min(95, Math.round((taskCount / 30) * 100)))
                                 haptics.light()
-                            } else if (data.type === 'DONE') {
+                            } else if (evtType === 'DONE') {
                                 setProgress(100)
                                 setPageState('ready')
                                 haptics.medium()
@@ -198,7 +201,7 @@ export default function GeneratingPage() {
                                     router.push('/')
                                 }, 1500)
                                 return
-                            } else if (data.type === 'ERROR') {
+                            } else if (evtType === 'ERROR') {
                                 throw new Error(data.error || 'Plan generation failed.')
                             }
                         } catch (parseErr: any) {

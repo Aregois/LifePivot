@@ -17,11 +17,21 @@ interface LanguageContextProps {
 const LanguageContext = createContext<LanguageContextProps | undefined>(undefined)
 
 // Flatten a nested dictionary into dot-notated keys for O(1) lookups
+import { createClient } from '@/utils/supabase/client'
+
 function flattenDictionary(obj: Record<string, any>, prefix = ''): Record<string, string> {
     const flattened: Record<string, string> = {}
     for (const [key, value] of Object.entries(obj)) {
         const fullKey = prefix ? `${prefix}.${key}` : key
-        if (value && typeof value === 'object' && !Array.isArray(value)) {
+        if (Array.isArray(value)) {
+            value.forEach((item, index) => {
+                if (item && typeof item === 'object') {
+                    Object.assign(flattened, flattenDictionary(item, `${fullKey}.${index}`))
+                } else if (typeof item === 'string') {
+                    flattened[`${fullKey}.${index}`] = item
+                }
+            })
+        } else if (value && typeof value === 'object') {
             Object.assign(flattened, flattenDictionary(value, fullKey))
         } else if (typeof value === 'string') {
             flattened[fullKey] = value
@@ -50,10 +60,27 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
             if (savedLocale && TRANSLATIONS[savedLocale]) {
                 setLocaleState(savedLocale)
             } else {
-                const browserLang = navigator.language?.slice(0, 2) as Locale
-                if (browserLang && TRANSLATIONS[browserLang]) {
-                    setLocaleState(browserLang)
-                }
+                const supabase = createClient()
+                supabase.auth.getUser().then(({ data: { user } }) => {
+                    if (user) {
+                        supabase.from('profiles').select('language').eq('id', user.id).single().then(({ data }) => {
+                            if (data?.language && TRANSLATIONS[data.language as Locale]) {
+                                setLocaleState(data.language as Locale)
+                                localStorage.setItem('lifepivot-locale', data.language)
+                            } else {
+                                const browserLang = navigator.language?.slice(0, 2) as Locale
+                                if (browserLang && TRANSLATIONS[browserLang]) {
+                                    setLocaleState(browserLang)
+                                }
+                            }
+                        })
+                    } else {
+                        const browserLang = navigator.language?.slice(0, 2) as Locale
+                        if (browserLang && TRANSLATIONS[browserLang]) {
+                            setLocaleState(browserLang)
+                        }
+                    }
+                })
             }
         } catch {
             // In case of restricted localStorage access
@@ -65,6 +92,11 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
             setLocaleState(newLocale)
             try {
                 localStorage.setItem('lifepivot-locale', newLocale)
+                const supabase = createClient()
+                const { data: { user } } = await supabase.auth.getUser()
+                if (user) {
+                    await supabase.from('profiles').update({ language: newLocale }).eq('id', user.id)
+                }
                 await updateActiveGoalsLanguage(newLocale)
             } catch (err) {
                 console.error('Failed to update active goals language in DB:', err)
@@ -90,9 +122,9 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
             template = currentDict[path] || fallbackDict[path]
         }
 
-        // Return path as fallback if not found in dictionary
+        // If not found in dictionary, return empty string so `t('missing') || 'Fallback'` works
         if (!template) {
-            return path
+            return ''
         }
 
         return interpolate(template, params)

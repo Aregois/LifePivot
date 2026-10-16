@@ -60,7 +60,8 @@ export async function createGoalBase(formData: FormData) {
     } catch {
         return { error: 'Invalid sprint walls format' }
     }
-    const dailyHours = parseInt(formData.get('daily_hours') as string) || 2
+    const rawDailyHours = parseFloat(formData.get('daily_hours') as string)
+    const dailyHours = isNaN(rawDailyHours) || rawDailyHours <= 0 ? 2 : rawDailyHours
 
     if (!title) return { error: 'No title provided' }
 
@@ -123,6 +124,7 @@ export async function generateTasksChunk(goalId: string, startDay: number, endDa
         .from('learning_goals')
         .select('*')
         .eq('id', goalId)
+        .eq('user_id', user.id)
         .single()
 
     if (!goal) return { error: 'Goal not found' }
@@ -502,6 +504,15 @@ export async function addTask(goalId: string, formData: FormData) {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return
 
+    const { data: goal } = await supabase
+        .from('learning_goals')
+        .select('id')
+        .eq('id', goalId)
+        .eq('user_id', user.id)
+        .single()
+
+    if (!goal) return
+
     await supabase.from('tasks').insert({
         goal_id: goalId,
         user_id: user.id,
@@ -527,16 +538,19 @@ export async function toggleTask(taskId: string, currentStatus: string) {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return
 
-    // Fetch the task's priority so we can scale the token reward correctly
+    // Fetch the task's priority and actual DB status scoped to this user
     const { data: task } = await supabase
         .from('tasks')
-        .select('priority')
+        .select('priority, status')
         .eq('id', taskId)
+        .eq('user_id', user.id)
         .single()
 
-    const newStatus = currentStatus === 'completed' ? 'pending' : 'completed'
-    const tokenDelta = TOKEN_REWARD[task?.priority ?? 3] ?? 1
-    const baseXp = task?.priority && task.priority > 0 ? (task.priority * 10 + 10) : 0
+    if (!task) return
+
+    const newStatus = (task.status || currentStatus) === 'completed' ? 'pending' : 'completed'
+    const tokenDelta = TOKEN_REWARD[task.priority ?? 3] ?? 1
+    const baseXp = task.priority && task.priority > 0 ? (task.priority * 10 + 10) : 0
 
     await supabase
         .from('tasks')
@@ -623,16 +637,27 @@ export async function completeTaskFocusMode(taskId: string, isFullFocus: boolean
 
     const { data: task } = await supabase
         .from('tasks')
-        .select('priority')
+        .select('priority, status')
         .eq('id', taskId)
         .eq('user_id', user.id)
         .single()
 
     if (!task) return { error: 'Task not found' }
+    if (task.status === 'completed') {
+        return { success: true, message: 'Task already completed', alreadyCompleted: true }
+    }
+
+    const { data: profile } = await supabase
+        .from('profiles')
+        .select('tokens_balance, xp, level, multiplier_active')
+        .eq('id', user.id)
+        .single()
+
+    const effectiveCatalyst = isCatalystActive || !!profile?.multiplier_active
 
     const baseReward = TOKEN_REWARD[task.priority] ?? 1
     let tokenReward = isFullFocus ? baseReward * 2 : baseReward
-    if (isCatalystActive) {
+    if (effectiveCatalyst) {
         tokenReward = tokenReward * 2
     }
 
@@ -642,30 +667,19 @@ export async function completeTaskFocusMode(taskId: string, isFullFocus: boolean
         .eq('id', taskId)
         .eq('user_id', user.id)
 
-    const { data: profile } = await supabase
-        .from('profiles')
-        .select('tokens_balance, xp, level, multiplier_active')
-        .eq('id', user.id)
-        .single()
-
     let newTokens = profile?.tokens_balance ?? 0
     let newXp = profile?.xp ?? 0
     let newLevel = profile?.level ?? 1
     let leveledUp = false
 
-    if (profile) {
-        // Apply focus multiplier if active
-        if (profile.multiplier_active) {
-            tokenReward = tokenReward * 2
-        }
-        newTokens += tokenReward
+    const baseXp = task.priority > 0 ? (task.priority * 10 + 10) : 0
+    let xpReward = isFullFocus ? baseXp * 2 : baseXp
+    if (effectiveCatalyst) {
+        xpReward = xpReward * 2
+    }
 
-        // Calculate XP reward
-        const baseXp = task.priority > 0 ? (task.priority * 10 + 10) : 0
-        let xpReward = isFullFocus ? baseXp * 2 : baseXp
-        if (isCatalystActive) {
-            xpReward = xpReward * 2
-        }
+    if (profile) {
+        newTokens += tokenReward
         newXp += xpReward
 
         let xpNeeded = newLevel * 100
@@ -691,7 +705,7 @@ export async function completeTaskFocusMode(taskId: string, isFullFocus: boolean
     return { 
         success: true, 
         tokensAwarded: tokenReward, 
-        xpAwarded: isFullFocus ? (task.priority * 10 + 10) * (isCatalystActive ? 4 : 2) : (task.priority * 10 + 10) * (isCatalystActive ? 2 : 1),
+        xpAwarded: xpReward,
         leveledUp,
         newLevel
     }
@@ -826,10 +840,16 @@ export async function sendSocraticMessage(
     // No gem gate or deduction - AI features are free!
 
     const { data: task } = await supabase
-        .from('tasks').select('title, subject, priority, goal_id').eq('id', taskId).single()
+        .from('tasks')
+        .select('title, subject, priority, goal_id')
+        .eq('id', taskId)
+        .eq('user_id', user.id)
+        .single()
 
-    const { data: goal } = task?.goal_id
-        ? await supabase.from('learning_goals').select('title, plan_metadata').eq('id', task.goal_id).single()
+    if (!task) return { error: 'Task not found' }
+
+    const { data: goal } = task.goal_id
+        ? await supabase.from('learning_goals').select('title, plan_metadata').eq('id', task.goal_id).eq('user_id', user.id).single()
         : { data: null }
 
     const language = (goal?.plan_metadata as any)?.language || 'en'
@@ -887,16 +907,17 @@ Respond now:`
 
 
 
-export async function deletePlan() {
+export async function deletePlan(goalId?: string) {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return { error: 'Not authenticated' }
 
-    // This will cascade delete tasks because of the DB foreign key constraint
-    const { error } = await supabase
-        .from('learning_goals')
-        .delete()
-        .eq('user_id', user.id)
+    let query = supabase.from('learning_goals').delete().eq('user_id', user.id)
+    if (goalId) {
+        query = query.eq('id', goalId)
+    }
+
+    const { error } = await query
 
     if (error) return { error: error.message }
 
@@ -913,7 +934,7 @@ export async function checkRescheduleTier(goalId: string) {
     if (!user) return { error: 'Not authenticated' }
 
     const [{ data: goal }, { data: profile }] = await Promise.all([
-        supabase.from('learning_goals').select('*').eq('id', goalId).single(),
+        supabase.from('learning_goals').select('*').eq('id', goalId).eq('user_id', user.id).single(),
         supabase.from('profiles').select('*').eq('id', user.id).single()
     ])
 
@@ -925,6 +946,7 @@ export async function checkRescheduleTier(goalId: string) {
         .from('tasks')
         .select('*')
         .eq('goal_id', goalId)
+        .eq('user_id', user.id)
         .gte('due_date', todayStr)
         .order('due_date', { ascending: true })
 
@@ -954,7 +976,7 @@ export async function processPivot(goalId: string) {
 
     // 1. Fetch State (Goal, Profile)
     const [{ data: goal }, { data: profile }] = await Promise.all([
-        supabase.from('learning_goals').select('*').eq('id', goalId).single(),
+        supabase.from('learning_goals').select('*').eq('id', goalId).eq('user_id', user.id).single(),
         supabase.from('profiles').select('*').eq('id', user.id).single()
     ]);
 
@@ -966,6 +988,7 @@ export async function processPivot(goalId: string) {
         .from('tasks')
         .select('id')
         .eq('goal_id', goalId)
+        .eq('user_id', user.id)
         .eq('status', 'pending')
         .lt('due_date', todayStr);
 
@@ -1013,10 +1036,11 @@ async function executeAICrunch(goalId: string, userId: string) {
         .from('tasks')
         .select('*')
         .eq('goal_id', goalId)
+        .eq('user_id', userId)
         .eq('status', 'pending')
         .order('due_date', { ascending: true });
 
-    const { data: goal } = await supabase.from('learning_goals').select('*').eq('id', goalId).single();
+    const { data: goal } = await supabase.from('learning_goals').select('*').eq('id', goalId).eq('user_id', userId).single();
     if (!allTasks || !goal) return { success: false };
 
     const language = (goal.plan_metadata as any)?.language || 'en';
@@ -1055,7 +1079,7 @@ async function executeAICrunch(goalId: string, userId: string) {
         const compressed = cleanAndParseJSON(responseText, [] as any[]);
 
         // Delete old pending tasks and insert new ones
-        await supabase.from('tasks').delete().eq('goal_id', goalId).eq('status', 'pending');
+        await supabase.from('tasks').delete().eq('goal_id', goalId).eq('user_id', userId).eq('status', 'pending');
 
         const tasksToInsert = compressed.map((t: any) => ({
             goal_id: goalId,
@@ -1070,9 +1094,9 @@ async function executeAICrunch(goalId: string, userId: string) {
         await supabase.from('tasks').insert(tasksToInsert);
 
         // Update Goal Metadata to reflect Crunch Mode
-        const { data: currentGoal } = await supabase.from('learning_goals').select('plan_metadata').eq('id', goalId).single();
+        const { data: currentGoal } = await supabase.from('learning_goals').select('plan_metadata').eq('id', goalId).eq('user_id', userId).single();
         const updatedMetadata = { ...(currentGoal?.plan_metadata as any || {}), is_crunch_mode: true };
-        await supabase.from('learning_goals').update({ plan_metadata: updatedMetadata }).eq('id', goalId);
+        await supabase.from('learning_goals').update({ plan_metadata: updatedMetadata }).eq('id', goalId).eq('user_id', userId);
 
         PIVOT_TRACE.log('TIER_2', 'AI Crunch Complete');
         return { success: true };
@@ -1091,6 +1115,7 @@ async function executeAvalanche(goalId: string, userId: string) {
         .from('tasks')
         .select('*')
         .eq('goal_id', goalId)
+        .eq('user_id', userId)
         .eq('status', 'pending')
         .lt('due_date', todayStr);
 
@@ -1103,7 +1128,8 @@ async function executeAvalanche(goalId: string, userId: string) {
         await supabase
             .from('tasks')
             .update({ due_date: todayStr, pivoted_count: maxPivotedCount + 1 })
-            .in('id', overdueIds);
+            .in('id', overdueIds)
+            .eq('user_id', userId);
     }
     PIVOT_TRACE.log('TIER_3', 'Avalanche Complete. Tasks stacked on today.');
 }
@@ -1308,6 +1334,7 @@ export async function submitActiveRecallAnswer(taskId: string, answer: string, p
                         xp: newXp,
                         level: newLevel
                     })
+                    .eq('id', user.id)
                 revalidatePath('/', 'layout')
                 return { 
                     feedback: evaluation.feedback, 
@@ -1545,6 +1572,9 @@ export async function verifyShopPurchase(
 }
 
 export async function purchaseCustomization(cost: number, itemName: string) {
+    if (typeof cost !== 'number' || isNaN(cost) || !isFinite(cost) || cost <= 0) {
+        return { error: 'Invalid cost amount' }
+    }
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return { error: 'Not authenticated' }
@@ -1569,6 +1599,9 @@ export async function purchaseCustomization(cost: number, itemName: string) {
 }
 
 export async function claimAchievementReward(xpReward: number, tokenReward: number, achievementTitle: string) {
+    if (typeof xpReward !== 'number' || isNaN(xpReward) || xpReward < 0 || typeof tokenReward !== 'number' || isNaN(tokenReward) || tokenReward < 0) {
+        return { error: 'Invalid reward values' }
+    }
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return { error: 'Not authenticated' }
@@ -1687,7 +1720,10 @@ export async function startCheckpointBattle(goalId: string, wallDate: string) {
         .from('learning_goals')
         .select('title, plan_metadata')
         .eq('id', goalId)
+        .eq('user_id', user.id)
         .single()
+
+    if (!goal) return { error: 'Goal not found' }
 
     const language = (goal?.plan_metadata as any)?.language || 'en'
 
@@ -1695,6 +1731,7 @@ export async function startCheckpointBattle(goalId: string, wallDate: string) {
         .from('tasks')
         .select('title, subject')
         .eq('goal_id', goalId)
+        .eq('user_id', user.id)
         .eq('status', 'completed')
         .lte('due_date', wallDate)
         .limit(10)
@@ -1842,16 +1879,18 @@ export async function resolveCheckpointBattle(goalId: string, wallDate: string, 
 
     if (rating === 'Pass') {
         const metadata = (goal.plan_metadata as any) || {}
-        const completed = metadata.completed_checkpoint_battles || []
-        if (!completed.includes(wallDate)) {
-            completed.push(wallDate)
+        const completed: string[] = metadata.completed_checkpoint_battles || []
+        if (completed.includes(wallDate)) {
+            return { success: true, message: 'Checkpoint battle already completed.' }
         }
+        completed.push(wallDate)
         metadata.completed_checkpoint_battles = completed
 
         await supabase
             .from('learning_goals')
             .update({ plan_metadata: metadata })
             .eq('id', goalId)
+            .eq('user_id', user.id)
 
         const { data: profile } = await supabase
             .from('profiles')

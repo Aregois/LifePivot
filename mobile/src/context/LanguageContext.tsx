@@ -43,7 +43,15 @@ function flattenDict(obj: Record<string, any>, prefix = '', target: Record<strin
   for (const key of Object.keys(obj)) {
     const val = obj[key];
     const path = prefix ? `${prefix}.${key}` : key;
-    if (val && typeof val === 'object' && !Array.isArray(val)) {
+    if (Array.isArray(val)) {
+      val.forEach((item, index) => {
+        if (item && typeof item === 'object') {
+          flattenDict(item, `${path}.${index}`, target);
+        } else if (typeof item === 'string') {
+          target[`${path}.${index}`] = item;
+        }
+      });
+    } else if (val && typeof val === 'object') {
       flattenDict(val, path, target);
     } else if (typeof val === 'string') {
       target[path] = val;
@@ -138,7 +146,7 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       try {
         let initialLocale: SupportedLocale = 'en';
 
-        // 1. Check SecureStore
+        // 1. Check SecureStore first
         const saved = await SecureStore.getItemAsync(SECURE_STORE_KEY);
         if (saved && localeLoaders[saved as SupportedLocale]) {
           initialLocale = saved as SupportedLocale;
@@ -149,24 +157,24 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           if (deviceCode && localeLoaders[deviceCode as SupportedLocale]) {
             initialLocale = deviceCode as SupportedLocale;
           }
-        }
 
-        // 3. Fallback: Check Supabase Profile
-        try {
-          const { data: { user } } = await supabase.auth.getUser();
-          if (user) {
-            const { data } = await supabase
-              .from('profiles')
-              .select('language')
-              .eq('id', user.id)
-              .single();
+          // 3. Fallback: Check Supabase Profile only if not found in SecureStore
+          try {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (user) {
+              const { data } = await supabase
+                .from('profiles')
+                .select('language')
+                .eq('id', user.id)
+                .single();
 
-            if (data?.language && localeLoaders[data.language as SupportedLocale]) {
-              initialLocale = data.language as SupportedLocale;
+              if (data?.language && localeLoaders[data.language as SupportedLocale]) {
+                initialLocale = data.language as SupportedLocale;
+              }
             }
+          } catch {
+            // Non-blocking network check
           }
-        } catch {
-          // Non-blocking network check
         }
 
         if (initialLocale !== 'en') {
@@ -208,6 +216,22 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             .from('profiles')
             .update({ language: newLocale })
             .eq('id', user.id);
+
+          // Synchronize active learning goals plan_metadata language for AI prompts
+          const { data: goals } = await supabase
+            .from('learning_goals')
+            .select('id, plan_metadata')
+            .eq('user_id', user.id);
+
+          if (goals && goals.length > 0) {
+            for (const goal of goals) {
+              const currentMeta = (goal.plan_metadata as any) || {};
+              await supabase
+                .from('learning_goals')
+                .update({ plan_metadata: { ...currentMeta, language: newLocale } })
+                .eq('id', goal.id);
+            }
+          }
         }
       } catch (err) {
         console.warn('[LanguageContext] Error saving locale preference:', err);
@@ -246,7 +270,12 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
       // Standard translation lookup (direct O(1) map read)
       if (!rawString) {
-        rawString = activeDict[path] || baseDict[path] || String(path);
+        rawString = activeDict[path] || baseDict[path];
+      }
+
+      // Return empty string if not found so `t('key') || 'Fallback'` works
+      if (!rawString) {
+        return '';
       }
 
       return interpolate(rawString, params);

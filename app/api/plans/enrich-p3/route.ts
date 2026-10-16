@@ -1,4 +1,4 @@
-﻿import { verifyUserSession } from '@/utils/auth'
+import { verifyUserSession } from '@/utils/auth'
 import { createClient } from '@/utils/supabase/server'
 import { textModel } from '@/utils/gemini'
 import { NextResponse } from 'next/server'
@@ -25,11 +25,12 @@ export async function POST(request: Request) {
 
         const supabase = await createClient()
 
-        // Fetch all P3 tasks for this plan
+        // Fetch all P3 tasks for this plan owned by this user
         const { data: tasks, error: fetchError } = await supabase
             .from('tasks')
             .select('id, title')
             .eq('goal_id', planId)
+            .eq('user_id', user.id)
             .eq('priority', 3)
 
         if (fetchError) {
@@ -114,6 +115,7 @@ export async function POST(request: Request) {
                 .from('tasks')
                 .update({ subtasks: finalSubtasks })
                 .eq('id', task.id)
+                .eq('user_id', user.id)
         })
 
         await Promise.all(updatePromises)

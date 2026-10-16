@@ -32,18 +32,28 @@ export async function extractTextContent(
     // 3. Word Document (.docx)
     if (
       normalizedMime === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
-      normalizedMime === 'application/msword'
+      (normalizedMime === 'application/msword' && fileName.toLowerCase().endsWith('.docx'))
     ) {
       const result = await mammoth.extractRawText({ buffer })
       return result.value || ''
     }
 
+    if (normalizedMime === 'application/msword' || fileName.toLowerCase().endsWith('.doc')) {
+      console.warn(`Legacy binary .doc format is not supported for text extraction: ${fileName}. Please convert to .docx.`)
+      return null
+    }
+
     // 4. PowerPoint (.pptx)
     if (
       normalizedMime === 'application/vnd.openxmlformats-officedocument.presentationml.presentation' ||
-      normalizedMime === 'application/vnd.ms-powerpoint'
+      (normalizedMime === 'application/vnd.ms-powerpoint' && fileName.toLowerCase().endsWith('.pptx'))
     ) {
       return extractTextFromPptx(buffer)
+    }
+
+    if (normalizedMime === 'application/vnd.ms-powerpoint' || fileName.toLowerCase().endsWith('.ppt')) {
+      console.warn(`Legacy binary .ppt format is not supported for text extraction: ${fileName}. Please convert to .pptx.`)
+      return null
     }
 
     // 5. Images (JPEG/PNG) via Gemini Vision

@@ -1,11 +1,9 @@
-﻿import Stripe from 'stripe'
+import Stripe from 'stripe'
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient as createSupabaseAdmin } from '@supabase/supabase-js'
 
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || 'sk_test_dummy', {
-    apiVersion: '2026-06-24.dahlia',
-})
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || 'sk_test_dummy')
 
 // Service-role client — bypasses RLS, safe only on the server
 function adminSupabase() {
@@ -142,11 +140,11 @@ export async function POST(request: NextRequest) {
                     return NextResponse.json({ received: true })
                 }
 
-                const status = sub.status // 'active' | 'past_due' | 'canceled' | 'unpaid' etc.
-                const isActive = status === 'active'
+                const status = sub.status // 'active' | 'trialing' | 'past_due' | 'canceled' | 'unpaid' etc.
+                const isActive = status === 'active' || status === 'trialing'
                 await supabase.from('profiles').update({
                     is_subscribed: isActive,
-                    subscription_status: ['active', 'past_due', 'canceled', 'inactive'].includes(status)
+                    subscription_status: ['active', 'trialing', 'past_due', 'canceled', 'inactive'].includes(status)
                         ? status
                         : 'inactive',
                 }).eq('id', userId)
@@ -178,8 +176,9 @@ export async function POST(request: NextRequest) {
         }
     } catch (err: any) {
         console.error(`[webhook] Handler error for ${event.type}:`, err)
-        // Return 200 regardless — we've already logged the idempotency record
-        // so Stripe won't retry. Better to log and move on than get into retry loops.
+        // Clean up idempotency row so Stripe retries the failed event
+        await supabase.from('processed_stripe_events').delete().eq('event_id', event.id)
+        return NextResponse.json({ error: 'Webhook handler failed' }, { status: 500 })
     }
 
     return NextResponse.json({ received: true })

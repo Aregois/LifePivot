@@ -239,7 +239,7 @@ export const SocraticChatModal: React.FC<SocraticChatModalProps> = ({
                     <View style={styles.headerTitleRow}>
                       <Ionicons name="sparkles" size={14} color={colors.primary} />
                       <Text style={[styles.headerSubtitle, { color: colors.primary }]}>
-                        SOCRATIC AI TUTOR
+                        {t('tutor.title') || 'SOCRATIC AI TUTOR'}
                       </Text>
                     </View>
                     <Text style={styles.taskTitleText} numberOfLines={1}>
@@ -388,7 +388,7 @@ export const SocraticChatModal: React.FC<SocraticChatModalProps> = ({
                       <View style={[styles.bubble, styles.bubbleModel, styles.typingBubble]}>
                         <ActivityIndicator size="small" color={colors.primary} />
                         <Text style={[styles.typingText, { color: colors.primary }]}>
-                          {currentPersonaInfo.label} is formulating guidance...
+                          {t('focus.tutor_thinking') || `${currentPersonaInfo.label} is formulating guidance...`}
                         </Text>
                       </View>
                     </View>
@@ -419,7 +419,7 @@ export const SocraticChatModal: React.FC<SocraticChatModalProps> = ({
                 <View style={styles.inputRow}>
                   <TextInput
                     style={styles.textInput}
-                    placeholder={`Ask ${currentPersonaInfo.label} about this task...`}
+                    placeholder={t('tutor.placeholder') || `Ask ${currentPersonaInfo.label} about this task...`}
                     placeholderTextColor={colors.placeholder}
                     value={inputText}
                     onChangeText={setInputText}

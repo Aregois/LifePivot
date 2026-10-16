@@ -206,9 +206,9 @@ export const PivotRecoveryModal: React.FC<PivotRecoveryModalProps> = ({
             <Ionicons name="close" size={24} color="#FFFFFF" />
           </TouchableOpacity>
           <View style={styles.headerTitleContainer}>
-            <Text style={[styles.headerSubtitle, { color: colors.primary }]}>PLAN RECOVERY ENGINE</Text>
+            <Text style={[styles.headerSubtitle, { color: colors.primary }]}>{t('missed_session.deploy_engine') || 'PLAN RECOVERY ENGINE'}</Text>
             <Text numberOfLines={1} style={styles.headerTitle}>
-              3-TIER PIVOT RESCHEDULE
+              {t('missed_session.interrupted') || '3-TIER PIVOT RESCHEDULE'}
             </Text>
           </View>
           <View style={[styles.tokenHeaderBadge, { borderColor: `${colors.amber}44`, backgroundColor: `${colors.amber}18` }]}>
@@ -221,9 +221,9 @@ export const PivotRecoveryModal: React.FC<PivotRecoveryModalProps> = ({
           {/* Overdue Warning Card */}
           <GlassCard elevated style={[styles.warningCard, { borderColor: colors.glassBorder }]}>
             <Ionicons name="warning-outline" size={36} color={colors.amber} />
-            <Text style={styles.warningTitle}>TIMELINE FRACTURE DETECTED</Text>
+            <Text style={styles.warningTitle}>{t('missed_session.disruption') || 'TIMELINE FRACTURE DETECTED'}</Text>
             <Text style={styles.warningSub}>
-              You have {overdueCount} overdue task(s). Execute a Pivot to re-align your daily study schedule using your earned tokens.
+              {t('missed_session.welcome_desc') || `You have ${overdueCount} overdue task(s). Execute a Pivot to re-align your daily study schedule using your earned tokens.`}
             </Text>
 
             {hasStreakShield && (
@@ -243,16 +243,16 @@ export const PivotRecoveryModal: React.FC<PivotRecoveryModalProps> = ({
                   <Text style={[styles.tierNumText, { color: colors.primary }]}>T1</Text>
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.tierTitle}>THE SHIFT</Text>
-                  <Text style={styles.tierSub}>Push schedule forward into future Void Days</Text>
+                  <Text style={styles.tierTitle}>{t('missed_session.tier1_title') || 'THE SHIFT'}</Text>
+                  <Text style={styles.tierSub}>{t('missed_session.tier1_desc') || 'Push schedule forward into future Void Days'}</Text>
                 </View>
-                <GlowBadge label="0 TOKENS" colorScheme="blue" />
+                <GlowBadge label={t('missed_session.pivot_free') || '0 TOKENS'} colorScheme="blue" />
               </View>
               <Text style={styles.tierDetailText}>
                 ✦ Free (0 Tokens) · Shifts tasks into scheduled rest days without compressing topic coverage.
               </Text>
               <PremiumButton
-                title="EXECUTE TIER 1 SHIFT (FREE)"
+                title={t('missed_session.initiate_realignment') || 'EXECUTE TIER 1 SHIFT (FREE)'}
                 onPress={() => handleExecutePivot(1)}
                 loading={loading && selectedTier === 1}
                 disabled={loading}
@@ -268,8 +268,8 @@ export const PivotRecoveryModal: React.FC<PivotRecoveryModalProps> = ({
                   <Text style={[styles.tierNumText, { color: colors.amber }]}>T2</Text>
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.tierTitle}>THE CRUNCH</Text>
-                  <Text style={styles.tierSub}>Compress & absorb into adjacent study days</Text>
+                  <Text style={styles.tierTitle}>{t('missed_session.tier2_title') || 'THE CRUNCH'}</Text>
+                  <Text style={styles.tierSub}>{t('missed_session.tier2_desc') || 'Compress & absorb into adjacent study days'}</Text>
                 </View>
                 <GlowBadge label="10 TOKENS" colorScheme="amber" glow />
               </View>
@@ -293,16 +293,16 @@ export const PivotRecoveryModal: React.FC<PivotRecoveryModalProps> = ({
                   <Text style={[styles.tierNumText, { color: colors.rose }]}>T3</Text>
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.tierTitle}>THE AVALANCHE</Text>
-                  <Text style={styles.tierSub}>Collapse debt & consolidate all items onto Today</Text>
+                  <Text style={styles.tierTitle}>{t('missed_session.tier3_title') || 'THE AVALANCHE'}</Text>
+                  <Text style={styles.tierSub}>{t('missed_session.tier3_desc') || 'Collapse debt & consolidate all items onto Today'}</Text>
                 </View>
-                <GlowBadge label="0 TOKENS" colorScheme="violet" />
+                <GlowBadge label={t('missed_session.pivot_free') || '0 TOKENS'} colorScheme="violet" />
               </View>
               <Text style={styles.tierDetailText}>
                 ✦ Free (0 Tokens) · Emergency fallback that collapses all overdue tasks directly onto Today for immediate catch-up.
               </Text>
               <PremiumButton
-                title="EXECUTE AVALANCHE DUMP (FREE)"
+                title={t('missed_session.accept_debt') || 'EXECUTE AVALANCHE DUMP (FREE)'}
                 onPress={() => handleExecutePivot(3)}
                 loading={loading && selectedTier === 3}
                 disabled={loading}

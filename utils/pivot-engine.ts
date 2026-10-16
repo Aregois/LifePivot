@@ -13,7 +13,7 @@ export async function evaluatePivot(userId: string) {
     // 1. Fetch user's profile
     const { data: profile } = await supabase
         .from('profiles')
-        .select('lives, last_pivot_check, streak_shields_count, current_streak, high_streak')
+        .select('last_pivot_check, streak_shields_count, current_streak, high_streak')
         .eq('id', userId)
         .single()
 

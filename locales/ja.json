@@ -42,7 +42,9 @@
     "tutor": "教師",
     "open_tutor": "ソクラテス式教師を開く",
     "cohorts": "コホート",
-    "marketplace": "マーケットプレイス"
+    "marketplace": "マーケットプレイス",
+    "today": "今日",
+    "plans": "マイスケジュール"
   },
   "hud": {
     "level": "Lv",
@@ -219,7 +221,8 @@
     "equip_unlocked_title": "解除した称号を装備",
     "equip_unlocked_frame": "解除したフレームを装備",
     "select_profile_avatar": "アバターを選択",
-    "streak": "連続日数"
+    "streak": "連続日数",
+    "utilities": "ユーティリティ"
   },
   "shop": {
     "wallet": "お財布",
@@ -337,7 +340,20 @@
     },
     "tokens_balance": "トークン残高",
     "token_store": "トークンストア",
-    "buy_tokens": "トークンを購入"
+    "buy_tokens": "トークンを購入",
+    "purchased_success": "購入成功：{name} を獲得しました！",
+    "unlocked_success": "開放成功：{name} を装備しました！",
+    "not_enough_gems": "ジェムが不足しています。あと {count} 個必要です。",
+    "purchase_failed_error": "取引失敗：{error}",
+    "wager_insufficient_gems": "継続ベットを行うためのジェムが不足しています。",
+    "wager_success_placed": "継続ベット完了！{amount} ジェムを賭けて {target} 日の継続を目指します。",
+    "wager_reward_claimed": "継続ベット報酬を獲得しました！+{amount} ジェムが財布に追加されました。",
+    "hearts_full": "ライフはすでに最大です！",
+    "multiplier_active": "フォーカスカタリストはすでにアクティブです！",
+    "shields_full": "継続シールドはすでに最大容量です！",
+    "streak_active": "継続記録は有効です。修復の必要はありません。",
+    "no_repair": "修復可能な破損した継続はありません。",
+    "purchase_failed": "購入に失敗しました。再試行してください。"
   },
   "circadian": {
     "celebration_title": "ブースター発動！",
@@ -448,7 +464,8 @@
     "todays_agenda": "本日のタスク ({count}件)",
     "all_dates_title": "すべての日程",
     "all_dates_count": "合計 {count} 件のタスク",
-    "yesterday": "昨日"
+    "yesterday": "昨日",
+    "void_day": "ボイドデイ"
   },
   "socratic": {
     "milestone_checkpoint": "関門チェックポイント",
@@ -497,7 +514,8 @@
     "next_question": "次の質問へ",
     "verify_answers": "回答を検証",
     "consulting_syllabus": "シラバスを調査中...",
-    "back": "戻る"
+    "back": "戻る",
+    "comprehension_passed": "理解度確認済み (+{xp} XP)"
   },
   "tutor": {
     "title": "ソクラテス式教師",
@@ -576,8 +594,8 @@
     "title_priority": "タスクの優先度 (P1〜P5)",
     "desc_priority": "計画は、軽い演習（P1）や概要（P2）から、深い理論（P5）まで交互に構成されます。高い優先度はより多くのXPとジェムを付与します。",
     "title_pivot": "3層の再調整エンジン (Pivot)",
-    "desc_pivot": "タスクを休んだ場合、エンジンが作動します。休息日を消費する「スライド」、ライフを1つ失って圧縮する「クランチ」、または「アバランチ」が実行されます。",
-    "title_circadian": "体内時計 multipliers",
+    "desc_pivot": "タスクに遅れが出た場合、エンジンがスケジュールを回復します。休息日を利用する「シフト」（0トークン）、日程を圧縮する「AIクランチ」（10トークン）、または「アバランチ」を実行できます。",
+    "title_circadian": "体内時計マルチプライヤー",
     "desc_circadian": "朝（6:00-11:00）または夜（18:00-22:00）に学習して鍵を獲得します。宝箱を開放して20分間の2倍ブースターを起動しよう。",
     "title_active_recall": "アクティブ想起とカード",
     "desc_active_recall": "完了時に学習内容を要約します。ソクラテスAIが要約を評価し、ライトナー方式の間隔反復フラッシュカードを生成します。",
@@ -731,7 +749,9 @@
     "live_progress_check": "進捗のリアルタイム確認",
     "comprehension_passed": "理解度確認に合格しました！マスター報酬がアンロックされました。",
     "focus_gems": "フォーカスジェム",
-    "evaluation_reflection": "暗記とリフレクション"
+    "evaluation_reflection": "暗記とリフレクション",
+    "reflection_tab": "振り返り",
+    "focus_minutes": "集中時間（分）"
   },
   "sidebar": {
     "upgrade": "PRO版にアップグレード"
@@ -769,7 +789,9 @@
   "calendar": {
     "view_all": "すべて表示",
     "yesterday": "昨日",
-    "tomorrow": "明日"
+    "tomorrow": "明日",
+    "title": "タイムスケジュールマトリックス",
+    "view_schedule_desc": "動的な学習曲線とタイムマイルストーンを確認します。"
   },
   "missed_session": {
     "restored": "スケジュールが復元されました",
@@ -990,7 +1012,16 @@
     "mins_one": "{count}分",
     "mins_other": "{count}分",
     "back": "戻る",
-    "where": "場所"
+    "where": "場所",
+    "error": "エラー",
+    "ready": "準備完了",
+    "done": "完了",
+    "skip": "スキップ",
+    "cancel": "キャンセル",
+    "confirm": "確認",
+    "save": "保存",
+    "loading": "読み込み中...",
+    "success": "成功"
   },
   "plan_import": {
     "title": "JSONプランのインポート",

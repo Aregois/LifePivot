@@ -32,8 +32,8 @@ export async function GET(request: NextRequest) {
         const { error } = await supabase.auth.exchangeCodeForSession(code)
 
         if (!error) {
-            // If an explicit ?next= was provided (e.g. password reset), honour it
-            if (next) {
+            // If an explicit ?next= was provided (e.g. password reset), honour it safely
+            if (next && next.startsWith('/') && !next.startsWith('//') && !next.includes('\\')) {
                 return NextResponse.redirect(`${origin}${next}`, {
                     headers: response.headers,
                 })

@@ -140,21 +140,8 @@ export default function ShopScreen() {
               Alert.alert('SHIELD EQUIPPED', res.message || 'Streak Shield equipped successfully!');
               fetchProfileData();
             } catch (err: any) {
-              // Client fallback
-              const { data: { user } } = await supabase.auth.getUser();
-              if (user) {
-                await supabase
-                  .from('profiles')
-                  .update({
-                    tokens_balance: tokens - 15,
-                    streak_shields_count: streakShields + 1,
-                  })
-                  .eq('id', user.id);
-                setTokens(tokens - 15);
-                setStreakShields(streakShields + 1);
-                Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-                Alert.alert('SHIELD EQUIPPED', 'Streak Shield successfully activated!');
-              }
+              Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+              Alert.alert('PURCHASE FAILED', err.message || 'Could not equip Streak Shield. Please try again.');
             } finally {
               setPurchasingItem(null);
             }
@@ -233,20 +220,8 @@ export default function ShopScreen() {
               Alert.alert('STREAK REPAIRED', res.message || `Streak restored to ${highStreak} days!`);
               fetchProfileData();
             } catch (err: any) {
-              const { data: { user } } = await supabase.auth.getUser();
-              if (user) {
-                await supabase
-                  .from('profiles')
-                  .update({
-                    tokens_balance: tokens - 30,
-                    current_streak: highStreak,
-                  })
-                  .eq('id', user.id);
-                setTokens(tokens - 30);
-                setCurrentStreak(highStreak);
-                Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-                Alert.alert('STREAK REPAIRED', `Streak restored to ${highStreak} days!`);
-              }
+              Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+              Alert.alert('REPAIR FAILED', err.message || 'Could not repair streak. Please try again.');
             } finally {
               setPurchasingItem(null);
             }
@@ -289,20 +264,8 @@ export default function ShopScreen() {
               Alert.alert('MULTIPLIER ACTIVE', res.message || 'Focus Multiplier activated for your next session!');
               fetchProfileData();
             } catch (err: any) {
-              const { data: { user } } = await supabase.auth.getUser();
-              if (user) {
-                await supabase
-                  .from('profiles')
-                  .update({
-                    tokens_balance: tokens - 15,
-                    multiplier_active: true,
-                  })
-                  .eq('id', user.id);
-                setTokens(tokens - 15);
-                setMultiplierActive(true);
-                Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-                Alert.alert('MULTIPLIER ACTIVE', 'Focus Multiplier activated for your next session!');
-              }
+              Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+              Alert.alert('ACTIVATION FAILED', err.message || 'Could not activate Focus Multiplier. Please try again.');
             } finally {
               setPurchasingItem(null);
             }

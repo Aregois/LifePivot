@@ -42,7 +42,9 @@
     "tutor": "Tutor",
     "open_tutor": "Open Socratic Tutor",
     "cohorts": "Cohorts",
-    "marketplace": "Marketplace"
+    "marketplace": "Marketplace",
+    "today": "Today",
+    "plans": "My Plans"
   },
   "hud": {
     "level": "Lvl",
@@ -219,7 +221,8 @@
     "equip_unlocked_title": "Equip Unlocked Title",
     "equip_unlocked_frame": "Equip Unlocked Avatar Frame",
     "select_profile_avatar": "Select Profile Avatar",
-    "streak": "Streak"
+    "streak": "Streak",
+    "utilities": "Utilities"
   },
   "shop": {
     "wallet": "Your Wallet",
@@ -337,7 +340,20 @@
     },
     "tokens_balance": "Tokens Balance",
     "token_store": "Token Store",
-    "buy_tokens": "Buy Tokens"
+    "buy_tokens": "Buy Tokens",
+    "purchased_success": "Purchase successful: {name} obtained!",
+    "unlocked_success": "Unlock successful: {name} equipped!",
+    "not_enough_gems": "Insufficient Gems. Need {count} more.",
+    "purchase_failed_error": "Transaction failed: {error}",
+    "wager_insufficient_gems": "Insufficient gems to place streak wager.",
+    "wager_success_placed": "Streak wager placed! Bet {amount} gems to reach {target} days.",
+    "wager_reward_claimed": "Streak wager reward claimed! +{amount} gems added to wallet.",
+    "hearts_full": "Lives are already full!",
+    "multiplier_active": "Focus Catalyst boost is already active!",
+    "shields_full": "Streak Shields are already at maximum capacity!",
+    "streak_active": "Daily streak is active. Repair not required.",
+    "no_repair": "No streak available to repair.",
+    "purchase_failed": "Purchase failed. Try again."
   },
   "circadian": {
     "celebration_title": "Booster Activated!",
@@ -448,7 +464,8 @@
     "todays_agenda": "Today's Agenda ({count} tasks)",
     "all_dates_title": "ALL CURRICULUM DATES",
     "all_dates_count": "{count} total tasks",
-    "yesterday": "YESTERDAY"
+    "yesterday": "YESTERDAY",
+    "void_day": "Void Day"
   },
   "socratic": {
     "milestone_checkpoint": "Milestone Checkpoint",
@@ -497,7 +514,8 @@
     "next_question": "Next Question",
     "verify_answers": "Verify Answers",
     "consulting_syllabus": "Consulting completed syllabus...",
-    "back": "Back"
+    "back": "Back",
+    "comprehension_passed": "Comprehension Verified (+{xp} XP)"
   },
   "tutor": {
     "title": "Socratic Tutor",
@@ -732,7 +750,8 @@
     "live_progress_check": "Live Progress Check",
     "comprehension_passed": "Comprehension verification passed! Mastery rewards unlocked.",
     "focus_gems": "Focus Gems",
-    "evaluation_reflection": "Evaluation & Reflection"
+    "evaluation_reflection": "Evaluation & Reflection",
+    "focus_minutes": "FOCUS MINUTES"
   },
   "sidebar": {
     "upgrade": "UPGRADE TO PRO"
@@ -770,7 +789,9 @@
   "calendar": {
     "view_all": "View All",
     "yesterday": "YESTERDAY",
-    "tomorrow": "TOMORROW"
+    "tomorrow": "TOMORROW",
+    "title": "Temporal Schedule Matrix",
+    "view_schedule_desc": "Inspect dynamic learning curves and temporal milestones."
   },
   "missed_session": {
     "restored": "Schedule Restored",
@@ -991,7 +1012,16 @@
     "mins_one": "{count} MIN",
     "mins_other": "{count} MINS",
     "back": "Back",
-    "where": "Where"
+    "where": "Where",
+    "error": "Error",
+    "ready": "Ready",
+    "done": "Done",
+    "skip": "Skip",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "save": "Save",
+    "loading": "Loading...",
+    "success": "Success"
   },
   "plan_import": {
     "title": "Import JSON Plan",

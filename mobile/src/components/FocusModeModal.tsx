@@ -11,6 +11,7 @@ import {
   StyleSheet,
   ActivityIndicator,
   Alert,
+  AppState,
 } from 'react-native';
 import { storage as SecureStore } from '../utils/storage';
 import { Ionicons } from '@expo/vector-icons';
@@ -99,6 +100,7 @@ export const FocusModeModal: React.FC<FocusModeModalProps> = ({
   const [timerRunning, setTimerRunning] = useState(false);
   const [showCustomInput, setShowCustomInput] = useState(false);
   const [customInputText, setCustomInputText] = useState('');
+  const endTimeRef = useRef<number | null>(null);
 
   // Subtasks state
   const [subtasks, setSubtasks] = useState<SubtaskItem[]>(initialSubtasks);
@@ -123,6 +125,7 @@ export const FocusModeModal: React.FC<FocusModeModalProps> = ({
       setTotalSeconds(mins * 60);
       setSecondsRemaining(mins * 60);
       setTimerRunning(false);
+      endTimeRef.current = null;
       setShowCustomInput(false);
       setCustomInputText('');
       setActiveTab('timer');
@@ -187,33 +190,49 @@ export const FocusModeModal: React.FC<FocusModeModalProps> = ({
     opacity: breathingOpacity.value,
   }));
 
-  // Main countdown timer
+  // Wall-clock countdown timer with AppState background/foreground synchronization
   useEffect(() => {
     let interval: ReturnType<typeof setInterval> | null = null;
 
-    if (timerRunning && secondsRemaining > 0) {
-      interval = setInterval(() => {
-        setSecondsRemaining((prev) => {
-          if (prev <= 1) {
-            return 0;
-          }
-          if (prev <= 4 && prev > 1) {
-            HapticsEngine.tier1.tick();
-          }
-          return prev - 1;
-        });
-      }, 1000);
-    }
+    if (timerRunning) {
+      if (!endTimeRef.current) {
+        endTimeRef.current = Date.now() + secondsRemaining * 1000;
+      }
 
-    return () => {
-      if (interval) clearInterval(interval);
-    };
-  }, [timerRunning, secondsRemaining]);
+      const updateRemaining = () => {
+        if (!endTimeRef.current) return;
+        const left = Math.max(0, Math.round((endTimeRef.current - Date.now()) / 1000));
+        if (left <= 4 && left > 0) {
+          HapticsEngine.tier1.tick();
+        }
+        setSecondsRemaining(left);
+        if (left === 0) {
+          endTimeRef.current = null;
+        }
+      };
+
+      interval = setInterval(updateRemaining, 1000);
+
+      const appStateSub = AppState.addEventListener('change', (nextState) => {
+        if (nextState === 'active') {
+          updateRemaining();
+        }
+      });
+
+      return () => {
+        if (interval) clearInterval(interval);
+        appStateSub.remove();
+      };
+    } else {
+      endTimeRef.current = null;
+    }
+  }, [timerRunning]);
 
   // Handle timer completion
   useEffect(() => {
     if (timerRunning && secondsRemaining === 0) {
       setTimerRunning(false);
+      endTimeRef.current = null;
       HapticsEngine.tier3.celebrate();
       const elapsedMinutes = Math.max(1, Math.round((totalSeconds - secondsRemaining) / 60));
       if (onCompleteSession) {
@@ -228,17 +247,27 @@ export const FocusModeModal: React.FC<FocusModeModalProps> = ({
 
   const handleStartPause = () => {
     HapticsEngine.tier2.toggle();
-    setTimerRunning((prev) => !prev);
+    setTimerRunning((prev) => {
+      const next = !prev;
+      if (next) {
+        endTimeRef.current = Date.now() + secondsRemaining * 1000;
+      } else {
+        endTimeRef.current = null;
+      }
+      return next;
+    });
   };
 
   const handleReset = () => {
     HapticsEngine.tier1.light();
     setTimerRunning(false);
+    endTimeRef.current = null;
     setSecondsRemaining(totalSeconds);
   };
 
   const handleSelectPreset = (mins: number) => {
     HapticsEngine.tier1.selection();
+    endTimeRef.current = null;
     setSelectedMinutes(mins);
     setTotalSeconds(mins * 60);
     setSecondsRemaining(mins * 60);

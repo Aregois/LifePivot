@@ -29,23 +29,37 @@ export async function POST(request: Request) {
         const { passed, results, correctCount = 0, totalCount = 3 } = verifyResult
         const supabase = await createClient()
 
+        // Fetch task to check ownership and whether it is already completed
+        const { data: task } = await supabase
+            .from('tasks')
+            .select('status')
+            .eq('id', taskId)
+            .eq('user_id', user.id)
+            .single()
+
+        if (!task) {
+            return NextResponse.json({ error: 'Task not found' }, { status: 404 })
+        }
+
+        const isAlreadyCompleted = task.status === 'completed'
+
         // Calculate rewards: +50 base XP + 20 per correct answer. 3/3 gets 110 XP + 15 tokens; otherwise 5 tokens if score > 0
-        const rewardXp = 50 + correctCount * 20
-        const rewardTokens = correctCount === totalCount ? 15 : (correctCount > 0 ? 5 : 0)
+        const rewardXp = isAlreadyCompleted ? 0 : (50 + correctCount * 20)
+        const rewardTokens = isAlreadyCompleted ? 0 : (correctCount === totalCount ? 15 : (correctCount > 0 ? 5 : 0))
 
         let leveledUp = false
         let newLevel = 1
         let newTokens = 0
         let newXp = 0
 
-        // Fetch current profile to apply rewards
+        // Fetch current profile to apply rewards (only if not already completed)
         const { data: profile } = await supabase
             .from('profiles')
             .select('tokens_balance, xp, level, multiplier_active')
             .eq('id', user.id)
             .single()
 
-        if (profile) {
+        if (profile && !isAlreadyCompleted) {
             let finalTokensReward = rewardTokens
             if (profile.multiplier_active && finalTokensReward > 0) {
                 finalTokensReward = finalTokensReward * 2
