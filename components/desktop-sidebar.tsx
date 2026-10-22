@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useEconomy } from './economy-provider'
 import { AvatarIcon } from './avatar-icons'
+import { InteractiveLogo } from './interactive-logo'
 import { haptics } from '@/utils/haptics'
 import { useLanguage } from './language-provider'
 import { createClient } from '@/utils/supabase/client'
@@ -66,7 +67,7 @@ export function DesktopSidebar() {
         <aside className="hidden md:flex flex-col w-64 fixed left-0 top-0 h-screen py-8 px-4 bg-[#0E111F]/80 backdrop-blur-xl border-r border-white/5 z-50 select-none">
             {/* Logo */}
             <div className="mb-8 px-4 flex items-center gap-2.5">
-                <img src="/logo.png" alt="LifePivot Logo" className="h-8 w-8 object-contain filter drop-shadow-[0_0_8px_rgba(var(--accent-rgb),0.3)]" />
+                <InteractiveLogo size="md" />
                 <div>
                     <h1 className="text-xl font-black tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-electric-blue to-neon-violet title-glow">
                         LifePivot

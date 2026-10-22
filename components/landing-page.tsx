@@ -4,6 +4,7 @@ import React from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { motion } from 'framer-motion'
+import { InteractiveLogo } from './interactive-logo'
 import { Sparkles, Shield, Flame, BookOpen, Compass, ArrowRight, Zap, CheckCircle2 } from 'lucide-react'
 
 export function LandingPage() {
@@ -19,16 +20,7 @@ export function LandingPage() {
       {/* ── Navigation ── */}
       <nav className="relative z-20 max-w-6xl mx-auto px-6 py-6 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="relative w-9 h-9 rounded-xl overflow-hidden shadow-lg shadow-cyan-500/20 border border-cyan-500/30">
-            <Image
-              src="/logo.png"
-              alt="LifePivot"
-              fill
-              className="object-cover"
-              sizes="36px"
-              priority
-            />
-          </div>
+          <InteractiveLogo size="md" />
           <span className="text-base font-black tracking-wider uppercase bg-clip-text text-transparent bg-gradient-to-r from-white via-slate-100 to-slate-400">
             LifePivot
           </span>

@@ -514,11 +514,13 @@ export async function addTask(goalId: string, formData: FormData) {
 
     if (!goal) return
 
+    const dueDate = (formData.get('due_date') as string) || getLocalDateString()
+
     await supabase.from('tasks').insert({
         goal_id: goalId,
         user_id: user.id,
         title,
-        due_date: getLocalDateString()
+        due_date: dueDate
     })
 
     revalidatePath('/', 'layout')
@@ -2632,4 +2634,175 @@ export async function importExternalPlan(formData: FormData) {
 
     revalidatePath('/', 'layout')
     return { success: true }
+}
+
+/**
+ * Update plan settings (title, level, goal_intent, duration_days)
+ */
+export async function updatePlanSettings(
+    goalId: string,
+    updates: { title?: string; level?: string; goal_intent?: string; duration_days?: number }
+) {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return { error: 'Not authenticated' }
+
+    const updatePayload: Record<string, any> = {}
+    if (updates.title?.trim()) updatePayload.title = updates.title.trim()
+    if (updates.level) updatePayload.level = updates.level
+    if (updates.goal_intent) updatePayload.goal_intent = updates.goal_intent
+    if (updates.duration_days) updatePayload.duration_days = Number(updates.duration_days)
+
+    if (Object.keys(updatePayload).length === 0) {
+        return { success: true }
+    }
+
+    const { error } = await supabase
+        .from('learning_goals')
+        .update(updatePayload)
+        .eq('id', goalId)
+        .eq('user_id', user.id)
+
+    if (error) return { error: error.message }
+    revalidatePath('/', 'layout')
+    return { success: true }
+}
+
+/**
+ * Add a custom task to a plan with priority, due date, duration, and subtasks
+ */
+export async function addCustomPlanTask(params: {
+    goalId: string
+    title: string
+    priority?: number
+    durationMins?: number
+    dueDate?: string
+    subtasks?: string[]
+    subject?: string
+}) {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return { error: 'Not authenticated' }
+    if (!params.title?.trim()) return { error: 'Task title is required' }
+
+    const { data: goal } = await supabase
+        .from('learning_goals')
+        .select('id, title')
+        .eq('id', params.goalId)
+        .eq('user_id', user.id)
+        .single()
+
+    if (!goal) return { error: 'Plan not found' }
+
+    const priorityVal = params.priority !== undefined ? Number(params.priority) : 3
+    const subtasksFormatted = (params.subtasks || []).filter((s: string) => s && s.trim()).map((subTitle: string, index: number) => ({
+        id: 'st_' + Date.now() + '_' + index,
+        title: subTitle.trim(),
+        completed: false
+    }))
+
+    const { data, error } = await supabase.from('tasks').insert({
+        goal_id: params.goalId,
+        user_id: user.id,
+        title: params.title.trim(),
+        subject: params.subject || 'General',
+        priority: priorityVal,
+        duration_mins: params.durationMins || 45,
+        due_date: params.dueDate || getLocalDateString(),
+        task_type: priorityVal === 0 ? 'void' : 'task',
+        status: 'pending',
+        subtasks: subtasksFormatted
+    }).select().single()
+
+    if (error) return { error: error.message }
+    revalidatePath('/', 'layout')
+    return { success: true, task: data }
+}
+
+/**
+ * Delete a specific task from a plan
+ */
+export async function deleteTask(taskId: string) {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return { error: 'Not authenticated' }
+
+    const { error } = await supabase
+        .from('tasks')
+        .delete()
+        .eq('id', taskId)
+        .eq('user_id', user.id)
+
+    if (error) return { error: error.message }
+    revalidatePath('/', 'layout')
+    return { success: true }
+}
+
+/**
+ * Update the due date of a specific task
+ */
+export async function updateTaskDate(taskId: string, newDueDate: string) {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return { error: 'Not authenticated' }
+
+    if (!newDueDate || !/^\d{4}-\d{2}-\d{2}$/.test(newDueDate)) {
+        return { error: 'Invalid date format (must be YYYY-MM-DD)' }
+    }
+
+    const { data, error } = await supabase
+        .from('tasks')
+        .update({ due_date: newDueDate })
+        .eq('id', taskId)
+        .eq('user_id', user.id)
+        .select()
+        .single()
+
+    if (error) return { error: error.message }
+    revalidatePath('/', 'layout')
+    return { success: true, task: data }
+}
+
+/**
+ * Shift curriculum schedule: shift all tasks on or after `fromDate` by `daysShift` days
+ */
+export async function shiftPlanSchedule(goalId: string, fromDate: string, daysShift: number) {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return { error: 'Not authenticated' }
+
+    const daysNum = Number(daysShift)
+    if (!daysNum || isNaN(daysNum)) {
+        return { error: 'Invalid shift days count' }
+    }
+
+    // Fetch tasks to shift
+    const { data: tasksToShift, error: fetchErr } = await supabase
+        .from('tasks')
+        .select('id, due_date')
+        .eq('goal_id', goalId)
+        .eq('user_id', user.id)
+        .gte('due_date', fromDate)
+        .order('due_date', { ascending: false })
+
+    if (fetchErr) return { error: fetchErr.message }
+    if (!tasksToShift || tasksToShift.length === 0) {
+        return { success: true, count: 0, message: 'No tasks found on or after this date' }
+    }
+
+    // Calculate new dates
+    for (const t of tasksToShift) {
+        if (!t.due_date) continue
+        const curr = new Date(t.due_date + 'T00:00:00')
+        curr.setDate(curr.getDate() + daysNum)
+        const newDateStr = getLocalDateString(curr)
+        await supabase
+            .from('tasks')
+            .update({ due_date: newDateStr })
+            .eq('id', t.id)
+            .eq('user_id', user.id)
+    }
+
+    revalidatePath('/', 'layout')
+    return { success: true, count: tasksToShift.length }
 }

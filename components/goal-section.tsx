@@ -199,6 +199,7 @@ export function GoalSection({
         className="flex items-center gap-3 mt-4"
         suppressHydrationWarning
       >
+        <input type="hidden" name="due_date" value={selectedDate} />
         <input
           name="title"
           type="text"

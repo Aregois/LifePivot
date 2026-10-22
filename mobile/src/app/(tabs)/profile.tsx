@@ -1094,6 +1094,10 @@ export default function Profile() {
       <OnboardingTourModal
         visible={tourVisible}
         onClose={() => setTourVisible(false)}
+        onStartPlan={() => {
+          setTourVisible(false);
+          router.push('/plan/create');
+        }}
       />
 
       {/* Void Day Placement Modal */}

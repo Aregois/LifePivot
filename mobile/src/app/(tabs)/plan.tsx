@@ -7,6 +7,7 @@ import { HapticsEngine } from '../../utils/HapticsEngine';
 import { useTheme } from '../../context/ThemeContext';
 import { useLanguage, translateGoalsArray } from '../../context/LanguageContext';
 import { FadeInView, GlassCard, GradientText, GlowBadge, PremiumButton, EmptyStateCTA, PlanSkeletonList } from '../../components/ui';
+import { PlanSettingsSheet, PlanData } from '../../components/PlanSettingsSheet';
 import { supabase } from '../../utils/supabase';
 
 export default function PlanPortal() {
@@ -18,6 +19,8 @@ export default function PlanPortal() {
     const [loading, setLoading] = useState(true);
     const [userLevel, setUserLevel] = useState<number>(1);
     const [isSubscribed, setIsSubscribed] = useState(false);
+    const [selectedSettingsPlan, setSelectedSettingsPlan] = useState<PlanData | null>(null);
+    const [settingsSheetVisible, setSettingsSheetVisible] = useState(false);
 
     const translatedPlans = useMemo(() => translateGoalsArray(activePlans, locale), [activePlans, locale]);
 
@@ -268,6 +271,24 @@ export default function PlanPortal() {
                                             )}
                                         </View>
                                     </View>
+                                    {!isPlanLocked && (
+                                        <TouchableOpacity
+                                            onPress={() => {
+                                                HapticsEngine.tier1.light();
+                                                setSelectedSettingsPlan(plan);
+                                                setSettingsSheetVisible(true);
+                                            }}
+                                            style={{
+                                                padding: 8,
+                                                borderRadius: 10,
+                                                backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                                                marginRight: 8,
+                                            }}
+                                            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                                        >
+                                            <Ionicons name="settings-outline" size={16} color={colors.primary} />
+                                        </TouchableOpacity>
+                                    )}
                                     <Ionicons name="chevron-forward" size={18} color={colors.primary} />
                                 </GlassCard>
                             );
@@ -276,6 +297,25 @@ export default function PlanPortal() {
                 )}
             </FadeInView>
             </ScrollView>
+
+            {/* Plan Settings & Task Customization Sheet */}
+            <PlanSettingsSheet
+                visible={settingsSheetVisible}
+                onClose={() => setSettingsSheetVisible(false)}
+                plan={selectedSettingsPlan}
+                onPlanUpdated={(updated) => {
+                    setActivePlans((prev) =>
+                        prev.map((p) => (p.id === selectedSettingsPlan?.id ? { ...p, ...updated } : p))
+                    );
+                }}
+                onTaskAdded={(_task) => {
+                    fetchActivePlans();
+                }}
+                onPlanDeleted={(planId) => {
+                    setActivePlans((prev) => prev.filter((p) => p.id !== planId));
+                    setSettingsSheetVisible(false);
+                }}
+            />
         </View>
     );
 }

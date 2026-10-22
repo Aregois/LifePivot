@@ -7,6 +7,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { haptics } from '@/utils/haptics'
 import { AvatarIcon } from './avatar-icons'
+import { InteractiveLogo } from './interactive-logo'
 import { useLanguage } from './language-provider'
 
 export function HUD() {
@@ -52,7 +53,7 @@ export function HUD() {
                         >
                             <AvatarIcon id={avatarId} className="w-full h-full" />
                         </Link>
-                        <img src="/logo.png" alt="Logo" className="w-6 h-6 object-contain filter drop-shadow-[0_0_6px_rgba(var(--accent-rgb),0.3)]" />
+                        <InteractiveLogo size="sm" />
                         <span className="text-xl font-black tracking-tight text-white">
                             LifePivot
                         </span>

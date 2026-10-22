@@ -15,3 +15,4 @@ export { FloatingXp } from './FloatingXp';
 export { GlassView } from './GlassView';
 
 
+export { LifePivotLogo } from './LifePivotLogo';

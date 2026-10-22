@@ -295,6 +295,8 @@ export function ProfileClient({
     const handleResetOnboarding = () => {
         if (hapticsEnabled) webHaptics.medium()
         localStorage.setItem('lifepivot_onboarding_completed', 'false')
+        window.dispatchEvent(new Event('lifepivot_onboarding_completed_changed'))
+        window.dispatchEvent(new Event('lifepivot_open_tour'))
         setOnboardingStatus(t('profile.tutorial_reset_success'))
         setTimeout(() => setOnboardingStatus(null), 5000)
     }

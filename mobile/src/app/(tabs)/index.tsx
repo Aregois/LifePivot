@@ -40,6 +40,7 @@ import { ActivePlanSwitcherModal } from '../../components/ActivePlanSwitcherModa
 import { DailyTasksHub, TaskItem } from '../../components/DailyTasksHub';
 import { TaskInteractionSheet } from '../../components/TaskInteractionSheet';
 import { FocusModeModal } from '../../components/FocusModeModal';
+import { OnboardingTourModal } from '../../components/OnboardingTourModal';
 
 /* ────────────────────────────────────────────────────────────────────────── */
 /*  Helpers & Constants                                                       */
@@ -142,6 +143,7 @@ export default function Dashboard() {
 
   // Modals state
   const [switcherVisible, setSwitcherVisible] = useState(false);
+  const [tourVisible, setTourVisible] = useState(false);
   const [selectedTask, setSelectedTask] = useState<TaskItem | null>(null);
   const [sheetVisible, setSheetVisible] = useState(false);
   const [focusModalVisible, setFocusModalVisible] = useState(false);
@@ -218,6 +220,16 @@ export default function Dashboard() {
 
       if (tasksData) {
         setTasks(tasksData);
+      }
+
+      // Check if user has completed the onboarding tour walkthrough
+      try {
+        const hasSeenTour = await SecureStore.getItemAsync('lifepivot_has_seen_tutorial');
+        if (!hasSeenTour) {
+          setTourVisible(true);
+        }
+      } catch {
+        /* ignore */
       }
     } catch (e) {
       console.error('Error fetching dashboard data:', e);
@@ -705,6 +717,16 @@ export default function Dashboard() {
             await handleToggleTask(focusTask.id, 'pending', focusTask.priority ?? 1);
           }
           fetchDashboardData(true);
+        }}
+      />
+
+      {/* Onboarding Interactive Tour Modal */}
+      <OnboardingTourModal
+        visible={tourVisible}
+        onClose={() => setTourVisible(false)}
+        onStartPlan={() => {
+          setTourVisible(false);
+          router.push('/plan/create');
         }}
       />
     </View>

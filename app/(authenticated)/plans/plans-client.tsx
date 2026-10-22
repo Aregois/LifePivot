@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { 
     Search, Plus, Lock, CheckCircle2, ChevronRight, 
-    Sparkles, Library, Layers, Target, Play, X, Info
+    Sparkles, Library, Layers, Target, Play, X, Info, Settings
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { haptics } from '@/utils/haptics'
@@ -12,6 +12,7 @@ import { useLanguage } from '@/components/language-provider'
 import { useEconomy } from '@/components/economy-provider'
 import { LearningPlanCreator } from '@/components/learning-plan-creator'
 import { SubscribeModal } from '@/components/subscribe-modal'
+import { PlanSettingsModal } from '@/components/plan-settings-modal'
 import { translateGoalsArray } from '@/utils/translations'
 
 interface Goal {
@@ -25,6 +26,10 @@ interface Goal {
         id: string
         status: string
         task_type: string
+        title?: string
+        priority?: number
+        due_date?: string
+        duration_mins?: number
     }[]
 }
 
@@ -48,24 +53,33 @@ export function PlansClient({ user, goals, goalsError, isSubscribed, subscriptio
     const [showCreateModal, setShowCreateModal] = useState(false)
     const [showSubscribeModal, setShowSubscribeModal] = useState(false)
 
+    // Plan Settings & Custom Task Modal State
+    const [selectedSettingsGoal, setSelectedSettingsGoal] = useState<Goal | null>(null)
+    const [showSettingsModal, setShowSettingsModal] = useState(false)
+    const [localGoals, setLocalGoals] = useState<Goal[]>(goals || [])
+
+    useEffect(() => {
+        setLocalGoals(goals || [])
+    }, [goals])
+
     // Load active plan from localStorage safely after mount to prevent hydration mismatch
     useEffect(() => {
         setIsMounted(true)
         const storedActiveId = localStorage.getItem('lifepivot_active_goal_id')
         if (storedActiveId) {
             setActiveGoalId(storedActiveId)
-        } else if (goals.length > 0) {
+        } else if (localGoals.length > 0) {
             // Default to the first (latest) plan and persist
-            const defaultId = goals[0].id
+            const defaultId = localGoals[0].id
             setActiveGoalId(defaultId)
             localStorage.setItem('lifepivot_active_goal_id', defaultId)
         }
-    }, [goals])
+    }, [localGoals])
 
     // Translate goals client-side
     const translatedGoals = useMemo(() => {
-        return translateGoalsArray(goals, locale) || []
-    }, [goals, locale])
+        return translateGoalsArray(localGoals, locale) || []
+    }, [localGoals, locale])
 
     // Compute plan list and status
     const processedGoals = useMemo(() => {
@@ -108,6 +122,12 @@ export function PlansClient({ user, goals, goalsError, isSubscribed, subscriptio
         router.push('/plan')
     }
 
+    const handleOpenPlanSettings = (goal: Goal) => {
+        haptics.light()
+        setSelectedSettingsGoal(goal)
+        setShowSettingsModal(true)
+    }
+
     if (!user) return null
 
     return (
@@ -125,13 +145,13 @@ export function PlansClient({ user, goals, goalsError, isSubscribed, subscriptio
                         {t('plan_switcher.title') || 'My Learning Plans'}
                     </h1>
                     <p className="text-gray-400 text-xs mt-1">
-                        {t('plan_switcher.select_active_desc') || 'Select an active focus syllabus, review stats, or forge a new curriculum.'}
+                        {t('plan_switcher.select_active_desc') || 'Select an active focus syllabus, customize tasks and settings, or forge a new curriculum.'}
                     </p>
                 </div>
 
                 <button
                     onClick={() => { haptics.medium(); setShowCreateModal(true) }}
-                    className="flex items-center justify-center gap-2 px-5 py-3 rounded-2xl bg-gradient-to-r from-neon-violet to-electric-blue text-white font-black text-[11px] tracking-widest uppercase shadow-[0_0_20px_rgba(var(--accent-rgb),0.25)] hover:scale-[1.02] active:scale-95 transition-all self-start md:self-auto"
+                    className="flex items-center justify-center gap-2 px-5 py-3 rounded-2xl bg-gradient-to-r from-neon-violet to-electric-blue text-white font-black text-[11px] tracking-widest uppercase shadow-[0_0_20px_rgba(var(--accent-rgb),0.25)] hover:scale-[1.02] active:scale-95 transition-all self-start md:self-auto cursor-pointer"
                 >
                     <Plus className="w-4 h-4" />
                     {t('plan_switcher.create_new') || 'Forge New Plan'}
@@ -158,7 +178,7 @@ export function PlansClient({ user, goals, goalsError, isSubscribed, subscriptio
                         <button
                             key={intent}
                             onClick={() => { haptics.light(); setFilterIntent(intent) }}
-                            className={`px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all active:scale-95 shrink-0 border ${
+                            className={`px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all active:scale-95 shrink-0 border cursor-pointer ${
                                 filterIntent === intent
                                     ? 'bg-electric-blue/15 border-electric-blue/35 text-electric-blue shadow-[0_0_12px_rgba(var(--accent-rgb),0.1)]'
                                     : 'bg-white/[0.02] border-white/5 text-gray-400 hover:text-white hover:bg-white/[0.04]'
@@ -179,7 +199,7 @@ export function PlansClient({ user, goals, goalsError, isSubscribed, subscriptio
                     </p>
                     <button
                         onClick={() => { haptics.medium(); setShowSubscribeModal(true) }}
-                        className="shrink-0 text-[9px] font-black uppercase tracking-widest text-neon-violet border border-neon-violet/30 bg-neon-violet/10 px-3.5 py-2 rounded-xl hover:bg-neon-violet/20 transition-all"
+                        className="shrink-0 text-[9px] font-black uppercase tracking-widest text-neon-violet border border-neon-violet/30 bg-neon-violet/10 px-3.5 py-2 rounded-xl hover:bg-neon-violet/20 transition-all cursor-pointer"
                     >
                         Go Pro
                     </button>
@@ -239,7 +259,7 @@ export function PlansClient({ user, goals, goalsError, isSubscribed, subscriptio
 
                                 {/* Header info */}
                                 <div className="flex justify-between items-start gap-4 mb-4">
-                                    <div className="flex flex-col min-w-0">
+                                    <div className="flex flex-col min-w-0 flex-1">
                                         <div className="flex items-center gap-1.5 flex-wrap">
                                             <span className={`text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full ${
                                                 goal.goal_intent === 'Exam' 
@@ -259,21 +279,33 @@ export function PlansClient({ user, goals, goalsError, isSubscribed, subscriptio
                                         </h3>
                                     </div>
 
-                                    {/* Action button: Set Active */}
-                                    {isActive ? (
-                                        <span className="flex items-center gap-1 text-electric-blue text-[9px] font-black uppercase tracking-widest bg-electric-blue/10 border border-electric-blue/20 px-2.5 py-1 rounded-xl shrink-0">
-                                            <CheckCircle2 className="w-3 h-3 text-electric-blue" />
-                                            {t('plan_switcher.active_track') || 'Active'}
-                                        </span>
-                                    ) : (
-                                        <button
-                                            onClick={() => handleSelectActivePlan(goal.id, !!isLocked)}
-                                            className="flex items-center gap-1 text-[9px] font-black text-gray-400 uppercase tracking-widest bg-white/5 border border-white/10 hover:border-white/20 hover:text-white px-2.5 py-1 rounded-xl transition-all shrink-0 active:scale-90"
-                                        >
-                                            <Play className="w-2.5 h-2.5" />
-                                            {t('plan_switcher.activate') || 'Activate'}
-                                        </button>
-                                    )}
+                                    {/* Action buttons: Plan Settings + Activate */}
+                                    <div className="flex items-center gap-1.5 shrink-0">
+                                        {!isLocked && (
+                                            <button
+                                                onClick={() => handleOpenPlanSettings(goal)}
+                                                className="p-2 rounded-xl bg-white/5 border border-white/10 hover:border-electric-blue/40 hover:bg-electric-blue/10 text-gray-400 hover:text-white transition-all cursor-pointer"
+                                                title="Plan Settings & Add Tasks"
+                                            >
+                                                <Settings className="w-3.5 h-3.5" />
+                                            </button>
+                                        )}
+
+                                        {isActive ? (
+                                            <span className="flex items-center gap-1 text-electric-blue text-[9px] font-black uppercase tracking-widest bg-electric-blue/10 border border-electric-blue/20 px-2.5 py-1.5 rounded-xl shrink-0">
+                                                <CheckCircle2 className="w-3 h-3 text-electric-blue" />
+                                                {t('plan_switcher.active_track') || 'Active'}
+                                            </span>
+                                        ) : (
+                                            <button
+                                                onClick={() => handleSelectActivePlan(goal.id, !!isLocked)}
+                                                className="flex items-center gap-1 text-[9px] font-black text-gray-400 uppercase tracking-widest bg-white/5 border border-white/10 hover:border-white/20 hover:text-white px-2.5 py-1.5 rounded-xl transition-all shrink-0 active:scale-90 cursor-pointer"
+                                            >
+                                                <Play className="w-2.5 h-2.5" />
+                                                {t('plan_switcher.activate') || 'Activate'}
+                                            </button>
+                                        )}
+                                    </div>
                                 </div>
 
                                 {/* Stats Section */}
@@ -304,19 +336,61 @@ export function PlansClient({ user, goals, goalsError, isSubscribed, subscriptio
                                     </div>
                                 </div>
 
-                                {/* Navigate to plan details link */}
-                                <button
-                                    onClick={() => handleSelectActivePlan(goal.id, !!isLocked)}
-                                    className="mt-4 flex items-center justify-between w-full p-3 rounded-2xl bg-white/[0.02] border border-white/[0.04] hover:bg-white/[0.04] text-[10px] font-bold text-gray-400 hover:text-white transition-all uppercase tracking-widest"
-                                >
-                                    <span>{t('plan.curriculum_arch') || 'Open Study Domain'}</span>
-                                    <ChevronRight className="w-3.5 h-3.5 text-electric-blue" />
-                                </button>
+                                {/* Action Buttons Footer: Open Curriculum & Settings/Tasks */}
+                                <div className="mt-4 flex items-center gap-2">
+                                    <button
+                                        onClick={() => handleSelectActivePlan(goal.id, !!isLocked)}
+                                        className="flex-1 flex items-center justify-between p-3 rounded-2xl bg-white/[0.02] border border-white/[0.04] hover:bg-white/[0.04] text-[10px] font-bold text-gray-400 hover:text-white transition-all uppercase tracking-widest cursor-pointer"
+                                    >
+                                        <span>{t('plan.curriculum_arch') || 'Open Study Domain'}</span>
+                                        <ChevronRight className="w-3.5 h-3.5 text-electric-blue" />
+                                    </button>
+
+                                    {!isLocked && (
+                                        <button
+                                            onClick={() => handleOpenPlanSettings(goal)}
+                                            className="px-3.5 py-3 rounded-2xl bg-white/[0.03] border border-white/[0.08] hover:border-electric-blue/40 hover:bg-electric-blue/10 text-gray-300 hover:text-white transition-all flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider shrink-0 cursor-pointer"
+                                            title="Settings & Add Tasks"
+                                        >
+                                            <Settings className="w-3.5 h-3.5 text-electric-blue" />
+                                            <span className="hidden sm:inline">Settings</span>
+                                        </button>
+                                    )}
+                                </div>
                             </motion.div>
                         )
                     })}
                 </div>
             )}
+
+            {/* Plan Settings & Task Customization Modal */}
+            <PlanSettingsModal
+                isOpen={showSettingsModal}
+                onClose={() => setShowSettingsModal(false)}
+                goal={selectedSettingsGoal}
+                onPlanUpdated={(updated) => {
+                    setLocalGoals(prev => prev.map(g => g.id === selectedSettingsGoal?.id ? { ...g, ...updated } : g))
+                    router.refresh()
+                }}
+                onTaskAdded={(newTask) => {
+                    setLocalGoals(prev => prev.map(g => {
+                        if (g.id === selectedSettingsGoal?.id) {
+                            const curTasks = g.tasks || []
+                            return {
+                                ...g,
+                                tasks: [...curTasks, newTask]
+                            }
+                        }
+                        return g
+                    }))
+                    router.refresh()
+                }}
+                onPlanDeleted={(deletedId) => {
+                    setLocalGoals(prev => prev.filter(g => g.id !== deletedId))
+                    setShowSettingsModal(false)
+                    router.refresh()
+                }}
+            />
 
             {/* Slide-over Drawer / Modal for LearningPlanCreator */}
             <AnimatePresence>
@@ -331,7 +405,7 @@ export function PlansClient({ user, goals, goalsError, isSubscribed, subscriptio
                             {/* Close button */}
                             <button
                                 onClick={() => { haptics.light(); setShowCreateModal(false) }}
-                                className="absolute right-6 top-6 w-8 h-8 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 flex items-center justify-center text-gray-400 hover:text-white transition-all active:scale-90 z-50"
+                                className="absolute right-6 top-6 w-8 h-8 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 flex items-center justify-center text-gray-400 hover:text-white transition-all active:scale-90 z-50 cursor-pointer"
                             >
                                 <X className="w-4 h-4" />
                             </button>

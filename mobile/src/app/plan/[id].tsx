@@ -22,6 +22,7 @@ import { FileUploadSheet } from '../../components/FileUploadSheet';
 import { TaskInteractionSheet } from '../../components/TaskInteractionSheet';
 import { SwipeableTaskCard } from '../../components/SwipeableTaskCard';
 import { FocusModeModal } from '../../components/FocusModeModal';
+import { PlanSettingsSheet } from '../../components/PlanSettingsSheet';
 import { API_BASE_URL } from '../../utils/api';
 import { HapticsEngine } from '../../utils/HapticsEngine';
 
@@ -117,6 +118,8 @@ export default function PlanDetail() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [materialsOpen, setMaterialsOpen] = useState(false);
+  const [settingsSheetVisible, setSettingsSheetVisible] = useState(false);
+  const [settingsInitialTab, setSettingsInitialTab] = useState<'schedule' | 'add_task' | 'details'>('schedule');
   const [userId, setUserId] = useState<string | null>(null);
   const [selectedTask, setSelectedTask] = useState<any>(null);
   const [sheetVisible, setSheetVisible] = useState(false);
@@ -427,7 +430,28 @@ export default function PlanDetail() {
           </Text>
         </TouchableOpacity>
 
-        <GlowBadge label={t('plan.overall', { percent: completionRate }) || `${completionRate}% OVERALL`} colorScheme="emerald" />
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+          <GlowBadge label={t('plan.overall', { percent: completionRate }) || `${completionRate}% OVERALL`} colorScheme="emerald" />
+          <TouchableOpacity
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              setSettingsInitialTab('schedule');
+              setSettingsSheetVisible(true);
+            }}
+            style={{
+              width: 32,
+              height: 32,
+              borderRadius: 10,
+              backgroundColor: 'rgba(255, 255, 255, 0.05)',
+              borderWidth: 1,
+              borderColor: colors.glassBorder,
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <Ionicons name="settings-outline" size={16} color="#FFFFFF" />
+          </TouchableOpacity>
+        </View>
       </View>
 
       <ScrollView contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 110 }} showsVerticalScrollIndicator={false}>
@@ -507,6 +531,30 @@ export default function PlanDetail() {
                 <Ionicons name="timer-outline" size={16} color="#050508" />
                 <Text style={{ fontSize: 11, fontWeight: '900', color: '#050508', letterSpacing: 0.5 }}>
                   {t('plan.focus_session') || 'FOCUS SESSION'}
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                onPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  setSettingsInitialTab('add_task');
+                  setSettingsSheetVisible(true);
+                }}
+                style={{
+                  paddingHorizontal: 12,
+                  paddingVertical: 10,
+                  borderRadius: 14,
+                  backgroundColor: 'rgba(0, 240, 255, 0.08)',
+                  borderWidth: 1,
+                  borderColor: 'rgba(0, 240, 255, 0.25)',
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: 5,
+                }}
+              >
+                <Ionicons name="add-circle-outline" size={16} color={colors.primary} />
+                <Text style={{ fontSize: 11, fontWeight: '900', color: colors.primary }}>
+                  {t('plan.add_task') || 'ADD TASK'}
                 </Text>
               </TouchableOpacity>
 
@@ -781,6 +829,23 @@ export default function PlanDetail() {
             ai_hint: task.ai_hint,
           });
           setFocusModalVisible(true);
+        }}
+      />
+
+      {/* Plan Settings Bottom Sheet */}
+      <PlanSettingsSheet
+        visible={settingsSheetVisible}
+        onClose={() => setSettingsSheetVisible(false)}
+        plan={goal}
+        initialTab={settingsInitialTab}
+        onPlanUpdated={(updated) => {
+          setGoal((prev: any) => ({ ...prev, ...updated }));
+        }}
+        onTaskAdded={(newTask) => {
+          setTasks((prev) => [...prev, newTask]);
+        }}
+        onPlanDeleted={() => {
+          router.replace('/(tabs)/plan');
         }}
       />
 
