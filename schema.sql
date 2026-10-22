@@ -15,6 +15,15 @@ create table public.profiles (
   streak_shields_count integer default 0 not null,
   current_streak integer default 0 not null,
   high_streak integer default 0 not null,
+  language text default 'en',
+  theme_accent text default 'cyan',
+  persona_preference text default 'feynman',
+  full_name text,
+  username text,
+  claimed_achievements jsonb default '[]'::jsonb not null,
+  unlocked_cosmetics jsonb default '[]'::jsonb not null,
+  ai_requests_today integer default 0 not null,
+  ai_requests_date date default current_date not null,
   last_pivot_check timestamp with time zone default timezone('utc'::text, now()) not null,
   created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
@@ -221,6 +230,10 @@ declare
   v_user_tokens integer;
   v_already_member boolean;
 begin
+  if auth.uid() is not null and p_user_id <> auth.uid() then
+    return jsonb_build_object('success', false, 'error', 'Unauthorized user mismatch');
+  end if;
+
   -- 1. Check if user is already a member
   select exists(
     select 1 from public.workspace_members
@@ -232,7 +245,7 @@ begin
   end if;
 
   -- 2. Get workspace details
-  select is_premium, token_cost, creator_id
+  select is_premium, greatest(0, coalesce(token_cost, 0)), creator_id
   into v_is_premium, v_token_cost, v_creator_id
   from public.workspaces
   where id = p_workspace_id;
@@ -245,7 +258,8 @@ begin
   if v_is_premium then
     select tokens_balance into v_user_tokens
     from public.profiles
-    where id = p_user_id;
+    where id = p_user_id
+    for update;
 
     if v_user_tokens is null then
       return jsonb_build_object('success', false, 'error', 'User profile not found');
@@ -298,6 +312,9 @@ begin
 end;
 $$ language plpgsql security definer;
 
+revoke execute on function public.reward_user_tokens_transaction(uuid, integer) from public, anon, authenticated;
+grant execute on function public.reward_user_tokens_transaction(uuid, integer) to service_role;
+
 
 -- 9. Tutor Push Task Stored Procedure
 create or replace function public.tutor_push_task(
@@ -318,6 +335,10 @@ declare
   v_subtasks jsonb;
   v_resources jsonb;
 begin
+  if auth.uid() is not null and p_tutor_id <> auth.uid() then
+    return jsonb_build_object('success', false, 'error', 'Unauthorized tutor ID mismatch');
+  end if;
+
   -- 1. Verify tutor role
   select role into v_tutor_role from public.profiles where id = p_tutor_id;
   if v_tutor_role <> 'tutor' then

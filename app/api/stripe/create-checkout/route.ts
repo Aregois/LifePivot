@@ -14,16 +14,41 @@ export async function POST(request: NextRequest) {
         }
 
         const body = await request.json()
-        const { priceId, mode } = body as {
+        const { priceId, mode, cancelPath } = body as {
             priceId: string
             mode: 'subscription' | 'payment'
+            cancelPath?: string
         }
 
-        if (!priceId || !mode) {
-            return NextResponse.json({ error: 'Missing priceId or mode' }, { status: 400 })
+        if (!priceId || !mode || !['subscription', 'payment'].includes(mode)) {
+            return NextResponse.json({ error: 'Missing or invalid priceId or mode' }, { status: 400 })
+        }
+
+        // Validate against configured price IDs when environment variables are present
+        const allowedPriceIds = [
+            process.env.STRIPE_PRO_MONTHLY_PRICE_ID,
+            process.env.NEXT_PUBLIC_STRIPE_PRO_MONTHLY_PRICE_ID,
+            process.env.STRIPE_PRO_ANNUAL_PRICE_ID,
+            process.env.NEXT_PUBLIC_STRIPE_PRO_ANNUAL_PRICE_ID,
+            process.env.STRIPE_PRO_YEARLY_PRICE_ID,
+            process.env.NEXT_PUBLIC_STRIPE_PRO_YEARLY_PRICE_ID,
+            process.env.STRIPE_TOKENS_100_PRICE_ID,
+            process.env.NEXT_PUBLIC_STRIPE_TOKENS_100_PRICE_ID,
+            process.env.STRIPE_TOKENS_500_PRICE_ID,
+            process.env.NEXT_PUBLIC_STRIPE_TOKENS_500_PRICE_ID,
+            process.env.STRIPE_TOKENS_1500_PRICE_ID,
+            process.env.NEXT_PUBLIC_STRIPE_TOKENS_1500_PRICE_ID,
+        ].filter((id): id is string => Boolean(id && id.trim()))
+
+        if (allowedPriceIds.length > 0 && !allowedPriceIds.includes(priceId)) {
+            return NextResponse.json({ error: 'Invalid Stripe price ID' }, { status: 400 })
         }
 
         const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+        const safeCancelPath =
+            cancelPath && cancelPath.startsWith('/') && !cancelPath.startsWith('//') && !cancelPath.includes('\\')
+                ? cancelPath
+                : mode === 'payment' ? '/shop' : '/profile'
 
         // Fetch or create a Stripe customer tied to this user
         const { data: profile } = await supabase
@@ -52,7 +77,7 @@ export async function POST(request: NextRequest) {
             mode,
             line_items: [{ price: priceId, quantity: 1 }],
             success_url: `${appUrl}/payment-success?session_id={CHECKOUT_SESSION_ID}`,
-            cancel_url: `${appUrl}/profile`,
+            cancel_url: `${appUrl}${safeCancelPath}`,
             metadata: {
                 supabase_user_id: user.id,
                 price_id: priceId,

@@ -212,6 +212,9 @@ export function LearningPlanCreator() {
     const [error, setError] = useState<string | null>(null)
     const [planLanguage, setPlanLanguage] = useState<string>('')
     const [createdGoalId, setCreatedGoalId] = useState<string | null>(null)
+    const [showMilestoneForm, setShowMilestoneForm] = useState(false)
+    const [newMilestoneDate, setNewMilestoneDate] = useState('')
+    const [newMilestoneLabel, setNewMilestoneLabel] = useState('')
     
     const activePlanLanguage = planLanguage || locale
 
@@ -485,7 +488,7 @@ export function LearningPlanCreator() {
                                         value={title}
                                         onChange={(e) => setTitle(e.target.value)}
                                         placeholder="e.g. MASTER NEXT.JS IN 30 DAYS"
-                                        className="w-full bg-[#121626]/50 border border-white/5 rounded-xl px-4 py-3 text-white placeholder-gray-600 focus:border-electric-blue focus:outline-none focus:ring-1 focus:ring-electric-blue/30 transition-all font-bold text-sm"
+                                        className="w-full bg-[#121626]/50 border border-white/5 rounded-xl px-4 py-3 text-white placeholder-gray-600 focus:border-electric-blue focus:outline-none focus:ring-1 focus:ring-electric-blue/30 transition-all font-bold text-base sm:text-sm"
                                     />
                                 </div>
 
@@ -498,7 +501,7 @@ export function LearningPlanCreator() {
                                             max="90"
                                             value={duration}
                                             onChange={(e) => setDuration(parseInt(e.target.value) || 30)}
-                                            className="w-full bg-[#121626]/50 border border-white/5 rounded-xl px-4 py-3 text-white focus:border-electric-blue focus:outline-none transition-all font-mono font-bold text-sm"
+                                            className="w-full bg-[#121626]/50 border border-white/5 rounded-xl px-4 py-3 text-white focus:border-electric-blue focus:outline-none transition-all font-mono font-bold text-base sm:text-sm"
                                         />
                                     </div>
                                     <div className="space-y-1.5">
@@ -506,7 +509,7 @@ export function LearningPlanCreator() {
                                         <select
                                             value={intent}
                                             onChange={(e) => setIntent(e.target.value as any)}
-                                            className="w-full bg-[#121626]/50 border border-white/5 rounded-xl px-4 py-3 text-white focus:border-electric-blue focus:outline-none transition-all font-bold appearance-none cursor-pointer text-sm"
+                                            className="w-full bg-[#121626]/50 border border-white/5 rounded-xl px-4 py-3 text-white focus:border-electric-blue focus:outline-none transition-all font-bold appearance-none cursor-pointer text-base sm:text-sm"
                                         >
                                             <option value="Exam">{t('creator.intent_exam')}</option>
                                             <option value="Level Up">{t('creator.intent_mastery')}</option>
@@ -520,7 +523,7 @@ export function LearningPlanCreator() {
                                     <select
                                         value={level}
                                         onChange={(e) => setLevel(e.target.value)}
-                                        className="w-full bg-[#121626]/50 border border-white/5 rounded-xl px-4 py-3 text-white focus:border-electric-blue focus:outline-none transition-all font-bold appearance-none cursor-pointer text-sm"
+                                        className="w-full bg-[#121626]/50 border border-white/5 rounded-xl px-4 py-3 text-white focus:border-electric-blue focus:outline-none transition-all font-bold appearance-none cursor-pointer text-base sm:text-sm"
                                     >
                                         <option>Beginner</option>
                                         <option>Intermediate</option>
@@ -538,7 +541,7 @@ export function LearningPlanCreator() {
                                                     type="date"
                                                     value={wall.date}
                                                     readOnly
-                                                    className="bg-white/5 border border-white/5 rounded-xl px-4 py-2.5 text-xs text-white flex-1"
+                                                    className="bg-white/5 border border-white/5 rounded-xl px-4 py-2.5 text-base sm:text-xs text-white flex-1"
                                                 />
                                                 <span className="text-xs text-gray-400 flex-1 truncate">{wall.label}</span>
                                                 <button
@@ -549,16 +552,61 @@ export function LearningPlanCreator() {
                                                 </button>
                                             </div>
                                         ))}
-                                        <button
-                                            onClick={() => {
-                                                const date = prompt("Milestone Date (YYYY-MM-DD):");
-                                                const label = prompt("Milestone Label (e.g. Midterm Exam):");
-                                                if (date && label) setSprintWalls([...sprintWalls, { date, label }]);
-                                            }}
-                                            className="w-full py-3 rounded-xl border border-dashed border-white/10 text-[10px] font-bold text-gray-400 uppercase tracking-widest hover:border-electric-blue/30 hover:text-electric-blue transition-all cursor-pointer pointer-events-auto"
-                                        >
-                                            {t('creator.add_milestone')}
-                                        </button>
+                                        {showMilestoneForm ? (
+                                            <div className="p-3 rounded-2xl bg-[#121626]/70 border border-electric-blue/30 space-y-2.5">
+                                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                                    <input
+                                                        type="date"
+                                                        value={newMilestoneDate}
+                                                        onChange={(e) => setNewMilestoneDate(e.target.value)}
+                                                        className="bg-black/40 border border-white/10 rounded-xl px-3.5 py-2.5 text-base sm:text-xs text-white focus:border-electric-blue focus:outline-none"
+                                                    />
+                                                    <input
+                                                        type="text"
+                                                        value={newMilestoneLabel}
+                                                        onChange={(e) => setNewMilestoneLabel(e.target.value)}
+                                                        placeholder="e.g. Midterm Exam"
+                                                        className="bg-black/40 border border-white/10 rounded-xl px-3.5 py-2.5 text-base sm:text-xs text-white placeholder-gray-600 focus:border-electric-blue focus:outline-none"
+                                                    />
+                                                </div>
+                                                <div className="flex gap-2">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => {
+                                                            if (newMilestoneDate && newMilestoneLabel.trim()) {
+                                                                setSprintWalls([...sprintWalls, { date: newMilestoneDate, label: newMilestoneLabel.trim() }])
+                                                                setNewMilestoneDate('')
+                                                                setNewMilestoneLabel('')
+                                                                setShowMilestoneForm(false)
+                                                            }
+                                                        }}
+                                                        disabled={!newMilestoneDate || !newMilestoneLabel.trim()}
+                                                        className="flex-1 py-2 rounded-xl bg-electric-blue text-black font-black text-[10px] uppercase tracking-widest disabled:opacity-40 cursor-pointer pointer-events-auto"
+                                                    >
+                                                        Save Milestone
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => {
+                                                            setShowMilestoneForm(false)
+                                                            setNewMilestoneDate('')
+                                                            setNewMilestoneLabel('')
+                                                        }}
+                                                        className="px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-gray-400 hover:text-white font-bold text-[10px] uppercase tracking-widest cursor-pointer pointer-events-auto"
+                                                    >
+                                                        Cancel
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <button
+                                                type="button"
+                                                onClick={() => setShowMilestoneForm(true)}
+                                                className="w-full py-3 rounded-xl border border-dashed border-white/10 text-[10px] font-bold text-gray-400 uppercase tracking-widest hover:border-electric-blue/30 hover:text-electric-blue transition-all cursor-pointer pointer-events-auto"
+                                            >
+                                                {t('creator.add_milestone')}
+                                            </button>
+                                        )}
                                     </div>
                                 </div>
 

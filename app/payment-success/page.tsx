@@ -1,24 +1,35 @@
-﻿'use client'
+'use client'
 
-import { useEffect, useState } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { Sparkles, ArrowRight, Loader2 } from 'lucide-react'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
 
-export default function PaymentSuccessPage() {
+function PaymentSuccessContent() {
     const searchParams = useSearchParams()
     const router = useRouter()
     const sessionId = searchParams.get('session_id')
     const [countdown, setCountdown] = useState(5)
+    const isValidSession = Boolean(sessionId && sessionId.startsWith('cs_'))
 
     useEffect(() => {
+        if (!isValidSession) {
+            router.replace('/plan')
+            return
+        }
+        router.refresh()
+    }, [isValidSession, router])
+
+    useEffect(() => {
+        if (!isValidSession) return
         if (countdown === 0) {
             router.push('/plan')
         }
-    }, [countdown, router])
+    }, [countdown, isValidSession, router])
 
     useEffect(() => {
+        if (!isValidSession) return
         const timer = setInterval(() => {
             setCountdown(prev => {
                 if (prev <= 1) {
@@ -29,7 +40,15 @@ export default function PaymentSuccessPage() {
             })
         }, 1000)
         return () => clearInterval(timer)
-    }, [])
+    }, [isValidSession])
+
+    if (!isValidSession) {
+        return (
+            <div className="fixed inset-0 bg-[#0B0D17] flex items-center justify-center p-6">
+                <Loader2 className="w-6 h-6 animate-spin text-electric-blue" />
+            </div>
+        )
+    }
 
     return (
         <div className="fixed inset-0 bg-[#0B0D17] flex items-center justify-center p-6">
@@ -85,5 +104,17 @@ export default function PaymentSuccessPage() {
                 </div>
             </motion.div>
         </div>
+    )
+}
+
+export default function PaymentSuccessPage() {
+    return (
+        <Suspense fallback={
+            <div className="fixed inset-0 bg-[#0B0D17] flex items-center justify-center p-6">
+                <Loader2 className="w-6 h-6 animate-spin text-electric-blue" />
+            </div>
+        }>
+            <PaymentSuccessContent />
+        </Suspense>
     )
 }

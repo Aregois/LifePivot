@@ -95,11 +95,17 @@ export function ProfileClient({
     const searchParams = useSearchParams()
     const [mindfulModeEnabled, setMindfulModeEnabled] = useState(false)
     const [onboardingStatus, setOnboardingStatus] = useState<string | null>(null)
+    const [confirmDeleteAccount, setConfirmDeleteAccount] = useState(false)
+    const [deletingAccount, setDeletingAccount] = useState(false)
+    const [deleteAccountError, setDeleteAccountError] = useState<string | null>(null)
 
     useEffect(() => {
         const t = searchParams.get('tab') as TabType
         if (t && ['mastery', 'cosmetics', 'settings'].includes(t)) {
             setActiveTab(t)
+        }
+        if (searchParams.get('upgrade') === 'true') {
+            setShowSubscribeModal(true)
         }
     }, [searchParams])
 
@@ -244,8 +250,31 @@ export function ProfileClient({
 
     const handlePersonaChange = (nextPersona: PersonaType) => {
         if (hapticsEnabled) webHaptics.light()
+        if ((nextPersona === 'socrates' || nextPersona === 'stoic') && !subscribed) {
+            setShowSubscribeModal(true)
+            return
+        }
         setPersona(nextPersona)
         localStorage.setItem('lifepivot_persona', nextPersona)
+    }
+
+    const handleDeleteAccount = async () => {
+        setDeletingAccount(true)
+        setDeleteAccountError(null)
+        try {
+            const res = await fetch('/api/profile/delete-account', { method: 'POST' })
+            const data = await res.json()
+            if (!res.ok || data.error) {
+                setDeleteAccountError(data.error || 'Failed to delete account')
+                setDeletingAccount(false)
+                return
+            }
+            localStorage.clear()
+            window.location.href = '/login'
+        } catch (err: any) {
+            setDeleteAccountError(err?.message || 'Failed to delete account')
+            setDeletingAccount(false)
+        }
     }
 
     const handleHapticsToggle = () => {
@@ -386,10 +415,13 @@ export function ProfileClient({
                             {activeTitle}
                         </p>
                         {subscribed ? (
-                            <span className="text-[9px] font-black text-neon-violet bg-neon-violet/10 border border-neon-violet/20 px-2.5 py-0.5 rounded-full select-none uppercase mt-1 tracking-widest flex items-center gap-1">
+                            <button
+                                onClick={() => { if (hapticsEnabled) webHaptics.medium(); setShowSubscribeModal(true) }}
+                                className="text-[9px] font-black text-neon-violet bg-neon-violet/10 border border-neon-violet/20 px-2.5 py-0.5 rounded-full hover:bg-neon-violet/20 transition-all select-none uppercase mt-1 tracking-widest flex items-center gap-1 cursor-pointer"
+                            >
                                 <Crown className="w-3 h-3 text-neon-violet fill-neon-violet" />
-                                Solo Power Active
-                            </span>
+                                Solo Power Active (Manage)
+                            </button>
                         ) : (
                             <button
                                 onClick={() => { if (hapticsEnabled) webHaptics.medium(); setShowSubscribeModal(true) }}
@@ -945,7 +977,7 @@ export function ProfileClient({
                                     if (hapticsEnabled) webHaptics.light()
                                     setLocale(e.target.value as any)
                                 }}
-                                className="bg-[#0c0e17] border border-white/10 text-xs rounded-xl px-2.5 py-1.5 focus:outline-none text-gray-300 font-bold uppercase tracking-wider"
+                                className="bg-[#0c0e17] border border-white/10 text-base sm:text-xs rounded-xl px-2.5 py-1.5 focus:outline-none text-gray-300 font-bold uppercase tracking-wider"
                             >
                                 {Object.entries(LANGUAGE_NAMES).map(([code, name]) => (
                                     <option key={code} value={code}>
@@ -999,6 +1031,94 @@ export function ProfileClient({
                             </button>
                         </div>
                     </div>
+
+                    {/* Billing, Password & Danger Zone */}
+                    <div className="bg-[#141824] border border-white/5 p-5 rounded-[2.5rem] shadow-lg flex flex-col gap-4 md:col-span-2">
+                        <div className="flex items-center gap-2">
+                            <ShieldAlert className="h-4 w-4 text-electric-blue" />
+                            <h3 className="text-xs font-black uppercase tracking-wider text-gray-400">
+                                {t('profile.account_security') || 'Account, Billing & Security'}
+                            </h3>
+                        </div>
+
+                        <div className="flex flex-wrap items-center justify-between gap-3">
+                            <div>
+                                <p className="text-[10px] text-white font-black uppercase tracking-wide">
+                                    {subscribed ? 'Solo Power Subscription' : 'Subscription Tier'}
+                                </p>
+                                <p className="text-[9px] text-gray-500 font-bold mt-0.5">
+                                    {subscribed ? 'Manage billing, invoices, or cancel anytime via Stripe.' : 'Upgrade to Solo Power for unlimited plans and Pro Socratic personas.'}
+                                </p>
+                            </div>
+                            <button
+                                onClick={() => setShowSubscribeModal(true)}
+                                className="px-4 py-2 bg-neon-violet/15 border border-neon-violet/30 hover:bg-neon-violet/25 text-neon-violet font-extrabold text-[10px] uppercase tracking-wider rounded-xl transition-all active:scale-95"
+                            >
+                                {subscribed ? (t('subscribe.manage_btn') || 'Manage Subscription') : (t('sidebar.upgrade') || 'Upgrade to Pro')}
+                            </button>
+                        </div>
+
+                        <div className="h-[1px] bg-white/5 w-full" />
+
+                        <div className="flex flex-wrap items-center justify-between gap-3">
+                            <div>
+                                <p className="text-[10px] text-white font-black uppercase tracking-wide">
+                                    {t('auth.reset_password_title') || 'Account Password'}
+                                </p>
+                                <p className="text-[9px] text-gray-500 font-bold mt-0.5">
+                                    {t('auth.reset_password_subtitle') || 'Update your sign-in password at any time.'}
+                                </p>
+                            </div>
+                            <a
+                                href="/reset-password"
+                                className="px-4 py-2 bg-white/5 border border-white/10 hover:bg-white/10 text-white font-extrabold text-[10px] uppercase tracking-wider rounded-xl transition-all active:scale-95"
+                            >
+                                {t('auth.update_password_btn') || 'Change Password'}
+                            </a>
+                        </div>
+
+                        <div className="h-[1px] bg-white/5 w-full" />
+
+                        <div className="flex flex-wrap items-center justify-between gap-3">
+                            <div>
+                                <p className="text-[10px] text-red-400 font-black uppercase tracking-wide">
+                                    {t('profile.delete_account') || 'Delete Account & Erase Data'}
+                                </p>
+                                <p className="text-[9px] text-gray-500 font-bold mt-0.5">
+                                    Permanently deletes your profile, learning plans, uploaded documents, and active subscriptions.
+                                </p>
+                            </div>
+                            {!confirmDeleteAccount ? (
+                                <button
+                                    onClick={() => setConfirmDeleteAccount(true)}
+                                    className="px-4 py-2 bg-red-500/10 border border-red-500/30 hover:bg-red-500/20 text-red-400 font-extrabold text-[10px] uppercase tracking-wider rounded-xl transition-all active:scale-95"
+                                >
+                                    {t('profile.delete_account') || 'Delete Account'}
+                                </button>
+                            ) : (
+                                <div className="flex items-center gap-2">
+                                    <button
+                                        onClick={() => setConfirmDeleteAccount(false)}
+                                        disabled={deletingAccount}
+                                        className="px-3 py-2 bg-white/5 border border-white/10 text-gray-300 font-extrabold text-[10px] uppercase tracking-wider rounded-xl"
+                                    >
+                                        {t('common.cancel') || 'Cancel'}
+                                    </button>
+                                    <button
+                                        onClick={handleDeleteAccount}
+                                        disabled={deletingAccount}
+                                        className="px-4 py-2 bg-red-600 hover:bg-red-500 text-white font-black text-[10px] uppercase tracking-wider rounded-xl flex items-center gap-1.5"
+                                    >
+                                        {deletingAccount && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                                        Confirm Permanent Erase
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+                        {deleteAccountError && (
+                            <p className="text-[10px] text-red-400 font-bold">{deleteAccountError}</p>
+                        )}
+                    </div>
                 </div>
             )}
 
@@ -1012,7 +1132,7 @@ export function ProfileClient({
                 </form>
 
                 <p className="text-center text-[8px] text-gray-600 uppercase tracking-widest font-black mt-6">
-                    LifePivot v1.0.5-beta
+                    LifePivot v1.0.0
                 </p>
             </div>
 
@@ -1020,6 +1140,7 @@ export function ProfileClient({
                 isOpen={showSubscribeModal}
                 onClose={() => setShowSubscribeModal(false)}
                 onSuccess={() => setSubscribed(true)}
+                isAlreadySubscribed={subscribed}
             />
         </div>
     )

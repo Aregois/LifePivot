@@ -128,6 +128,8 @@ export default function OnboardingPage() {
         check()
     }, [router])
 
+    const [slideDir, setSlideDir] = useState(1)
+
     if (checking) {
         return (
             <div className="flex min-h-[100dvh] items-center justify-center bg-black/50">
@@ -142,8 +144,6 @@ export default function OnboardingPage() {
         center: { opacity: 1, x: 0 },
         exit: (dir: number) => ({ opacity: 0, x: dir > 0 ? -40 : 40 }),
     }
-
-    const [slideDir, setSlideDir] = useState(1)
 
     const goNext = () => { setSlideDir(1); setStep(s => s + 1) }
     const goBack = () => { setSlideDir(-1); setStep(s => s - 1) }

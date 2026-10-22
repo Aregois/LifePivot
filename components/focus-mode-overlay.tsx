@@ -1032,7 +1032,8 @@ export function FocusModeOverlay({ task, goalTitle, onClose, onOptimisticTokenUp
                     /* ──── MOBILE / TABLET VIEW ──── */
                     <>
                         {/* ── FIXED HEADER GROUP ── */}
-                        <div className="shrink-0 relative z-20 bg-[#050508]/80 backdrop-blur-xl border-b border-white/5 pb-4">
+                        <div className="shrink-0 relative z-20 bg-[#050508]/80 backdrop-blur-xl border-b border-white/5 pb-4"
+                            style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
                             {/* Drag handle bar indicator & grab zone */}
                             <div 
                                 onPointerDown={(e) => dragControls.start(e)}
@@ -1041,7 +1042,7 @@ export function FocusModeOverlay({ task, goalTitle, onClose, onOptimisticTokenUp
                                 <div className="w-12 h-1 bg-white/15 rounded-full" />
                             </div>
                             {/* ── TOP NAV BAR ── */}
-                            <div className="flex items-center justify-between px-5 pt-4 pb-2">
+                            <div className="flex items-center justify-between px-5 pt-2 pb-2">
                                 <button 
                                     onClick={() => {
                                         onTaskUpdate?.({
@@ -1143,7 +1144,7 @@ export function FocusModeOverlay({ task, goalTitle, onClose, onOptimisticTokenUp
                                                 value={notes}
                                                 onChange={(e) => { hasUserEditedNotes.current = true; setNotes(e.target.value) }}
                                                 placeholder={t('focus.notes_placeholder')}
-                                                className="flex-1 min-h-[300px] w-full bg-white/[0.015] border border-white/5 rounded-3xl p-5 text-sm text-gray-300 placeholder-gray-600 focus:outline-none focus:border-electric-blue/30 resize-none font-sans leading-relaxed transition-colors"
+                                                className="flex-1 min-h-[300px] w-full bg-white/[0.015] border border-white/5 rounded-3xl p-5 text-base sm:text-sm text-gray-300 placeholder-gray-600 focus:outline-none focus:border-electric-blue/30 resize-none font-sans leading-relaxed transition-colors"
                                             />
                                         </div>
                                     )}
@@ -1264,7 +1265,7 @@ export function FocusModeOverlay({ task, goalTitle, onClose, onOptimisticTokenUp
                                                 onChange={(e) => setReflection(e.target.value)}
                                                 placeholder={t('focus.reflection_placeholder')}
                                                 disabled={quizLoading}
-                                                className="h-28 w-full bg-black/40 border border-white/10 rounded-3xl p-4 text-xs text-gray-300 placeholder-gray-600 focus:outline-none focus:border-amber-500/30 resize-none leading-relaxed transition-colors"
+                                                className="h-28 w-full bg-black/40 border border-white/10 rounded-3xl p-4 text-base sm:text-xs text-gray-300 placeholder-gray-600 focus:outline-none focus:border-amber-500/30 resize-none leading-relaxed transition-colors"
                                             />
 
                                             {quizFeedback && (

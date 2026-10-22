@@ -1,4 +1,5 @@
 import { createClient } from '@/utils/supabase/server'
+import { createClient as createSupabaseAdmin } from '@supabase/supabase-js'
 import { verifyUserSession } from '@/utils/auth'
 import { NextResponse } from 'next/server'
 
@@ -17,12 +18,21 @@ export async function POST(
         const body = await request.json()
         const { rating } = body
 
-        const numRating = Number(rating)
+        const numRating = Math.round(Number(rating))
         if (isNaN(numRating) || numRating < 1 || numRating > 5) {
             return NextResponse.json({ error: 'Rating must be an integer between 1 and 5' }, { status: 400 })
         }
 
         const supabase = await createClient()
+
+        // Use service-role client for the cross-user rating update so RLS on learning_goals
+        // (which only permits the plan owner to UPDATE) does not block community ratings.
+        const dbWriter = process.env.SUPABASE_SERVICE_ROLE_KEY
+            ? createSupabaseAdmin(
+                process.env.NEXT_PUBLIC_SUPABASE_URL!,
+                process.env.SUPABASE_SERVICE_ROLE_KEY
+            )
+            : supabase
 
         // 1. Fetch public goal details
         const { data: goal, error: goalError } = await supabase
@@ -39,25 +49,37 @@ export async function POST(
             return NextResponse.json({ error: 'Cannot rate private plans' }, { status: 400 })
         }
 
-        // 2. Fetch or initialize ratings count/sum in plan_metadata
+        // 2. Deduplicate per-user ratings inside plan_metadata.user_ratings
         const metadata = goal.plan_metadata || {}
-        
-        // Default values to preserve historical 5.0 rating if none exist
+        const userRatings: Record<string, number> = { ...(metadata.user_ratings || {}) }
+        const previousUserRating = userRatings[user.id]
+
         const currentCount = Number(metadata.rating_count || 1)
         const currentSum = Number(metadata.rating_sum || (5.0 * currentCount))
 
-        const newCount = currentCount + 1
-        const newSum = currentSum + numRating
-        const newAverage = Number((newSum / newCount).toFixed(2))
+        let newCount = currentCount
+        let newSum = currentSum
+
+        if (typeof previousUserRating === 'number') {
+            // Update existing user's rating without inflating rating_count
+            newSum = currentSum - previousUserRating + numRating
+        } else {
+            newCount = currentCount + 1
+            newSum = currentSum + numRating
+        }
+
+        userRatings[user.id] = numRating
+        const newAverage = Number((newSum / Math.max(1, newCount)).toFixed(2))
 
         const updatedMetadata = {
             ...metadata,
             rating_count: newCount,
-            rating_sum: newSum
+            rating_sum: newSum,
+            user_ratings: userRatings,
         }
 
         // 3. Update the goal record
-        const { data: updatedGoal, error: updateError } = await supabase
+        const { data: updatedGoal, error: updateError } = await dbWriter
             .from('learning_goals')
             .update({
                 rating: newAverage,

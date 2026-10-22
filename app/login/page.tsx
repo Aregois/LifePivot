@@ -7,7 +7,7 @@ import { Locale, LANGUAGE_NAMES } from '@/utils/translations'
 import { Globe, Mail, Lock, Eye, EyeOff, ArrowRight, Loader2 } from 'lucide-react'
 import { haptics } from '@/utils/haptics'
 import { createClient } from '@/utils/supabase/client'
-import { useState, useTransition, useRef, useEffect } from 'react'
+import { useState, useTransition, useRef, useEffect, Suspense } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
 
@@ -45,7 +45,7 @@ function ErrorToast({ message, onDismiss }: { message: string; onDismiss: () => 
 }
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
-export default function LoginPage() {
+function LoginContent() {
     const { t, locale, setLocale } = useLanguage()
     const searchParams = useSearchParams()
     const urlMessage = searchParams.get('message')
@@ -320,5 +320,13 @@ export default function LoginPage() {
                 </AnimatePresence>
             </div>
         </div>
+    )
+}
+
+export default function LoginPage() {
+    return (
+        <Suspense fallback={<div className="min-h-screen bg-[#0B0D17]" />}>
+            <LoginContent />
+        </Suspense>
     )
 }

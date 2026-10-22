@@ -2,10 +2,9 @@
 // Bump this version whenever you deploy code changes.
 // The activate event will delete all caches with a different name,
 // ensuring users always receive fresh JS/CSS bundles after updates.
-const CACHE_NAME = 'lifepivot-cache-v2';
+const CACHE_NAME = 'lifepivot-cache-v3';
 
 const STATIC_ASSETS = [
-  '/',
   '/manifest.json',
   '/icon-512.png',
   '/apple-touch-icon.png',
@@ -43,10 +42,14 @@ self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
 
-  // Skip non-GET, cross-origin, HMR, and Supabase requests
+  // Skip non-GET, cross-origin, HMR, API, Auth, RSC, and Supabase requests
   if (
     request.method !== 'GET' ||
     url.origin !== self.location.origin ||
+    url.pathname.startsWith('/api/') ||
+    url.pathname.startsWith('/auth/') ||
+    request.headers.get('RSC') === '1' ||
+    request.headers.get('Next-Router-Prefetch') === '1' ||
     request.url.includes('/_next/webpack-hmr') ||
     request.url.includes('/supabase/')
   ) {
@@ -103,23 +106,6 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // ── Dynamic pages: Network First ────────────────────────────────────────
-  event.respondWith(
-    fetch(request)
-      .then((networkResponse) => {
-        if (networkResponse && networkResponse.status === 200) {
-          const responseToCache = networkResponse.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(request, responseToCache));
-        }
-        return networkResponse;
-      })
-      .catch(() => {
-        return caches.match(request).then((cachedResponse) => {
-          if (cachedResponse) return cachedResponse;
-          if (request.headers.get('accept').includes('text/html')) {
-            return caches.match('/');
-          }
-        });
-      })
-  );
+  // ── Dynamic pages: Network Only (never cache authenticated HTML) ────────
+  return;
 });

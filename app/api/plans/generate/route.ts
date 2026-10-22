@@ -3,6 +3,7 @@ import { verifyUserSession } from '@/utils/auth'
 import { createClient } from '@/utils/supabase/server'
 import { getLocalDateString } from '@/utils/date-utils'
 import { textModel } from '@/utils/gemini'
+import { checkRateLimit } from '@/utils/rate-limit'
 import { NextResponse } from 'next/server'
 
 // Category specific instructions matching actions.ts prompts
@@ -44,17 +45,26 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
         }
 
+        const rateCheck = checkRateLimit(`${user.id}:plan_generate`, 5, 60 * 60 * 1000)
+        if (!rateCheck.allowed) {
+            return NextResponse.json(
+                { error: 'Too many plan generation requests. Please wait before generating another plan.' },
+                { status: 429 }
+            )
+        }
+
         const body = await request.json()
         const { goal, level, dailyTime, style, duration, intent, language } = body
 
-        if (!goal || !level || !dailyTime || !style) {
+        if (!goal || !level || !dailyTime || !style || String(goal).trim().length > 300) {
             return NextResponse.json(
-                { error: 'Missing required fields: goal, level, dailyTime, style' },
+                { error: 'Missing or invalid required fields: goal, level, dailyTime, style' },
                 { status: 400 }
             )
         }
 
-        const durationDays = duration ? parseInt(String(duration), 10) || 30 : 30
+        const rawDuration = duration ? parseInt(String(duration), 10) || 30 : 30
+        const durationDays = Math.min(Math.max(rawDuration, 1), 90)
         const dailyHours = mapDailyTimeToHours(dailyTime)
         const planLevel = mapLevel(level)
         const category = mapStyleToCategory(style)

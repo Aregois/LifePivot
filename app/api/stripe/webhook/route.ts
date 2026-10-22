@@ -13,12 +13,17 @@ function adminSupabase() {
     )
 }
 
-// Token amounts granted per price ID
-const TOKEN_PACK_AMOUNTS: Record<string, number> = {
-    [process.env.STRIPE_TOKENS_100_PRICE_ID!]: 100,
-    [process.env.STRIPE_TOKENS_500_PRICE_ID!]: 500,
-    [process.env.STRIPE_TOKENS_1500_PRICE_ID!]: 1500,
+// Token amounts granted per price ID (supports both server and NEXT_PUBLIC_ env vars)
+const TOKEN_PACK_AMOUNTS: Record<string, number> = {}
+const registerTokenPack = (id: string | undefined, amount: number) => {
+    if (id && id.trim()) TOKEN_PACK_AMOUNTS[id.trim()] = amount
 }
+registerTokenPack(process.env.STRIPE_TOKENS_100_PRICE_ID, 100)
+registerTokenPack(process.env.NEXT_PUBLIC_STRIPE_TOKENS_100_PRICE_ID, 100)
+registerTokenPack(process.env.STRIPE_TOKENS_500_PRICE_ID, 500)
+registerTokenPack(process.env.NEXT_PUBLIC_STRIPE_TOKENS_500_PRICE_ID, 500)
+registerTokenPack(process.env.STRIPE_TOKENS_1500_PRICE_ID, 1500)
+registerTokenPack(process.env.NEXT_PUBLIC_STRIPE_TOKENS_1500_PRICE_ID, 1500)
 
 export async function POST(request: NextRequest) {
     const rawBody = await request.text()

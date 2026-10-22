@@ -179,6 +179,72 @@ export function ShopClient() {
             color: 'from-green-500 to-teal-600 text-green-400',
             glowColor: 'rgba(16,185,129,0.3)',
             badge: t('shop.items.sound_greenhouse.badge')
+        },
+        {
+            id: 'title_alchemist',
+            type: 'title',
+            title: 'Title: Alchemist',
+            description: 'Unlock the Alchemist rank title in your Profile Wardrobe.',
+            cost: 20,
+            icon: Crown,
+            color: 'from-amber-400 to-yellow-500 text-amber-300',
+            glowColor: 'rgba(245,158,11,0.3)',
+            badge: 'TITLE'
+        },
+        {
+            id: 'title_navigator',
+            type: 'title',
+            title: 'Title: Mind Navigator',
+            description: 'Unlock the Mind Navigator rank title in your Profile Wardrobe.',
+            cost: 35,
+            icon: Rocket,
+            color: 'from-cyan-400 to-blue-500 text-cyan-300',
+            glowColor: 'rgba(0,240,255,0.3)',
+            badge: 'TITLE'
+        },
+        {
+            id: 'title_legend',
+            type: 'title',
+            title: 'Title: Focus Legend',
+            description: 'Unlock the Focus Legend prestige title in your Profile Wardrobe.',
+            cost: 50,
+            icon: Crown,
+            color: 'from-fuchsia-500 to-purple-600 text-fuchsia-300',
+            glowColor: 'rgba(189,0,255,0.3)',
+            badge: 'PRESTIGE'
+        },
+        {
+            id: 'frame_neon',
+            type: 'frame',
+            title: 'Frame: Neon Pulse',
+            description: 'Glowing electric cyan avatar ring for your profile header.',
+            cost: 25,
+            icon: Palette,
+            color: 'from-cyan-400 to-teal-500 text-cyan-300',
+            glowColor: 'rgba(0,240,255,0.3)',
+            badge: 'FRAME'
+        },
+        {
+            id: 'frame_sunset',
+            type: 'frame',
+            title: 'Frame: Sunset Flame',
+            description: 'Warm solar gradient avatar border for your profile header.',
+            cost: 35,
+            icon: Palette,
+            color: 'from-orange-400 to-pink-500 text-orange-300',
+            glowColor: 'rgba(249,115,22,0.3)',
+            badge: 'FRAME'
+        },
+        {
+            id: 'frame_cosmic',
+            type: 'frame',
+            title: 'Frame: Cosmic Portal',
+            description: 'Deep violet nebula halo avatar frame for your profile header.',
+            cost: 50,
+            icon: Palette,
+            color: 'from-purple-500 to-indigo-600 text-purple-300',
+            glowColor: 'rgba(139,92,246,0.3)',
+            badge: 'PRESTIGE'
         }
     ]
 

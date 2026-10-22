@@ -15,41 +15,44 @@ export default function TermsPage() {
             ← Return to LifePivot
           </Link>
           <h1 className="text-3xl md:text-4xl font-black text-white tracking-tight uppercase">Terms of Service</h1>
-          <p className="text-xs text-slate-500 uppercase tracking-widest mt-2">Last Updated: October 8, 2026</p>
+          <p className="text-xs text-slate-500 uppercase tracking-widest mt-2">Effective &amp; Last Updated: April 19, 2026</p>
         </div>
 
         <section className="space-y-4 text-sm leading-relaxed">
           <h2 className="text-lg font-bold text-white uppercase tracking-wider">1. Agreement to Terms</h2>
           <p>
-            By creating an account or accessing LifePivot on iOS, Android, or Web, you agree to these Terms of Service and the standard Apple End User License Agreement (EULA). If you do not agree to these terms, do not access or use the application.
+            By creating an account or accessing LifePivot on Web, iOS, or Android, you agree to these Terms of Service and, where applicable, the standard Apple End User License Agreement (EULA). If you do not agree to these terms, do not access or use the application.
           </p>
         </section>
 
         <section className="space-y-4 text-sm leading-relaxed">
-          <h2 className="text-lg font-bold text-white uppercase tracking-wider">2. Subscriptions &amp; Digital Currency</h2>
+          <h2 className="text-lg font-bold text-white uppercase tracking-wider">2. Subscriptions, Billing &amp; Virtual Tokens</h2>
           <p>
-            LifePivot offers a premium &quot;Power Tier&quot; subscription granting unlimited curriculum generation, customization cosmetics, and AI Socratic dialogues. Subscriptions renew automatically unless cancelled at least 24 hours prior to the conclusion of the active billing period. You may manage or cancel your subscription at any time in your Apple App Store Account Settings (for iOS) or the Billing Portal (for Web).
+            LifePivot offers a premium &quot;Solo Power&quot; subscription (billed monthly or annually via Stripe on Web or Apple StoreKit on iOS) granting unlimited curriculum generation, document uploads, customization cosmetics, and AI Socratic personas. Subscriptions renew automatically unless cancelled prior to the conclusion of the active billing period. You may manage or cancel your web subscription at any time via <em>Profile &gt; Settings &gt; Manage Subscription</em> (Stripe Billing Portal).
+          </p>
+          <p>
+            Virtual Focus Tokens and Gems acquired through in-app achievements or purchased via Token Packs have no monetary value outside LifePivot, cannot be redeemed for cash, and are non-transferable. Except as required by applicable consumer law, consumable Token Pack purchases are final.
           </p>
         </section>
 
         <section className="space-y-4 text-sm leading-relaxed">
           <h2 className="text-lg font-bold text-white uppercase tracking-wider">3. Acceptable Use &amp; Community Standards</h2>
           <p>
-            Users creating study plans or utilizing AI Socratic dialogues must not submit defamatory, abusive, infringing, or harmful content. LifePivot reserves the right to terminate accounts that violate academic integrity or acceptable community guidelines.
+            Users creating study plans or utilizing AI Socratic dialogues must not submit defamatory, abusive, infringing, or harmful content, nor attempt to manipulate virtual currency balances or abuse AI generation endpoints. LifePivot reserves the right to suspend or terminate accounts that violate these terms.
           </p>
         </section>
 
         <section className="space-y-4 text-sm leading-relaxed">
           <h2 className="text-lg font-bold text-white uppercase tracking-wider">4. Disclaimer of Warranties</h2>
           <p>
-            LifePivot is provided on an &quot;AS IS&quot; and &quot;AS AVAILABLE&quot; basis without warranties of any kind. AI-generated curriculums and Socratic study hints are supplemental learning tools and do not substitute for certified academic qualifications or institutional course grading.
+            LifePivot is provided on an &quot;AS IS&quot; and &quot;AS AVAILABLE&quot; basis without warranties of any kind. AI-generated curriculums and Socratic study hints are supplemental learning tools and do not substitute for certified academic qualifications, medical advice, or institutional course grading.
           </p>
         </section>
 
         <section className="space-y-4 text-sm leading-relaxed">
           <h2 className="text-lg font-bold text-white uppercase tracking-wider">5. Governing Law &amp; Contact</h2>
           <p>
-            These terms are governed by the laws of the jurisdiction of operation. For legal questions or support, contact <span className="text-cyan-400">support@lifepivot.app</span>.
+            These Terms shall be governed by and construed in accordance with applicable federal and international digital commerce laws, without regard to conflict of law principles. For billing, legal inquiries, or support, contact <span className="text-cyan-400">support@lifepivot.app</span>.
           </p>
         </section>
       </div>

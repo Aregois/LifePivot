@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -84,13 +84,8 @@ export function PwaInstallPrompt() {
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
 
     return () => {
-      window.removeEventListener('beforeinstallprompt', handleBeforeBeforeInstallPrompt);
-    };
-    
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    function handleBeforeBeforeInstallPrompt(e: Event) {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-    }
+    };
   }, []);
 
   const handleInstallClick = async () => {

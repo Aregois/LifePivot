@@ -8,8 +8,15 @@ export async function GET(request: NextRequest) {
     const origin = requestUrl.origin
 
     if (code) {
-        // Build a mutable response that cookies can be written into
-        let response = NextResponse.redirect(`${origin}/onboarding`)
+        const capturedCookies: { name: string; value: string; options?: Record<string, any> }[] = []
+
+        const buildRedirect = (targetUrl: string) => {
+            const res = NextResponse.redirect(targetUrl)
+            capturedCookies.forEach(({ name, value, options }) => {
+                res.cookies.set(name, value, options)
+            })
+            return res
+        }
 
         const supabase = createServerClient(
             process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -22,7 +29,7 @@ export async function GET(request: NextRequest) {
                     setAll(cookiesToSet) {
                         cookiesToSet.forEach(({ name, value, options }) => {
                             request.cookies.set(name, value)
-                            response.cookies.set(name, value, options)
+                            capturedCookies.push({ name, value, options })
                         })
                     },
                 },
@@ -34,9 +41,7 @@ export async function GET(request: NextRequest) {
         if (!error) {
             // If an explicit ?next= was provided (e.g. password reset), honour it safely
             if (next && next.startsWith('/') && !next.startsWith('//') && !next.includes('\\')) {
-                return NextResponse.redirect(`${origin}${next}`, {
-                    headers: response.headers,
-                })
+                return buildRedirect(`${origin}${next}`)
             }
 
             // Determine whether this user has completed onboarding
@@ -65,10 +70,7 @@ export async function GET(request: NextRequest) {
                     !profile || profile.onboarding_completed === null || profile.onboarding_completed === false
 
                 const destination = needsOnboarding ? '/onboarding' : '/'
-                response = NextResponse.redirect(`${origin}${destination}`, {
-                    headers: response.headers,
-                })
-                return response
+                return buildRedirect(`${origin}${destination}`)
             }
         }
     }

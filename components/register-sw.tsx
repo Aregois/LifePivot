@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useEffect } from 'react';
 
@@ -17,7 +17,7 @@ export function RegisterServiceWorker() {
       }
 
       if ((window as any).workbox === undefined) {
-        window.addEventListener('load', () => {
+        const registerWorker = () => {
           navigator.serviceWorker
             .register('/sw.js')
             .then((registration) => {
@@ -26,7 +26,14 @@ export function RegisterServiceWorker() {
             .catch((error) => {
               console.error('[Service Worker] Registration failed:', error);
             });
-        });
+        };
+
+        if (document.readyState === 'complete') {
+          registerWorker();
+        } else {
+          window.addEventListener('load', registerWorker);
+          return () => window.removeEventListener('load', registerWorker);
+        }
       }
     }
   }, []);

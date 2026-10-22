@@ -42,24 +42,32 @@ export async function POST(request: Request) {
         }
 
         const isAlreadyCompleted = task.status === 'completed'
+        const isPassed = Boolean(passed || correctCount >= 2)
+        const shouldAward = isPassed && !isAlreadyCompleted
 
-        // Calculate rewards: +50 base XP + 20 per correct answer. 3/3 gets 110 XP + 15 tokens; otherwise 5 tokens if score > 0
-        const rewardXp = isAlreadyCompleted ? 0 : (50 + correctCount * 20)
-        const rewardTokens = isAlreadyCompleted ? 0 : (correctCount === totalCount ? 15 : (correctCount > 0 ? 5 : 0))
+        // Only award XP and tokens when the user passes the drill and the task transitions to completed
+        const rewardXp = shouldAward ? (50 + correctCount * 20) : 0
+        const rewardTokens = shouldAward ? (correctCount === totalCount ? 15 : 5) : 0
 
         let leveledUp = false
         let newLevel = 1
         let newTokens = 0
         let newXp = 0
 
-        // Fetch current profile to apply rewards (only if not already completed)
+        // Fetch current profile to apply rewards (only when passing a pending task)
         const { data: profile } = await supabase
             .from('profiles')
             .select('tokens_balance, xp, level, multiplier_active')
             .eq('id', user.id)
             .single()
 
-        if (profile && !isAlreadyCompleted) {
+        if (profile) {
+            newTokens = profile.tokens_balance ?? 0
+            newXp = profile.xp ?? 0
+            newLevel = profile.level ?? 1
+        }
+
+        if (profile && shouldAward) {
             let finalTokensReward = rewardTokens
             if (profile.multiplier_active && finalTokensReward > 0) {
                 finalTokensReward = finalTokensReward * 2
@@ -88,8 +96,8 @@ export async function POST(request: Request) {
                 .eq('id', user.id)
         }
 
-        // If passed (or completed drill), mark task as completed
-        if (passed || correctCount >= 2) {
+        // If passed, mark task as completed
+        if (isPassed && !isAlreadyCompleted) {
             await supabase
                 .from('tasks')
                 .update({ status: 'completed' })

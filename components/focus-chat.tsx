@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useState, useRef, useEffect, useTransition } from 'react'
 import { createPortal } from 'react-dom'
@@ -237,7 +237,7 @@ export function FocusChat({ task, goalTitle, activeSubtaskTitle, onClose, person
                         onKeyDown={e => e.key === 'Enter' && handleSend()}
                         placeholder={task ? t('tutor.placeholder') : t('tutor.select_task')}
                         disabled={isPending || !task}
-                        className="flex-1 bg-transparent text-xs text-white placeholder-gray-600 focus:outline-none py-2 pl-1" 
+                        className="flex-1 bg-transparent text-base sm:text-xs text-white placeholder-gray-600 focus:outline-none py-2 pl-1" 
                     />
                     <button 
                         onClick={handleSend} 

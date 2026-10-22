@@ -15,19 +15,29 @@ export function DesktopSidebar() {
     const { level, avatarId } = useEconomy()
     const { t } = useLanguage()
     const [isSubscribed, setIsSubscribed] = useState(false)
+    const [displayName, setDisplayName] = useState<string>('')
 
     useEffect(() => {
         const supabase = createClient()
         supabase.auth.getUser().then(({ data: { user } }) => {
             if (user) {
+                const fallbackName =
+                    user.user_metadata?.full_name ||
+                    user.email?.split('@')[0] ||
+                    ''
+                if (fallbackName) setDisplayName(fallbackName)
+
                 supabase
                     .from('profiles')
-                    .select('is_subscribed')
+                    .select('is_subscribed, full_name, username')
                     .eq('id', user.id)
                     .single()
                     .then(({ data }) => {
                         if (data) {
                             setIsSubscribed(!!data.is_subscribed)
+                            if (data.username || data.full_name) {
+                                setDisplayName(data.username || data.full_name)
+                            }
                         }
                     })
             }
@@ -65,19 +75,22 @@ export function DesktopSidebar() {
             </div>
 
             {/* Profile Summary Card */}
-            <div className="flex items-center gap-3.5 mb-8 px-4 py-3.5 rounded-2xl bg-white/[0.02] border border-white/5 shadow-inner">
-                {/* TODO: Replace monogram with user initials from profile data when available */}
+            <Link
+                href="/profile"
+                className="flex items-center gap-3.5 mb-8 px-4 py-3.5 rounded-2xl bg-white/[0.02] hover:bg-white/[0.05] border border-white/5 transition-colors shadow-inner"
+            >
                 <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-indigo-500 to-indigo-700 flex items-center justify-center border border-white/10 shrink-0 shadow-md select-none overflow-hidden">
                     <AvatarIcon id={avatarId} className="w-full h-full" />
                 </div>
                 <div className="min-w-0">
-                    {/* TODO: Replace with actual user display name from profile when available */}
-                    <p className="text-xs font-black text-white uppercase tracking-wider truncate">{levelTitle}</p>
+                    <p className="text-xs font-black text-white capitalize tracking-wider truncate">
+                        {displayName || levelTitle}
+                    </p>
                     <p className="text-[10px] font-black text-electric-blue uppercase tracking-widest mt-0.5 truncate">
                         LV {level} {levelTitle}
                     </p>
                 </div>
-            </div>
+            </Link>
 
             {/* Navigation Tabs */}
             <nav className="flex-1 space-y-2">
@@ -108,12 +121,13 @@ export function DesktopSidebar() {
             {/* CTA Pro Button */}
             {!isSubscribed && (
                 <div className="pt-4 mt-auto border-t border-white/5">
-                    <button 
+                    <Link
+                        href="/profile?upgrade=true"
                         onClick={() => haptics.medium()}
-                        className="w-full py-3.5 rounded-xl border border-neon-violet/30 text-neon-violet bg-neon-violet/5 font-black text-[10px] tracking-widest uppercase hover:bg-neon-violet hover:text-white transition-all duration-300 shadow-[0_0_15px_rgba(var(--violet-rgb),0.08)] active:scale-95"
+                        className="block text-center w-full py-3.5 rounded-xl border border-neon-violet/30 text-neon-violet bg-neon-violet/5 font-black text-[10px] tracking-widest uppercase hover:bg-neon-violet hover:text-white transition-all duration-300 shadow-[0_0_15px_rgba(var(--violet-rgb),0.08)] active:scale-95"
                     >
                         {t('sidebar.upgrade')}
-                    </button>
+                    </Link>
                 </div>
             )}
         </aside>

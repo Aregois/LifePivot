@@ -1,4 +1,4 @@
-﻿'use server'
+'use server'
 
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
@@ -63,7 +63,7 @@ export async function forgotPassword(email: string) {
     const supabase = await createClient()
     const origin = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
     await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${origin}/auth/callback?next=/profile`,
+        redirectTo: `${origin}/auth/callback?next=/reset-password`,
     })
     // Always succeed silently — don't leak whether the email exists
 }

@@ -15,7 +15,7 @@ export default function PrivacyPage() {
             ← Return to LifePivot
           </Link>
           <h1 className="text-3xl md:text-4xl font-black text-white tracking-tight uppercase">Privacy Policy</h1>
-          <p className="text-xs text-slate-500 uppercase tracking-widest mt-2">Last Updated: October 8, 2026</p>
+          <p className="text-xs text-slate-500 uppercase tracking-widest mt-2">Effective &amp; Last Updated: April 19, 2026</p>
         </div>
 
         <section className="space-y-4 text-sm leading-relaxed">
@@ -24,9 +24,9 @@ export default function PrivacyPage() {
             LifePivot (&quot;we&quot;, &quot;us&quot;, or &quot;our&quot;) collects information necessary to personalize study curriculums, track daily habit streaks, and maintain account security:
           </p>
           <ul className="list-disc list-inside space-y-2 text-slate-400 pl-2">
-            <li><strong className="text-slate-200">Account Credentials:</strong> Email address and profile name provided upon sign up or Apple Authentication.</li>
-            <li><strong className="text-slate-200">Study Curriculum &amp; Task Data:</strong> Learning goals, study session durations, completed subtasks, and user-authored notes.</li>
-            <li><strong className="text-slate-200">Device &amp; Telemetry:</strong> Anonymized crash logs and platform analytics (via Sentry) to resolve software defects.</li>
+            <li><strong className="text-slate-200">Account Credentials:</strong> Email address and profile name provided upon sign up, Google OAuth, or Apple Authentication.</li>
+            <li><strong className="text-slate-200">Study Curriculum &amp; Task Data:</strong> Learning goals, uploaded study documents (PDF/DOCX/TXT/Images), study session durations, completed subtasks, and user-authored notes.</li>
+            <li><strong className="text-slate-200">Billing Metadata:</strong> Subscription status, Stripe customer/subscription identifiers, and token pack transaction records.</li>
           </ul>
         </section>
 
@@ -47,7 +47,7 @@ export default function PrivacyPage() {
         <section className="space-y-4 text-sm leading-relaxed">
           <h2 className="text-lg font-bold text-white uppercase tracking-wider">4. In-App Account Deletion &amp; Data Rights</h2>
           <p>
-            In compliance with Apple App Store Review Guideline 5.1.1(v) and GDPR/CCPA regulations, you may permanently erase your account and all associated data at any time directly inside the app under <em>Profile &gt; Settings &gt; Danger Zone &gt; Delete Account</em>, or by submitting a written request to <span className="text-cyan-400">privacy@lifepivot.app</span>. All cloud records, progress history, and authentication tokens are immediately purged.
+            In compliance with Apple App Store Review Guideline 5.1.1(v) and GDPR/CCPA regulations, you may permanently erase your account and all associated data at any time directly inside the app under <em>Profile &gt; Settings &gt; Account, Billing &amp; Security &gt; Delete Account &amp; Erase Data</em>, or by submitting a written request to <span className="text-cyan-400">privacy@lifepivot.app</span>. All cloud records, uploaded files, active subscriptions, progress history, and authentication credentials are immediately purged.
           </p>
         </section>
 

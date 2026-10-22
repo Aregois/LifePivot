@@ -4,6 +4,7 @@ import { createClient } from '@/utils/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { executeAlgorithmicSlide, PIVOT_TRACE } from '@/utils/pivot-engine'
 import { getLocalDateString } from '@/utils/date-utils'
+import { checkRateLimit } from '@/utils/rate-limit'
 
 function cleanAndParseJSON<T>(rawText: string, fallback: T): T {
     try {
@@ -835,9 +836,29 @@ export async function sendSocraticMessage(
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return { error: 'Not authenticated' }
 
-    const isFirstMessage = history.length === 0
+    const rateCheck = checkRateLimit(`${user.id}:socratic_chat`, 20, 60_000)
+    if (!rateCheck.allowed) {
+        return { error: 'RATE_LIMITED' }
+    }
 
-    // No gem gate or deduction - AI features are free!
+    const safeUserMessage = String(userMessage || '').trim().slice(0, 2000)
+    if (!safeUserMessage) return { error: 'Empty message' }
+
+    const safeHistory = (Array.isArray(history) ? history : []).slice(-20)
+    const isFirstMessage = safeHistory.length === 0
+
+    // Verify Pro subscription if a Pro-only persona ('socrates' | 'stoic') is requested
+    let effectivePersona = persona
+    if (persona === 'socrates' || persona === 'stoic') {
+        const { data: profile } = await supabase
+            .from('profiles')
+            .select('is_subscribed')
+            .eq('id', user.id)
+            .single()
+        if (!profile?.is_subscribed) {
+            effectivePersona = 'feynman'
+        }
+    }
 
     const { data: task } = await supabase
         .from('tasks')
@@ -856,9 +877,9 @@ export async function sendSocraticMessage(
     const subtaskLine = subtaskTitle ? `Specific struggle: "${subtaskTitle}"` : ''
 
     let personaPrompt = `You are a world-class Socratic tutor and inspiring professor (in the style of Richard Feynman). Your goal is to explain concepts in simple terms using vivid analogies, physical intuition, and clear mental models.`
-    if (persona === 'socrates') {
+    if (effectivePersona === 'socrates') {
         personaPrompt = `You are a Socratic guide speaking in the style of Socrates himself. Your goal is to lead the student to deep conceptual mastery through dialectic wisdom, questioning their assumptions, and offering cognitive scaffolding rather than direct answers.`
-    } else if (persona === 'stoic') {
+    } else if (effectivePersona === 'stoic') {
         personaPrompt = `You are a study guide in the style of Marcus Aurelius, the Stoic philosopher. Your goal is to help the student build focus, clarity, and intellectual discipline, speaking in a calm, direct, encouraging, and philosophical tone.`
     }
 
@@ -883,9 +904,9 @@ Respond now:`
     try {
         const { textModel } = await import('@/utils/gemini')
 
-        const chatHistory = history.map(msg => ({
-            role: msg.role,
-            parts: [{ text: msg.text }],
+        const chatHistory = safeHistory.map(msg => ({
+            role: msg.role === 'model' ? 'model' : 'user',
+            parts: [{ text: String(msg.text || '').slice(0, 2000) }],
         }))
 
         const chat = textModel.startChat({
@@ -896,7 +917,7 @@ Respond now:`
             ],
         })
 
-        const result = await chat.sendMessage(userMessage)
+        const result = await chat.sendMessage(safeUserMessage)
         const reply = result.response.text().trim()
         return { reply, isFirstMessage }
     } catch (err) {
@@ -1255,9 +1276,12 @@ export async function submitActiveRecallAnswer(taskId: string, answer: string, p
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return { error: 'Not authenticated' }
 
+    const rateCheck = checkRateLimit(`${user.id}:active_recall_${taskId}`, 5, 60_000)
+    if (!rateCheck.allowed) return { error: 'Too many attempts. Please wait a moment.' }
+
     const { data: task } = await supabase
         .from('tasks')
-        .select('title, subject, goal_id')
+        .select('title, subject, goal_id, status')
         .eq('id', taskId)
         .eq('user_id', user.id)
         .single()
@@ -1281,10 +1305,12 @@ export async function submitActiveRecallAnswer(taskId: string, answer: string, p
         personaEvaluatorPrompt = `You are Richard Feynman, a world-class tutor reviewing a student's answer/summary for their completed task. Provide feedback using simple terms, intuitive explanation, or a warm analogy.`
     }
 
+    const safeAnswer = String(answer || '').trim().slice(0, 2000)
+
     const prompt = `
         ${personaEvaluatorPrompt}
         Task title: "${task.title}"
-        Student's explanation: "${answer}"
+        Student's explanation: "${safeAnswer}"
 
         Determine if the explanation shows real effort and basic accuracy (Pass), or if it is too short (less than 4-5 words), lazy, or completely incorrect (Needs Work).
         Provide a very brief (2-3 sentences max) Socratic guidance or encouragement in your persona. Do not give direct solutions.
@@ -1304,7 +1330,7 @@ export async function submitActiveRecallAnswer(taskId: string, answer: string, p
         const responseText = result.response.text()
         const evaluation = cleanAndParseJSON(responseText, { feedback: "Socratic feedback generation failed.", rating: "Needs Work" })
 
-        if (evaluation.rating === 'Pass') {
+        if (evaluation.rating === 'Pass' && task.status !== 'completed') {
             const { data: profile } = await supabase
                 .from('profiles')
                 .select('tokens_balance, xp, level')
@@ -1599,12 +1625,22 @@ export async function purchaseCustomization(cost: number, itemName: string) {
 }
 
 export async function claimAchievementReward(xpReward: number, tokenReward: number, achievementTitle: string) {
-    if (typeof xpReward !== 'number' || isNaN(xpReward) || xpReward < 0 || typeof tokenReward !== 'number' || isNaN(tokenReward) || tokenReward < 0) {
+    if (
+        typeof xpReward !== 'number' || isNaN(xpReward) || xpReward < 0 || xpReward > 500 ||
+        typeof tokenReward !== 'number' || isNaN(tokenReward) || tokenReward < 0 || tokenReward > 50 ||
+        !achievementTitle || typeof achievementTitle !== 'string'
+    ) {
         return { error: 'Invalid reward values' }
     }
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return { error: 'Not authenticated' }
+
+    const claimKey = `${user.id}:claim:${achievementTitle.trim().toLowerCase()}`
+    const rateCheck = checkRateLimit(claimKey, 1, 12 * 60 * 60 * 1000)
+    if (!rateCheck.allowed) {
+        return { error: 'Reward already claimed recently' }
+    }
 
     const { data: profile } = await supabase
         .from('profiles')
@@ -1614,10 +1650,13 @@ export async function claimAchievementReward(xpReward: number, tokenReward: numb
 
     if (!profile) return { error: 'Profile not found' }
 
-    let newXp = (profile.xp ?? 0) + xpReward
+    const safeXp = Math.floor(xpReward)
+    const safeTokens = Math.floor(tokenReward)
+
+    let newXp = (profile.xp ?? 0) + safeXp
     let newLevel = profile.level ?? 1
     let xpNeeded = newLevel * 100
-    while (newXp >= xpNeeded) {
+    while (newXp >= xpNeeded && newLevel < 100) {
         newXp -= xpNeeded
         newLevel += 1
         xpNeeded = newLevel * 100
@@ -1626,7 +1665,7 @@ export async function claimAchievementReward(xpReward: number, tokenReward: numb
     const { error } = await supabase
         .from('profiles')
         .update({ 
-            tokens_balance: (profile.tokens_balance ?? 0) + tokenReward,
+            tokens_balance: (profile.tokens_balance ?? 0) + safeTokens,
             xp: newXp,
             level: newLevel
         })
@@ -1634,7 +1673,7 @@ export async function claimAchievementReward(xpReward: number, tokenReward: numb
 
     if (error) return { error: error.message }
     revalidatePath('/', 'layout')
-    return { success: true, newTokens: (profile.tokens_balance ?? 0) + tokenReward, newXp, newLevel, message: `Claimed reward for: ${achievementTitle}!` }
+    return { success: true, newTokens: (profile.tokens_balance ?? 0) + safeTokens, newXp, newLevel, message: `Claimed reward for: ${achievementTitle}!` }
 }
 
 export async function awardStreakShieldServer() {
@@ -1642,27 +1681,28 @@ export async function awardStreakShieldServer() {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return { error: 'Not authenticated' }
 
+    const rateCheck = checkRateLimit(`${user.id}:award_streak_shield`, 1, 24 * 60 * 60 * 1000)
+    if (!rateCheck.allowed) {
+        return { error: 'Daily streak shield reward already claimed' }
+    }
+
     const { data: profile } = await supabase
         .from('profiles')
-        .select('streak_shields_count')
+        .select('streak_shields_count, current_streak, tokens_balance')
         .eq('id', user.id)
         .single()
 
     if (!profile) return { error: 'Profile not found' }
+    if ((profile.current_streak ?? 0) < 3) {
+        return { error: 'Minimum 3-day streak required for milestone shield' }
+    }
     
     // Max 2 shields
     if ((profile.streak_shields_count ?? 0) >= 2) {
-        const { data: prof } = await supabase
+        await supabase
             .from('profiles')
-            .select('tokens_balance')
+            .update({ tokens_balance: (profile.tokens_balance ?? 0) + 5 })
             .eq('id', user.id)
-            .single()
-        if (prof) {
-            await supabase
-                .from('profiles')
-                .update({ tokens_balance: (prof.tokens_balance ?? 0) + 5 })
-                .eq('id', user.id)
-        }
         return { error: 'SHIELDS_FULL', message: 'Shields are already full! Awarded 5 Tokens instead.' }
     }
 
@@ -2466,15 +2506,14 @@ export async function importExternalPlan(formData: FormData) {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return { error: 'Not authenticated' }
 
-    // Check if the user already has an active plan
-    const { data: existingGoals } = await supabase
-        .from('learning_goals')
-        .select('id')
-        .eq('user_id', user.id)
-        .limit(1)
+    // Check if the user is on the Free tier and already has an active plan
+    const [{ data: profile }, { data: existingGoals }] = await Promise.all([
+        supabase.from('profiles').select('is_subscribed').eq('id', user.id).single(),
+        supabase.from('learning_goals').select('id').eq('user_id', user.id).limit(1),
+    ])
 
-    if (existingGoals && existingGoals.length > 0) {
-        return { error: 'You already have an active learning plan.' }
+    if (!profile?.is_subscribed && existingGoals && existingGoals.length > 0) {
+        return { error: 'SUBSCRIBE_REQUIRED' }
     }
 
     // Clean and parse JSON

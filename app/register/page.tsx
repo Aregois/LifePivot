@@ -4,7 +4,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { Mail, Lock, Eye, EyeOff, User, ArrowRight, Loader2, Globe } from 'lucide-react'
 import { haptics } from '@/utils/haptics'
 import { createClient } from '@/utils/supabase/client'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
 import { useLanguage } from '@/components/language-provider'
@@ -95,7 +95,7 @@ interface FormErrors {
     confirm?: string
 }
 
-export default function RegisterPage() {
+function RegisterContent() {
     const router = useRouter()
     const searchParams = useSearchParams()
     const urlMessage = searchParams.get('message')
@@ -346,5 +346,13 @@ export default function RegisterPage() {
                 </div>
             </div>
         </div>
+    )
+}
+
+export default function RegisterPage() {
+    return (
+        <Suspense fallback={<div className="min-h-screen bg-[#0B0D17]" />}>
+            <RegisterContent />
+        </Suspense>
     )
 }

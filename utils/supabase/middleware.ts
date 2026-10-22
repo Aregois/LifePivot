@@ -37,8 +37,13 @@ export async function updateSession(request: NextRequest) {
 
     const isPublicRoute =
         request.nextUrl.pathname === '/' ||
+        request.nextUrl.pathname === '/manifest.json' ||
+        request.nextUrl.pathname === '/sw.js' ||
+        request.nextUrl.pathname === '/robots.txt' ||
+        request.nextUrl.pathname === '/sitemap.xml' ||
         request.nextUrl.pathname.startsWith('/login') ||
         request.nextUrl.pathname.startsWith('/register') ||
+        request.nextUrl.pathname.startsWith('/reset-password') ||
         request.nextUrl.pathname.startsWith('/onboarding') ||
         request.nextUrl.pathname.startsWith('/privacy') ||
         request.nextUrl.pathname.startsWith('/terms') ||

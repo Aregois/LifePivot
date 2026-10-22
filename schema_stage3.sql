@@ -75,17 +75,40 @@ ALTER TABLE public.profiles
 --     application/vnd.openxmlformats-officedocument.wordprocessingml.document,
 --     application/vnd.ms-powerpoint,
 --     application/vnd.openxmlformats-officedocument.presentationml.presentation,
---     text/plain
---
--- Then add an RLS policy on the storage.objects table:
--- CREATE POLICY "Auth users can upload their own documents"
---   ON storage.objects FOR INSERT
---   WITH CHECK (bucket_id = 'lifepivot-documents' AND auth.uid()::text = (storage.foldername(name))[1]);
---
--- CREATE POLICY "Users can read their own documents"
---   ON storage.objects FOR SELECT
---   USING (bucket_id = 'lifepivot-documents' AND auth.uid()::text = (storage.foldername(name))[1]);
---
--- CREATE POLICY "Users can delete their own documents"
---   ON storage.objects FOR DELETE
---   USING (bucket_id = 'lifepivot-documents' AND auth.uid()::text = (storage.foldername(name))[1]);
+--     text/plain, image/jpeg, image/png
+INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+VALUES (
+  'lifepivot-documents',
+  'lifepivot-documents',
+  false,
+  10485760,
+  ARRAY[
+    'application/pdf',
+    'application/msword',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'application/vnd.ms-powerpoint',
+    'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+    'text/plain',
+    'image/jpeg',
+    'image/png'
+  ]
+)
+ON CONFLICT (id) DO UPDATE SET
+  file_size_limit = EXCLUDED.file_size_limit,
+  allowed_mime_types = EXCLUDED.allowed_mime_types;
+
+-- Add RLS policies on the storage.objects table:
+DROP POLICY IF EXISTS "Auth users can upload their own documents" ON storage.objects;
+CREATE POLICY "Auth users can upload their own documents"
+  ON storage.objects FOR INSERT
+  WITH CHECK (bucket_id = 'lifepivot-documents' AND auth.uid()::text = (storage.foldername(name))[1]);
+
+DROP POLICY IF EXISTS "Users can read their own documents" ON storage.objects;
+CREATE POLICY "Users can read their own documents"
+  ON storage.objects FOR SELECT
+  USING (bucket_id = 'lifepivot-documents' AND auth.uid()::text = (storage.foldername(name))[1]);
+
+DROP POLICY IF EXISTS "Users can delete their own documents" ON storage.objects;
+CREATE POLICY "Users can delete their own documents"
+  ON storage.objects FOR DELETE
+  USING (bucket_id = 'lifepivot-documents' AND auth.uid()::text = (storage.foldername(name))[1]);
