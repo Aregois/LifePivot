@@ -10,6 +10,7 @@ import {
 import { useRouter } from 'next/navigation'
 import { haptics } from '@/utils/haptics'
 import { useLanguage } from './language-provider'
+import { createClient } from '@/utils/supabase/client'
 
 type AccentKey = 'cyan' | 'violet' | 'emerald' | 'amber'
 
@@ -38,12 +39,45 @@ export function OnboardingTour() {
 
     useEffect(() => {
         setMounted(true)
-        const completed = localStorage.getItem('lifepivot_onboarding_completed')
-        if (completed !== 'true') {
-            setIsOpen(true)
+
+        // 1. Fast local checks: If already completed or dismissed in this session, never show
+        if (localStorage.getItem('lifepivot_onboarding_completed') === 'true') {
+            return
+        }
+        if (sessionStorage.getItem('lifepivot_tour_dismissed') === 'true') {
+            return
         }
 
-        // Listen for reset events immediately
+        // 2. Database verification: Existing users with goals or onboarding_completed === true must never see the tour
+        const verifyNewUserStatus = async () => {
+            try {
+                const supabase = createClient()
+                const { data: { user } } = await supabase.auth.getUser()
+                if (!user) return
+
+                const [{ data: profile }, { count: goalsCount }] = await Promise.all([
+                    supabase.from('profiles').select('onboarding_completed').eq('id', user.id).single(),
+                    supabase.from('learning_goals').select('*', { count: 'exact', head: true }).eq('user_id', user.id)
+                ])
+
+                // If user is already marked completed OR already has learning goals, they are an existing user
+                if (profile?.onboarding_completed === true || (goalsCount !== null && goalsCount > 0)) {
+                    localStorage.setItem('lifepivot_onboarding_completed', 'true')
+                    sessionStorage.setItem('lifepivot_tour_dismissed', 'true')
+                    setIsOpen(false)
+                    return
+                }
+
+                // Genuinely new user with no goals: show tour once
+                setIsOpen(true)
+            } catch (err) {
+                console.error('Error verifying onboarding tour status:', err)
+            }
+        }
+
+        verifyNewUserStatus()
+
+        // Listen for explicit manual reset events (e.g. from Profile page "Replay Tutorial")
         const handleCheckOnboarding = () => {
             setStep(0)
             setDemoSubtaskDone(false)
@@ -58,7 +92,7 @@ export function OnboardingTour() {
             window.removeEventListener('lifepivot_onboarding_completed_changed', handleCheckOnboarding)
             window.removeEventListener('lifepivot_open_tour', handleCheckOnboarding)
         }
-    }, [isOpen])
+    }, [])
 
     const handleNext = () => {
         haptics.medium()
@@ -81,9 +115,20 @@ export function OnboardingTour() {
         handleComplete()
     }
 
-    const handleComplete = () => {
+    const handleComplete = async () => {
         localStorage.setItem('lifepivot_onboarding_completed', 'true')
+        sessionStorage.setItem('lifepivot_tour_dismissed', 'true')
         setIsOpen(false)
+
+        try {
+            const supabase = createClient()
+            const { data: { user } } = await supabase.auth.getUser()
+            if (user) {
+                await supabase.from('profiles').update({ onboarding_completed: true }).eq('id', user.id)
+            }
+        } catch (err) {
+            console.error('Failed to persist onboarding status to profile:', err)
+        }
     }
 
     const handleLaunchPlan = () => {
